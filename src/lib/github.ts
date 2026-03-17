@@ -51,7 +51,7 @@ export async function fetchAgentsTasks(): Promise<string[]> {
 }
 
 export async function fetchFinanceData(): Promise<string | null> {
-  return fetchRepoFile('company', 'FINANCE.md');
+  return fetchRepoFile('the-firm', 'FINANCE.md');
 }
 
 export async function fetchCheckpoint(): Promise<string | null> {
@@ -59,27 +59,27 @@ export async function fetchCheckpoint(): Promise<string | null> {
 }
 
 export async function fetchCeoInbox(): Promise<string | null> {
-  return fetchRepoFile('company', 'CEO_INBOX.md');
+  return fetchRepoFile('the-firm', 'CEO_INBOX.md');
 }
 
 export async function fetchBandwidth(): Promise<string | null> {
-  return fetchRepoFile('company', 'BANDWIDTH.md');
+  return fetchRepoFile('the-firm', 'BANDWIDTH.md');
 }
 
 export async function fetchMarketing(): Promise<string | null> {
-  return fetchRepoFile('company', 'MARKETING.md');
+  return fetchRepoFile('the-firm', 'MARKETING.md');
 }
 
 export async function fetchHealth(): Promise<string | null> {
-  return fetchRepoFile('company', 'HEALTH.md');
+  return fetchRepoFile('the-firm', 'HEALTH.md');
 }
 
 export async function fetchProjects(): Promise<string | null> {
-  return fetchRepoFile('company', 'PROJECTS.md');
+  return fetchRepoFile('the-firm', 'PROJECTS.md');
 }
 
 export async function fetchCompanyCheckpoint(): Promise<string | null> {
-  return fetchRepoFile('company', 'CHECKPOINT.md');
+  return fetchRepoFile('the-firm', 'CHECKPOINT.md');
 }
 
 export async function fetchLearnieHealth(): Promise<{
@@ -100,7 +100,7 @@ export async function fetchLearnieHealth(): Promise<{
 export async function fetchAllTasks(): Promise<string[]> {
   const [learnieContent, companyContent] = await Promise.all([
     fetchRepoFile('learnie-ai', 'AGENTS.md'),
-    fetchRepoFile('company', 'CHECKPOINT.md'),
+    fetchRepoFile('the-firm', 'CHECKPOINT.md'),
   ]);
 
   const lines: string[] = [];
