@@ -69,3 +69,88 @@ export async function fetchBandwidth(): Promise<string | null> {
 export async function fetchMarketing(): Promise<string | null> {
   return fetchRepoFile('company', 'MARKETING.md');
 }
+
+export async function fetchHealth(): Promise<string | null> {
+  return fetchRepoFile('company', 'HEALTH.md');
+}
+
+export async function fetchProjects(): Promise<string | null> {
+  return fetchRepoFile('company', 'PROJECTS.md');
+}
+
+export async function fetchCompanyCheckpoint(): Promise<string | null> {
+  return fetchRepoFile('company', 'CHECKPOINT.md');
+}
+
+export async function fetchLearnieHealth(): Promise<{
+  status: number;
+  ok: boolean;
+}> {
+  try {
+    const res = await fetch('https://learnie-ai-ten.vercel.app', {
+      method: 'HEAD',
+      next: { revalidate: 60 },
+    });
+    return { status: res.status, ok: res.ok };
+  } catch {
+    return { status: 0, ok: false };
+  }
+}
+
+export async function fetchAllTasks(): Promise<string[]> {
+  const [learnieContent, companyContent] = await Promise.all([
+    fetchRepoFile('learnie-ai', 'AGENTS.md'),
+    fetchRepoFile('company', 'CHECKPOINT.md'),
+  ]);
+
+  const lines: string[] = [];
+
+  if (learnieContent) {
+    lines.push(
+      ...learnieContent
+        .split('\n')
+        .filter(
+          (l) =>
+            (l.includes('TASK-') || l.includes('CP-')) &&
+            (l.includes('⏳ TODO') ||
+              l.includes('🕐 LATER') ||
+              l.includes('BLOCKED')),
+        ),
+    );
+  }
+
+  return lines;
+}
+
+export function extractMichaelBlockers(
+  learnieAgents: string | null,
+  companyCheckpoint: string | null,
+): string[] {
+  const blockers: string[] = [];
+  const patterns = [
+    /needs Michael/i,
+    /Michael:/i,
+    /💳/,
+    /credit card/i,
+    /⚖️/,
+    /blocked.*Michael/i,
+    /Michael.*credit/i,
+    /Apple Developer/i,
+    /Google Play Console/i,
+    /\bDNS\b/i,
+  ];
+
+  for (const content of [learnieAgents, companyCheckpoint]) {
+    if (!content) continue;
+    for (const line of content.split('\n')) {
+      if (patterns.some((p) => p.test(line))) {
+        const cleaned = line.replace(/^\|?\s*/, '').replace(/\s*\|?\s*$/, '').trim();
+        if (cleaned && !blockers.includes(cleaned)) {
+          blockers.push(cleaned);
+        }
+      }
+    }
+  }
+
+  return blockers;
+}

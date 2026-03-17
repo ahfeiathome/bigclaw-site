@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
+// MC runs locally — iframe uses direct URL (both HTTP, no mixed content)
+// On Vercel (HTTPS), iframe won't load; shows offline with instructions
 const MC_URL = 'http://localhost:3001';
 
 export default function MissionControlPage() {
   const [status, setStatus] = useState<'loading' | 'online' | 'offline'>('loading');
 
-  useEffect(() => {
+  const checkHealth = () => {
+    setStatus('loading');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
 
@@ -20,11 +23,10 @@ export default function MissionControlPage() {
         clearTimeout(timer);
         setStatus('offline');
       });
+  };
 
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
+  useEffect(() => {
+    checkHealth();
   }, []);
 
   return (
@@ -59,16 +61,21 @@ export default function MissionControlPage() {
           </span>
           {status === 'offline' && (
             <button
-              onClick={() => {
-                setStatus('loading');
-                fetch(MC_URL, { mode: 'no-cors' })
-                  .then(() => setStatus('online'))
-                  .catch(() => setStatus('offline'));
-              }}
+              onClick={checkHealth}
               className="text-xs text-accent hover:underline"
             >
               Retry
             </button>
+          )}
+          {status === 'online' && (
+            <a
+              href={MC_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:underline"
+            >
+              Open standalone
+            </a>
           )}
         </div>
       </div>
@@ -89,14 +96,22 @@ export default function MissionControlPage() {
           <div className="text-4xl mb-4">🖥️</div>
           <h3 className="text-lg font-semibold mb-2">Mission Control is offline</h3>
           <p className="text-muted text-sm mb-6 max-w-md mx-auto">
-            Mission Control runs locally on port 3001. Start it to see the agent orchestration
-            dashboard here.
+            Mission Control runs locally on port 3001. Start it and run bigclaw-site
+            locally to see the dashboard here.
           </p>
-          <div className="bg-surface border border-border rounded-lg p-4 inline-block text-left">
-            <p className="text-xs text-muted mb-1">Start Mission Control:</p>
-            <code className="text-sm font-mono text-accent">
-              cd ~/Projects/mission-control && ./restart.sh
-            </code>
+          <div className="bg-surface border border-border rounded-lg p-4 inline-block text-left space-y-2">
+            <div>
+              <p className="text-xs text-muted mb-1">1. Start Mission Control:</p>
+              <code className="text-sm font-mono text-accent">
+                cd ~/Projects/mission-control && ./restart.sh
+              </code>
+            </div>
+            <div>
+              <p className="text-xs text-muted mb-1">2. Run bigclaw-site locally:</p>
+              <code className="text-sm font-mono text-accent">
+                cd ~/Projects/bigclaw-site && npm run dev
+              </code>
+            </div>
           </div>
         </div>
       )}
