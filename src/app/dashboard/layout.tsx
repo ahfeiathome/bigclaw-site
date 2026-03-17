@@ -12,6 +12,7 @@ const navItems = [
   { href: '/dashboard/projects', label: 'Projects' },
   { href: '/dashboard/marketing', label: 'Marketing' },
   { href: '/dashboard/bizdev', label: 'Biz Dev' },
+  { href: '/dashboard/mission-control', label: 'Mission Control' },
 ];
 
 export default function DashboardLayout({
