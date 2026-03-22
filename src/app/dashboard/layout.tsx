@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 
 const navItems = [
   { href: '/dashboard', label: 'Exec View' },
+  { href: '/dashboard/patrol', label: 'Felix Patrol' },
   { href: '/dashboard/finance', label: 'Finance' },
   { href: '/dashboard/projects', label: 'Projects' },
   { href: '/dashboard/bizdev', label: 'Biz Dev' },

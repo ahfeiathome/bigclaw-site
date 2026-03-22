@@ -94,6 +94,10 @@ export async function fetchRadarScorecard(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/STRATEGY_SCORECARD.md');
 }
 
+export async function fetchPatrolReport(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'PATROL_REPORT.md');
+}
+
 export async function fetchAgentsMd(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'AGENTS.md');
 }
