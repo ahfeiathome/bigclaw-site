@@ -7,6 +7,8 @@ import {
   fetchLearnieHealth,
   fetchCompanyCheckpoint,
   extractMichaelBlockers,
+  fetchTooling,
+  fetchRadarStatus,
 } from '@/lib/github';
 
 function parseAgentStatuses(bandwidth: string | null): {
@@ -77,6 +79,45 @@ function parseTodoTasks(content: string | null): string[] {
       return l.replace(/\|/g, '').trim();
     })
     .slice(0, 5);
+}
+
+function parseRadarStatus(content: string | null): {
+  tradeCount: number;
+  lastTrade: string;
+} {
+  if (!content) return { tradeCount: 0, lastTrade: 'none' };
+  const lines = content.split('\n').filter(
+    (l) => l.startsWith('|') && !l.includes('---') && !l.includes('Date'),
+  );
+  return {
+    tradeCount: lines.length,
+    lastTrade: lines.length > 0 ? lines[lines.length - 1].trim() : 'none',
+  };
+}
+
+function parseToolingStatus(content: string | null): {
+  connectors: number;
+  skills: number;
+} {
+  if (!content) return { connectors: 0, skills: 0 };
+  const sections = content.split(/^##\s/m);
+  let connectors = 0;
+  let skills = 0;
+  for (const section of sections) {
+    if (section.toLowerCase().includes('mapping') || section.toLowerCase().includes('connector')) {
+      const rows = section.split('\n').filter(
+        (l) => l.includes('|') && !l.includes('---') && (l.includes('Enabled') || l.includes('✅')),
+      );
+      connectors = rows.length;
+    }
+    if (section.toLowerCase().includes('skill') || section.toLowerCase().includes('inventory')) {
+      const rows = section.split('\n').filter(
+        (l) => l.includes('|') && !l.includes('---') && !l.toLowerCase().includes('skill'),
+      );
+      skills = rows.length;
+    }
+  }
+  return { connectors, skills };
 }
 
 function parseFinanceMetrics(finance: string | null): {
@@ -177,6 +218,8 @@ export default async function DashboardOverview() {
     health,
     projects,
     learnieHealth,
+    tooling,
+    radarLog,
   ] = await Promise.all([
     fetchRepoFile('learnie-ai', 'AGENTS.md'),
     fetchCompanyCheckpoint(),
@@ -185,6 +228,8 @@ export default async function DashboardOverview() {
     fetchHealth(),
     fetchProjects(),
     fetchLearnieHealth(),
+    fetchTooling(),
+    fetchRadarStatus(),
   ]);
 
   const blockers = extractMichaelBlockers(learnieAgents, companyCheckpoint);
@@ -193,6 +238,8 @@ export default async function DashboardOverview() {
   const financeMetrics = parseFinanceMetrics(finance);
   const projectStatuses = parseProjectStatuses(projects);
   const healthStatus = parseHealthStatus(health);
+  const radarStatus = parseRadarStatus(radarLog);
+  const toolingStatus = parseToolingStatus(tooling);
 
   const now = new Date().toISOString().slice(11, 16);
 
@@ -205,10 +252,10 @@ export default async function DashboardOverview() {
         </div>
       </div>
 
-      {/* 5-section grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {/* Section 1 — Needs Michael */}
-        <div className="border border-border rounded-lg p-4 md:col-span-1">
+      {/* 3-col grid, 2 rows */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Row 1, Col 1 — Needs Michael */}
+        <div className="border border-border rounded-lg p-4">
           <div className="text-xs font-semibold text-red-400 uppercase tracking-wide mb-3">
             🔴 Needs Michael
           </div>
@@ -225,8 +272,8 @@ export default async function DashboardOverview() {
           )}
         </div>
 
-        {/* Section 2 — Building Now */}
-        <div className="border border-border rounded-lg p-4 md:col-span-1">
+        {/* Row 1, Col 2 — Building Now */}
+        <div className="border border-border rounded-lg p-4">
           <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">
             🏗 Building Now
           </div>
@@ -243,8 +290,8 @@ export default async function DashboardOverview() {
           )}
         </div>
 
-        {/* Section 3 — Production Health */}
-        <div className="border border-border rounded-lg p-4 md:col-span-1">
+        {/* Row 1, Col 3 — Production Health */}
+        <div className="border border-border rounded-lg p-4">
           <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-3">
             🌐 Production
           </div>
@@ -283,8 +330,8 @@ export default async function DashboardOverview() {
           </div>
         </div>
 
-        {/* Section 4 — Money */}
-        <div className="border border-border rounded-lg p-4 md:col-span-1">
+        {/* Row 2, Col 1 — Money */}
+        <div className="border border-border rounded-lg p-4">
           <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-3">
             💰 Money
           </div>
@@ -308,30 +355,69 @@ export default async function DashboardOverview() {
           </div>
         </div>
 
-        {/* Section 5 — Agents */}
-        <div className="border border-border rounded-lg p-4 md:col-span-1">
-          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-3">
-            🤖 Agents
+        {/* Row 2, Col 2 — RADAR Trading */}
+        <div className="border border-border rounded-lg p-4">
+          <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-3">
+            📈 RADAR Trading
           </div>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-muted">Phase</span>
+              <span className="font-mono">Paper</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Capital</span>
+              <span className="font-mono">$100K</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Trades</span>
+              <span className="font-mono">{radarStatus.tradeCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Strategies</span>
+              <span className="font-mono">3 scored</span>
+            </div>
+            <div className="text-[10px] text-muted mt-2">
+              PEAD + Momentum + BTD · $0/mo data
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2, Col 3 — Agents & Tooling */}
+        <div className="border border-border rounded-lg p-4">
+          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-3">
+            🤖 Agents & Tooling
+          </div>
+          {/* Agents */}
           <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="w-2 h-2 rounded-full bg-green-400" />
+              <span>felix</span>
+            </div>
             {agents.map((a) => (
-              <div
-                key={a.name}
-                className="flex items-center gap-1.5 text-xs"
-              >
+              <div key={a.name} className="flex items-center gap-1.5 text-xs">
                 <span className={`w-2 h-2 rounded-full ${a.color}`} />
                 <span>{a.name}</span>
               </div>
             ))}
-            {agents.length === 0 && (
-              <span className="text-xs text-muted">No data</span>
-            )}
           </div>
-          <div className="text-[10px] text-muted">
+          <div className="border-t border-border pt-2 space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-muted">Connectors</span>
+              <span className="font-mono">{toolingStatus.connectors}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Skills</span>
+              <span className="font-mono">{toolingStatus.skills}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Mode</span>
+              <span className="font-mono">M2 Felix</span>
+            </div>
+          </div>
+          <div className="text-[10px] text-muted mt-2">
             Last loop: {lastLoop.slice(11, 16) || lastLoop}
-            {loopStale && (
-              <span className="text-amber-400 ml-1">⚠️ STALE</span>
-            )}
+            {loopStale && <span className="text-amber-400 ml-1">⚠️ STALE</span>}
           </div>
         </div>
       </div>

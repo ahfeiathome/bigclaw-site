@@ -63,23 +63,39 @@ export async function fetchCeoInbox(): Promise<string | null> {
 }
 
 export async function fetchBandwidth(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'BANDWIDTH.md');
+  return fetchRepoFile('the-firm', 'docs/operations/BANDWIDTH.md');
 }
 
 export async function fetchMarketing(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'MARKETING.md');
+  return fetchRepoFile('the-firm', 'docs/growth/MARKETING.md');
 }
 
 export async function fetchHealth(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'HEALTH.md');
+  return fetchRepoFile('the-firm', 'docs/operations/HEALTH.md');
 }
 
 export async function fetchProjects(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'PROJECTS.md');
+  return fetchRepoFile('the-firm', 'ceo/PROJECTS.md');
 }
 
 export async function fetchCompanyCheckpoint(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'CHECKPOINT.md');
+}
+
+export async function fetchTooling(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/operations/TOOLING.md');
+}
+
+export async function fetchRadarStatus(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
+}
+
+export async function fetchRadarScorecard(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/projects/radar/STRATEGY_SCORECARD.md');
+}
+
+export async function fetchAgentsMd(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'AGENTS.md');
 }
 
 export async function fetchLearnieHealth(): Promise<{

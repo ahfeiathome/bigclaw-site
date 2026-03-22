@@ -25,6 +25,42 @@ const projects = [
     pricing: '$19.99/mo per family',
     phase: 'v0.5 — Pre-revenue, building toward first paid users',
   },
+  {
+    name: 'Fat Frog Models',
+    status: 'LIVE',
+    url: 'https://fatfrogmodels.vercel.app',
+    description:
+      'Scale model e-commerce catalog for a hobbyist brand. Dark motorsport theme with admin panel for inventory management.',
+    stack: ['Next.js', 'React', 'Tailwind CSS', 'Vercel'],
+    features: [
+      '5 SKU product catalog with filters and detail pages',
+      'Dark motorsport aesthetic with Barlow Condensed typography',
+      'Password-gated admin panel with CRUD operations',
+      'Image upload and buy link management',
+      'Mobile-responsive catalog browsing',
+    ],
+    pricing: 'Client project',
+    phase: 'v1.0 — Live, pending DNS cutover',
+  },
+  {
+    name: 'RADAR',
+    status: 'PAPER',
+    url: null,
+    description:
+      'Systematic trading engine with constitution-enforced risk management. Multi-strategy signal feeds with automated execution via Alpaca API.',
+    stack: ['Python', 'Alpaca API', 'Finnhub', 'Options Level 3'],
+    features: [
+      'Constitution-enforced trading laws (10 hard-coded guards)',
+      'R:R >= 3.0 required on every trade with mandatory stop/target',
+      'Per-trade risk capped at 2% of equity',
+      'PEAD signal feed (earnings surprise drift)',
+      'Momentum + mean reversion feeds planned',
+      '$100K paper account, targeting 20-30% in 6-week paper phase',
+      'Congressional copy trading research (Tier 2)',
+    ],
+    pricing: 'Internal — paper trading phase',
+    phase: 'v0.2 — Signal feeds building, paper testing',
+  },
 ];
 
 export default function ProjectsPage() {
@@ -40,7 +76,13 @@ export default function ProjectsPage() {
               <h2 className="text-2xl font-bold">{project.name}</h2>
               <p className="text-muted mt-2">{project.description}</p>
             </div>
-            <span className="text-xs font-mono px-2 py-1 bg-green-500/10 text-green-400 rounded shrink-0">
+            <span className={`text-xs font-mono px-2 py-1 rounded shrink-0 ${
+              project.status === 'LIVE'
+                ? 'bg-green-500/10 text-green-400'
+                : project.status === 'PAPER'
+                  ? 'bg-amber-500/10 text-amber-400'
+                  : 'bg-zinc-500/10 text-zinc-400'
+            }`}>
               {project.status}
             </span>
           </div>
@@ -81,14 +123,16 @@ export default function ProjectsPage() {
               </h3>
               <p className="text-sm text-muted">{project.phase}</p>
 
-              <a
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center mt-6 px-4 py-2 bg-accent text-background text-sm font-medium rounded-lg hover:bg-accent-dim transition-colors no-underline hover:no-underline"
-              >
-                Visit App →
-              </a>
+              {project.url && (
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center mt-6 px-4 py-2 bg-accent text-background text-sm font-medium rounded-lg hover:bg-accent-dim transition-colors no-underline hover:no-underline"
+                >
+                  Visit App →
+                </a>
+              )}
             </div>
           </div>
         </div>
