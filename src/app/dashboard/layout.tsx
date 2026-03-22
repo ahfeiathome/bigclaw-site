@@ -7,14 +7,11 @@ export const metadata: Metadata = {
 };
 
 const navItems = [
-  { href: '/dashboard', label: 'Exec View' },
-  { href: '/dashboard/patrol', label: 'Felix Patrol' },
+  { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard/projects', label: 'Projects' },
   { href: '/dashboard/radar', label: 'RADAR' },
   { href: '/dashboard/finance', label: 'Finance' },
-  { href: '/dashboard/projects', label: 'Projects' },
-  { href: '/dashboard/bizdev', label: 'Biz Dev' },
-  { href: '/dashboard/marketing', label: 'Marketing' },
-  { href: '/dashboard/mission-control', label: 'Mission Control' },
+  { href: '/dashboard/bizdev', label: 'Growth' },
 ];
 
 export default function DashboardLayout({

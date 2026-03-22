@@ -1,425 +1,223 @@
-import {
-  fetchRepoFile,
-  fetchFinanceData,
-  fetchBandwidth,
-  fetchHealth,
-  fetchProjects,
-  fetchLearnieHealth,
-  fetchCompanyCheckpoint,
-  extractMichaelBlockers,
-  fetchTooling,
-  fetchRadarStatus,
-} from '@/lib/github';
+import { fetchPatrolReport } from '@/lib/github';
 
-function parseAgentStatuses(bandwidth: string | null): {
-  agents: { name: string; status: string; color: string }[];
-  lastLoop: string;
-  loopStale: boolean;
-} {
-  if (!bandwidth)
-    return { agents: [], lastLoop: 'unknown', loopStale: true };
-
-  const agents: { name: string; status: string; color: string }[] = [];
-  const lines = bandwidth.split('\n');
-
-  for (const line of lines) {
-    if (!line.includes('|') || line.includes('Agent')) continue;
-    const cols = line
-      .split('|')
-      .map((c) => c.trim())
-      .filter(Boolean);
-    if (cols.length >= 3) {
-      const name = cols[1]?.toLowerCase() || '';
-      const statusRaw = cols[2] || '';
-      if (['mika', 'koda', 'rex', 'sage', 'lumina', 'byte'].includes(name)) {
-        const isOnline =
-          statusRaw.includes('🟢') || statusRaw.includes('loop');
-        const isBusy = statusRaw.includes('🟡') || statusRaw.includes('busy');
-        const isOffline = statusRaw.includes('⚪') || statusRaw.includes('offline');
-        agents.push({
-          name,
-          status: isOffline ? 'off' : isBusy ? 'busy' : 'on',
-          color: isOffline
-            ? 'bg-zinc-600'
-            : isBusy
-              ? 'bg-amber-400'
-              : 'bg-green-400',
-        });
-      }
-    }
-  }
-
-  const loopMatch = bandwidth.match(/Last loop:\s*(\S+)/);
-  const lastLoop = loopMatch?.[1] || 'unknown';
-  let loopStale = true;
-  if (lastLoop !== 'unknown') {
-    const loopTime = new Date(lastLoop).getTime();
-    loopStale = Date.now() - loopTime > 15 * 60 * 1000;
-  }
-
-  return { agents, lastLoop, loopStale };
+interface TableRow {
+  cells: string[];
 }
 
-function parseTodoTasks(content: string | null): string[] {
-  if (!content) return [];
-  return content
-    .split('\n')
-    .filter((l) => l.includes('⏳ TODO') && (l.includes('TASK-') || l.includes('CP-')))
-    .map((l) => {
-      const cols = l
-        .split('|')
-        .map((c) => c.trim())
-        .filter(Boolean);
-      if (cols.length >= 5) {
-        return `${cols[0]} · ${cols[3]} · ${cols[4]}`;
-      }
-      if (cols.length >= 3) {
-        return `${cols[0]} · ${cols[cols.length - 1]}`;
-      }
-      return l.replace(/\|/g, '').trim();
-    })
-    .slice(0, 5);
-}
-
-function parseRadarStatus(content: string | null): {
-  tradeCount: number;
-  lastTrade: string;
-} {
-  if (!content) return { tradeCount: 0, lastTrade: 'none' };
-  const lines = content.split('\n').filter(
-    (l) => l.startsWith('|') && !l.includes('---') && !l.includes('Date'),
+function parseMarkdownTable(section: string): TableRow[] {
+  const lines = section.split('\n').filter(
+    (l) => l.includes('|') && !l.match(/^\|[\s-|]+\|$/)
   );
-  return {
-    tradeCount: lines.length,
-    lastTrade: lines.length > 0 ? lines[lines.length - 1].trim() : 'none',
-  };
+  if (lines.length <= 1) return [];
+  return lines.slice(1).map((line) => ({
+    cells: line.split('|').map((c) => c.trim()).filter(Boolean),
+  }));
 }
 
-function parseToolingStatus(content: string | null): {
-  connectors: number;
-  skills: number;
-} {
-  if (!content) return { connectors: 0, skills: 0 };
-  const sections = content.split(/^##\s/m);
-  let connectors = 0;
-  let skills = 0;
-  for (const section of sections) {
-    if (section.toLowerCase().includes('mapping') || section.toLowerCase().includes('connector')) {
-      const rows = section.split('\n').filter(
-        (l) => l.includes('|') && !l.includes('---') && (l.includes('Enabled') || l.includes('✅')),
-      );
-      connectors = rows.length;
-    }
-    if (section.toLowerCase().includes('skill') || section.toLowerCase().includes('inventory')) {
-      const rows = section.split('\n').filter(
-        (l) => l.includes('|') && !l.includes('---') && !l.toLowerCase().includes('skill'),
-      );
-      skills = rows.length;
-    }
+function extractSection(content: string, heading: string): string {
+  const regex = new RegExp(`^## ${heading}\\s*$`, 'm');
+  const match = content.search(regex);
+  if (match === -1) return '';
+  const rest = content.slice(match);
+  const lines = rest.split('\n');
+  let end = lines.length;
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].match(/^## /)) { end = i; break; }
   }
-  return { connectors, skills };
+  return lines.slice(0, end).join('\n');
 }
 
-function parseFinanceMetrics(finance: string | null): {
-  mrr: string;
-  burn: string;
-  budgetLeft: string;
-  runway: string;
-} {
-  const defaults = {
-    mrr: '$0',
-    burn: '~$5/mo',
-    budgetLeft: 'unknown',
-    runway: '∞',
-  };
-  if (!finance) return defaults;
+function extractMeta(content: string): Record<string, string> {
+  const rows = parseMarkdownTable(extractSection(content, 'Meta'));
+  const meta: Record<string, string> = {};
+  for (const row of rows) {
+    if (row.cells.length >= 2) meta[row.cells[0]] = row.cells[1];
+  }
+  return meta;
+}
 
-  const mrrMatch = finance.match(/MRR[:\s]*\$?([\d,.]+)/i);
-  const burnMatch = finance.match(/(?:burn|spend)[:\s]*~?\$?([\d,.]+)/i);
-  const budgetMatch = finance.match(
-    /(?:budget|remaining|left)[:\s]*~?\$?([\d,.]+)/i,
+function StatusBadge({ value }: { value: string }) {
+  const isGood = value.includes('✅') || value === 'UP' || value === 'OK' || value.includes('HEALTHY') || value.includes('active') || value.includes('green') || value.includes('LIVE');
+  const isWarn = value.includes('⚠️') || value.includes('STALE') || value.includes('Blocked') || value.includes('QUEUE');
+  const isBad = value.includes('❌') || value === 'DOWN' || value.includes('FAIL');
+  const color = isBad ? 'text-red-400' : isWarn ? 'text-amber-400' : isGood ? 'text-green-400' : 'text-foreground/80';
+  return <span className={`font-mono ${color}`}>{value}</span>;
+}
+
+function KpiCard({ title, color, rows, showTrend }: { title: string; color: string; rows: TableRow[]; showTrend?: boolean }) {
+  return (
+    <div className="border border-border rounded-lg p-4">
+      <div className={`text-xs font-semibold ${color} uppercase tracking-wide mb-3`}>{title}</div>
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <div key={i} className="flex justify-between items-center text-xs gap-2">
+            <span className="text-muted shrink-0">{row.cells[0]}</span>
+            <StatusBadge value={row.cells[1] || ''} />
+            {showTrend && row.cells[2] && (
+              <span className="text-muted text-[10px] shrink-0 w-4 text-center">{row.cells[2]}</span>
+            )}
+          </div>
+        ))}
+        {rows.length === 0 && <div className="text-xs text-muted">No data</div>}
+      </div>
+    </div>
   );
-  const runwayMatch = finance.match(/runway[:\s]*([\w∞]+)/i);
-
-  return {
-    mrr: mrrMatch ? `$${mrrMatch[1]}` : defaults.mrr,
-    burn: burnMatch ? `~$${burnMatch[1]}/mo` : defaults.burn,
-    budgetLeft: budgetMatch ? `$${budgetMatch[1]}` : defaults.budgetLeft,
-    runway: runwayMatch ? runwayMatch[1] : defaults.runway,
-  };
 }
 
-function parseProjectStatuses(
-  projects: string | null,
-): { name: string; status: string; color: string }[] {
-  if (!projects) return [];
-  const results: { name: string; status: string; color: string }[] = [];
-  for (const line of projects.split('\n')) {
-    if (!line.includes('|') || line.includes('Project') || line.includes('---'))
-      continue;
-    const cols = line
-      .split('|')
-      .map((c) => c.trim())
-      .filter(Boolean);
-    if (cols.length >= 2) {
-      const name = cols[0];
-      const statusRaw = cols[1];
-      const isActive =
-        statusRaw.includes('✅') || statusRaw.includes('Active');
-      const isHold =
-        statusRaw.includes('⏸') || statusRaw.includes('Hold');
-      const isArchived =
-        statusRaw.includes('❌') || statusRaw.includes('Deprioritized') || statusRaw.includes('Passed');
-      if (isArchived) continue;
-      results.push({
-        name,
-        status: isActive ? 'LIVE' : isHold ? 'QUEUE' : 'QUEUE',
-        color: isActive ? 'bg-green-400' : 'bg-zinc-500',
-      });
-    }
-  }
-  return results;
-}
+function ProjectCard({ row }: { row: TableRow }) {
+  const [name, status, phase, blocker] = row.cells;
+  const statusColor =
+    status === 'LIVE' ? 'bg-green-400' :
+    status === 'BUILD' ? 'bg-blue-400' :
+    status === 'PAPER' ? 'bg-cyan-400' :
+    status === 'DESIGN' ? 'bg-purple-400' :
+    status === 'QUEUE' ? 'bg-zinc-500' :
+    status === 'BLOCKED' ? 'bg-red-400' : 'bg-zinc-600';
 
-function parseHealthStatus(health: string | null): {
-  lastScan: string;
-  isStale: boolean;
-  summary: string;
-} {
-  if (!health)
-    return { lastScan: 'unknown', isStale: true, summary: 'No data' };
-
-  const timeMatch = health.match(
-    /(?:updated|scan|last)[:\s]*([\d-]+\s*[\d:]+\s*\w*)/i,
+  return (
+    <div className="border border-border rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`w-2 h-2 rounded-full ${statusColor}`} />
+        <span className="text-xs font-semibold text-foreground">{name}</span>
+        <span className="text-[10px] font-mono text-muted ml-auto">{status}</span>
+      </div>
+      <div className="text-[11px] text-muted">{phase}</div>
+      {blocker && blocker !== '—' && (
+        <div className="text-[10px] text-amber-400 mt-1">{blocker}</div>
+      )}
+    </div>
   );
-  const lastScan = timeMatch?.[1] || 'unknown';
+}
 
-  let isStale = true;
-  if (lastScan !== 'unknown') {
-    const scanTime = new Date(lastScan).getTime();
-    isStale = Date.now() - scanTime > 25 * 60 * 60 * 1000;
-  }
+function AlertsCard({ rows }: { rows: TableRow[] }) {
+  const hasAlerts = rows.length > 0 && !(rows.length === 1 && rows[0].cells[0] === '—');
+  return (
+    <div className={`border rounded-lg p-4 ${hasAlerts ? 'border-red-500/50 bg-red-500/5' : 'border-border'}`}>
+      <div className="text-xs font-semibold text-red-400 uppercase tracking-wide mb-3">Alerts</div>
+      {!hasAlerts ? (
+        <div className="text-sm text-green-400">No alerts</div>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((row, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs">
+              <span className={`shrink-0 mt-0.5 w-2 h-2 rounded-full ${
+                row.cells[0]?.includes('CRITICAL') ? 'bg-red-400' : row.cells[0]?.includes('WARN') ? 'bg-amber-400' : 'bg-blue-400'
+              }`} />
+              <div>
+                <span className="text-foreground/90">{row.cells[1]}</span>
+                {row.cells[2] && <span className="text-muted ml-2">{row.cells[2]}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const hasIssues =
-    health.includes('⚠️') ||
-    health.includes('FAIL') ||
-    health.includes('STALE');
-  const summary = hasIssues ? 'Issues detected' : 'Clean';
+function ActionsCard({ rows }: { rows: TableRow[] }) {
+  return (
+    <div className="border border-border rounded-lg p-4">
+      <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Actions Taken</div>
+      <div className="space-y-1.5">
+        {rows.map((row, i) => (
+          <div key={i} className="flex items-start gap-2 text-xs">
+            <span className="shrink-0 text-green-400">{row.cells[1]?.includes('✅') ? '✓' : '·'}</span>
+            <span className="text-foreground/80">{row.cells[0]}</span>
+          </div>
+        ))}
+        {rows.length === 0 && <div className="text-xs text-muted">No actions this patrol</div>}
+      </div>
+    </div>
+  );
+}
 
-  return { lastScan, isStale, summary };
+function BlockedCard({ rows }: { rows: TableRow[] }) {
+  return (
+    <div className="border border-border rounded-lg p-4">
+      <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-3">Needs Sponsor</div>
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <div key={i} className="text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400">●</span>
+              <span className="text-foreground/90 font-medium">{row.cells[0]}</span>
+              <span className="text-muted text-[10px] ml-auto">{row.cells[1]}</span>
+            </div>
+            {row.cells[2] && <div className="text-muted ml-4 mt-0.5">{row.cells[2]}</div>}
+          </div>
+        ))}
+        {rows.length === 0 && <div className="text-xs text-green-400">Nothing blocked</div>}
+      </div>
+    </div>
+  );
 }
 
 export default async function DashboardOverview() {
-  const [
-    learnieAgents,
-    companyCheckpoint,
-    finance,
-    bandwidth,
-    health,
-    projects,
-    learnieHealth,
-    tooling,
-    radarLog,
-  ] = await Promise.all([
-    fetchRepoFile('learnie-ai', 'AGENTS.md'),
-    fetchCompanyCheckpoint(),
-    fetchFinanceData(),
-    fetchBandwidth(),
-    fetchHealth(),
-    fetchProjects(),
-    fetchLearnieHealth(),
-    fetchTooling(),
-    fetchRadarStatus(),
-  ]);
+  const content = await fetchPatrolReport();
 
-  const blockers = extractMichaelBlockers(learnieAgents, companyCheckpoint);
-  const todoTasks = parseTodoTasks(learnieAgents);
-  const { agents, lastLoop, loopStale } = parseAgentStatuses(bandwidth);
-  const financeMetrics = parseFinanceMetrics(finance);
-  const projectStatuses = parseProjectStatuses(projects);
-  const healthStatus = parseHealthStatus(health);
-  const radarStatus = parseRadarStatus(radarLog);
-  const toolingStatus = parseToolingStatus(tooling);
+  if (!content) {
+    return (
+      <div className="text-center py-20 text-muted">
+        <div className="text-2xl mb-2">📡</div>
+        <div>No patrol report yet.</div>
+        <div className="text-xs mt-1">Felix will generate one on next heartbeat.</div>
+      </div>
+    );
+  }
 
-  const now = new Date().toISOString().slice(11, 16);
+  const meta = extractMeta(content);
+  const financial = parseMarkdownTable(extractSection(content, 'Financial'));
+  const projects = parseMarkdownTable(extractSection(content, 'Projects'));
+  const infra = parseMarkdownTable(extractSection(content, 'Infrastructure'));
+  const tooling = parseMarkdownTable(extractSection(content, 'Tooling'));
+  const velocity = parseMarkdownTable(extractSection(content, 'Velocity'));
+  const alerts = parseMarkdownTable(extractSection(content, 'Alerts'));
+  const actions = parseMarkdownTable(extractSection(content, 'Actions'));
+  const blocked = parseMarkdownTable(extractSection(content, 'Blocked on Sponsor'));
+
+  const statusColor =
+    meta['Status'] === 'HEALTHY' ? 'text-green-400' :
+    meta['Status']?.includes('WARN') ? 'text-amber-400' :
+    meta['Status']?.includes('CRITICAL') ? 'text-red-400' : 'text-foreground';
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="text-xs text-muted">
-          Data from GitHub · refreshes every 5 min · Last: {now} UTC
+        <div className="flex items-center gap-3">
+          <div className={`w-2.5 h-2.5 rounded-full ${meta['Status'] === 'HEALTHY' ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
+          <div>
+            <div className="text-sm font-medium">Felix Heartbeat — {meta['Timestamp'] || 'unknown'}</div>
+            <div className="text-[10px] text-muted">
+              {meta['Type'] || `Market: ${meta['Market Phase'] || '?'} · Mode: ${meta['Mode'] || '?'}`} · Duration: {meta['Duration'] || '?'}
+            </div>
+          </div>
+        </div>
+        <div className={`text-xs font-mono font-semibold ${statusColor}`}>{meta['Status'] || 'UNKNOWN'}</div>
+      </div>
+
+      <div className="mb-4"><AlertsCard rows={alerts} /></div>
+
+      <div className="mb-4">
+        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Projects</div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {projects.map((row, i) => <ProjectCard key={i} row={row} />)}
         </div>
       </div>
 
-      {/* 3-col grid, 2 rows */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Row 1, Col 1 — Needs Michael */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-red-400 uppercase tracking-wide mb-3">
-            🔴 Needs Michael
-          </div>
-          {blockers.length === 0 ? (
-            <div className="text-sm text-green-400">✅ Nothing pending</div>
-          ) : (
-            <div className="space-y-2">
-              {blockers.slice(0, 5).map((b, i) => (
-                <div key={i} className="text-xs text-foreground/80 leading-relaxed">
-                  {b.slice(0, 80)}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <KpiCard title="💰 Financial" color="text-amber-400" rows={financial} showTrend />
+        <KpiCard title="🖥️ Infrastructure" color="text-emerald-400" rows={infra} />
+      </div>
 
-        {/* Row 1, Col 2 — Building Now */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">
-            🏗 Building Now
-          </div>
-          {todoTasks.length === 0 ? (
-            <div className="text-sm text-green-400">✅ Queue clear</div>
-          ) : (
-            <div className="space-y-2">
-              {todoTasks.map((t, i) => (
-                <div key={i} className="text-xs text-foreground/80 leading-relaxed truncate">
-                  {t}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <KpiCard title="🔧 Tooling" color="text-purple-400" rows={tooling} />
+        <KpiCard title="🚀 Velocity" color="text-blue-400" rows={velocity} />
+      </div>
 
-        {/* Row 1, Col 3 — Production Health */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-3">
-            🌐 Production
-          </div>
-
-          {/* Projects */}
-          <div className="space-y-1.5 mb-3">
-            <div className="flex items-center gap-2 text-xs">
-              <span
-                className={`w-2 h-2 rounded-full ${learnieHealth.ok ? 'bg-green-400' : 'bg-red-400'}`}
-              />
-              <span>Learnie AI</span>
-              <span className="text-muted ml-auto">
-                {learnieHealth.ok ? 'LIVE' : 'DOWN'}
-              </span>
-            </div>
-            {projectStatuses.map((p) => (
-              <div key={p.name} className="flex items-center gap-2 text-xs">
-                <span className={`w-2 h-2 rounded-full ${p.color}`} />
-                <span>{p.name}</span>
-                <span className="text-muted ml-auto">{p.status}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Infra */}
-          <div className="border-t border-border pt-2 space-y-1">
-            <div className="flex items-center gap-2 text-xs">
-              <span
-                className={`w-2 h-2 rounded-full ${healthStatus.isStale ? 'bg-amber-400' : 'bg-green-400'}`}
-              />
-              <span>Pi5 Infra</span>
-              <span className="text-muted ml-auto">
-                {healthStatus.isStale ? '⚠️ STALE' : healthStatus.summary}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2, Col 1 — Money */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-3">
-            💰 Money
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted">MRR</span>
-              <span className="font-mono">{financeMetrics.mrr}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Burn</span>
-              <span className="font-mono">{financeMetrics.burn}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Budget left</span>
-              <span className="font-mono">{financeMetrics.budgetLeft}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Runway</span>
-              <span className="font-mono">{financeMetrics.runway}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2, Col 2 — RADAR Trading */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-3">
-            📈 RADAR Trading
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted">Phase</span>
-              <span className="font-mono">Paper</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Capital</span>
-              <span className="font-mono">$100K</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Trades</span>
-              <span className="font-mono">{radarStatus.tradeCount}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Strategies</span>
-              <span className="font-mono">3 scored</span>
-            </div>
-            <div className="text-[10px] text-muted mt-2">
-              PEAD + Momentum + BTD · $0/mo data
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2, Col 3 — Agents & Tooling */}
-        <div className="border border-border rounded-lg p-4">
-          <div className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-3">
-            🤖 Agents & Tooling
-          </div>
-          {/* Agents */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span>felix</span>
-            </div>
-            {agents.map((a) => (
-              <div key={a.name} className="flex items-center gap-1.5 text-xs">
-                <span className={`w-2 h-2 rounded-full ${a.color}`} />
-                <span>{a.name}</span>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-border pt-2 space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted">Connectors</span>
-              <span className="font-mono">{toolingStatus.connectors}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Skills</span>
-              <span className="font-mono">{toolingStatus.skills}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Mode</span>
-              <span className="font-mono">M2 Felix</span>
-            </div>
-          </div>
-          <div className="text-[10px] text-muted mt-2">
-            Last loop: {lastLoop.slice(11, 16) || lastLoop}
-            {loopStale && <span className="text-amber-400 ml-1">⚠️ STALE</span>}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ActionsCard rows={actions} />
+        <BlockedCard rows={blocked} />
       </div>
     </div>
   );

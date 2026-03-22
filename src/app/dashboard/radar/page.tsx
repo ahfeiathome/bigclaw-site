@@ -49,6 +49,113 @@ function parseDashboardMeta(content: string): Record<string, string> {
   return meta;
 }
 
+function EquityChart({ content }: { content: string }) {
+  const section = extractSection(content, 'Equity History');
+  const rows = parseMarkdownTable(section);
+
+  if (rows.length < 2) {
+    return (
+      <div className="border border-border rounded-lg p-4 mb-4">
+        <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-3">
+          Equity Curve
+        </div>
+        <div className="h-40 flex items-center justify-center text-xs text-muted">
+          Chart will appear after 2+ days of trading data
+        </div>
+      </div>
+    );
+  }
+
+  const dataPoints = rows.map((row) => {
+    const equity = parseFloat(row.cells[1]?.replace(/[$,]/g, '') || '0');
+    const pnl = parseFloat(row.cells[2]?.replace(/[$,]/g, '') || '0');
+    return { date: row.cells[0] || '', equity, pnl };
+  });
+
+  const equities = dataPoints.map((d) => d.equity);
+  const minE = Math.min(...equities) * 0.999;
+  const maxE = Math.max(...equities) * 1.001;
+  const range = maxE - minE || 1;
+  const chartW = 600;
+  const chartH = 140;
+
+  // Build SVG path for equity line
+  const points = dataPoints.map((d, i) => {
+    const x = (i / (dataPoints.length - 1)) * chartW;
+    const y = chartH - ((d.equity - minE) / range) * chartH;
+    return `${x},${y}`;
+  });
+  const linePath = `M ${points.join(' L ')}`;
+  const areaPath = `${linePath} L ${chartW},${chartH} L 0,${chartH} Z`;
+
+  // P&L bars
+  const maxAbsPnl = Math.max(...dataPoints.map((d) => Math.abs(d.pnl)), 1);
+  const barW = Math.max(chartW / dataPoints.length - 2, 4);
+
+  return (
+    <div className="border border-border rounded-lg p-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wide">
+          Equity Curve
+        </div>
+        <div className="text-[10px] text-muted font-mono">
+          ${minE.toLocaleString()} — ${maxE.toLocaleString()}
+        </div>
+      </div>
+
+      {/* Equity line chart */}
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-36" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgb(34,211,238)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="rgb(34,211,238)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((pct) => (
+          <line key={pct} x1="0" y1={chartH * pct} x2={chartW} y2={chartH * pct}
+            stroke="rgb(63,63,70)" strokeWidth="0.5" strokeDasharray="4" />
+        ))}
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#eqGrad)" />
+        {/* Line */}
+        <path d={linePath} fill="none" stroke="rgb(34,211,238)" strokeWidth="2" />
+        {/* Data points */}
+        {dataPoints.map((d, i) => {
+          const x = (i / (dataPoints.length - 1)) * chartW;
+          const y = chartH - ((d.equity - minE) / range) * chartH;
+          return <circle key={i} cx={x} cy={y} r="3" fill="rgb(34,211,238)" />;
+        })}
+      </svg>
+
+      {/* P&L bar chart */}
+      <div className="mt-4">
+        <div className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+          Daily P/L
+        </div>
+        <svg viewBox={`0 0 ${chartW} 60`} className="w-full h-14" preserveAspectRatio="none">
+          {/* Zero line */}
+          <line x1="0" y1="30" x2={chartW} y2="30" stroke="rgb(63,63,70)" strokeWidth="0.5" />
+          {dataPoints.map((d, i) => {
+            const x = (i / dataPoints.length) * chartW + barW / 2;
+            const barH = (Math.abs(d.pnl) / maxAbsPnl) * 28;
+            const y = d.pnl >= 0 ? 30 - barH : 30;
+            const color = d.pnl >= 0 ? 'rgb(74,222,128)' : 'rgb(248,113,113)';
+            return (
+              <rect key={i} x={x} y={y} width={barW} height={barH || 1}
+                fill={color} rx="1" opacity="0.8" />
+            );
+          })}
+        </svg>
+        <div className="flex justify-between text-[9px] text-muted font-mono mt-1">
+          {dataPoints.length > 0 && <span>{dataPoints[0].date}</span>}
+          {dataPoints.length > 1 && <span>{dataPoints[dataPoints.length - 1].date}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PortfolioSummary({ meta }: { meta: Record<string, string> }) {
   const pnlValue = meta['Daily P/L'] || '$0.00';
   const isPositive = !pnlValue.includes('-') && pnlValue !== '$0.00';
@@ -360,6 +467,9 @@ export default async function RadarPage() {
 
       {/* Portfolio Summary — full width hero */}
       <PortfolioSummary meta={meta} />
+
+      {/* Charts */}
+      <EquityChart content={dashboard} />
 
       {/* Positions Table */}
       <PositionsTable content={dashboard} />
