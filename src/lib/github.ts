@@ -98,6 +98,14 @@ export async function fetchPatrolReport(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'PATROL_REPORT.md');
 }
 
+export async function fetchRadarConstitution(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/projects/radar/RADAR_CONSTITUTION.md');
+}
+
+export async function fetchRadarDashboard(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/projects/radar/RADAR_DASHBOARD.md');
+}
+
 export async function fetchAgentsMd(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'AGENTS.md');
 }
