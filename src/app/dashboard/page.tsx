@@ -1,4 +1,4 @@
-import { fetchPatrolReport } from '@/lib/github';
+import { fetchPatrolReport, fetchProjects } from '@/lib/github';
 
 interface TableRow {
   cells: string[];
@@ -60,6 +60,105 @@ function KpiCard({ title, color, rows, showTrend }: { title: string; color: stri
         ))}
         {rows.length === 0 && <div className="text-xs text-muted">No data</div>}
       </div>
+    </div>
+  );
+}
+
+const PDLC_STAGES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+const PDLC_LABELS: Record<string, string> = {
+  S1: 'DISCOVER', S2: 'DEFINE', S3: 'DECIDE', S4: 'BUILD',
+  S5: 'HARDEN', S6: 'PILOT', S7: 'LAUNCH', S8: 'GROW',
+};
+
+function parsePdlcStage(raw: string): { current: string; label: string } {
+  const match = raw.match(/S(\d)/);
+  if (!match) return { current: 'S1', label: raw };
+  const stage = `S${match[1]}`;
+  return { current: stage, label: PDLC_LABELS[stage] || raw };
+}
+
+interface PdlcProject {
+  codename: string;
+  publicName: string;
+  pdlcStage: string;
+  status: string;
+  revenue: string;
+  notes: string;
+}
+
+function parsePdlcProjects(content: string): PdlcProject[] {
+  const projects: PdlcProject[] = [];
+  const sections = ['Active', 'FOUNDRY — App Factory', 'Pipeline'];
+  for (const section of sections) {
+    const regex = new RegExp(`## ${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n`, 'm');
+    const match = content.search(regex);
+    if (match === -1) continue;
+    const rest = content.slice(match);
+    const lines = rest.split('\n');
+    for (const line of lines) {
+      if (!line.startsWith('|') || line.includes('Codename') || line.match(/^\|[\s-|]+\|$/)) continue;
+      if (line.startsWith('| —') || line.startsWith('|---')) continue;
+      const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cols.length < 6) continue;
+      const codename = cols[0].replace(/\*\*/g, '');
+      const pdlcRaw = cols[3] || '';
+      if (pdlcRaw.includes('ARCHIVED') || pdlcRaw === '—') continue;
+      projects.push({
+        codename,
+        publicName: cols[1],
+        pdlcStage: pdlcRaw,
+        status: cols[4],
+        revenue: cols[6] || '',
+        notes: cols[7] || '',
+      });
+    }
+  }
+  return projects;
+}
+
+function PdlcCard({ project }: { project: PdlcProject }) {
+  const { current } = parsePdlcStage(project.pdlcStage);
+  const currentIdx = PDLC_STAGES.indexOf(current);
+
+  const stageColors = (stage: string, idx: number) => {
+    if (idx < currentIdx) return 'bg-green-500'; // completed
+    if (idx === currentIdx) return 'bg-blue-400 ring-2 ring-blue-400/40'; // current
+    return 'bg-zinc-700'; // future
+  };
+
+  const statusDot =
+    project.status.includes('PRIORITY') || project.status.includes('Active') || project.status.includes('active')
+      ? 'bg-blue-400'
+      : project.status.includes('live') || project.status.includes('LIVE') || project.status.includes('Live')
+      ? 'bg-green-400'
+      : project.status.includes('Paper') || project.status.includes('paper')
+      ? 'bg-cyan-400'
+      : project.status.includes('queued') || project.status.includes('Queued')
+      ? 'bg-zinc-500'
+      : 'bg-zinc-500';
+
+  return (
+    <div className="border border-border rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`w-2 h-2 rounded-full ${statusDot}`} />
+        <span className="text-xs font-semibold text-foreground">{project.codename}</span>
+        <span className="text-[10px] text-muted ml-auto">{project.publicName}</span>
+      </div>
+      {/* PDLC Pipeline Track */}
+      <div className="flex gap-0.5 mb-2">
+        {PDLC_STAGES.map((stage, idx) => (
+          <div key={stage} className="flex-1 flex flex-col items-center">
+            <div className={`w-full h-1.5 rounded-full ${stageColors(stage, idx)}`} />
+            <span className={`text-[7px] mt-0.5 ${idx === currentIdx ? 'text-blue-400 font-bold' : idx < currentIdx ? 'text-green-500/70' : 'text-muted/50'}`}>
+              {stage}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="text-[10px] text-muted truncate">{PDLC_LABELS[current] || current} — {project.status.replace(/\*\*/g, '').slice(0, 50)}</div>
+      {project.revenue && project.revenue !== '—' && project.revenue !== 'Internal' && (
+        <div className="text-[9px] text-green-400/70 mt-0.5">{project.revenue}</div>
+      )}
     </div>
   );
 }
@@ -154,7 +253,11 @@ function BlockedCard({ rows }: { rows: TableRow[] }) {
 }
 
 export default async function DashboardOverview() {
-  const content = await fetchPatrolReport();
+  const [content, projectsMd] = await Promise.all([
+    fetchPatrolReport(),
+    fetchProjects(),
+  ]);
+  const pdlcProjects = projectsMd ? parsePdlcProjects(projectsMd) : [];
 
   if (!content) {
     return (
@@ -199,10 +302,16 @@ export default async function DashboardOverview() {
       <div className="mb-4"><AlertsCard rows={alerts} /></div>
 
       <div className="mb-4">
-        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Projects</div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {projects.map((row, i) => <ProjectCard key={i} row={row} />)}
-        </div>
+        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Projects — PDLC Pipeline</div>
+        {pdlcProjects.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pdlcProjects.map((p) => <PdlcCard key={p.codename} project={p} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {projects.map((row, i) => <ProjectCard key={i} row={row} />)}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
