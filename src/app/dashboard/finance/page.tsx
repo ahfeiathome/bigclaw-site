@@ -291,23 +291,44 @@ export default async function FinancePage() {
         </SectionCard>
       )}
 
-      {/* Remaining structured data as SectionCards with HealthRows */}
+      {/* Remaining structured data as proper tables */}
       {allSections.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allSections.map((sec, i) => (
-            <SectionCard key={i} title={sec.title} accent="slate">
-              <div className="space-y-2.5">
-                {sec.rows.map((row, j) => (
-                  <HealthRow
-                    key={j}
-                    label={row.cells[0]}
-                    value={row.cells.slice(1).join(' | ')}
-                    status="good"
-                  />
-                ))}
-              </div>
-            </SectionCard>
-          ))}
+          {allSections.map((sec, i) => {
+            // Get header row from the original section
+            const sectionText = extractSection(finance, sec.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const headerLine = sectionText.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| —/));
+            const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
+
+            return (
+              <SectionCard key={i} title={sec.title} accent="slate">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    {headers.length > 1 && (
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          {headers.map((h, hi) => (
+                            <th key={hi} className="text-left text-xs text-slate-400 font-medium pb-2 pr-3">{h.replace(/\*\*/g, '')}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                    )}
+                    <tbody>
+                      {sec.rows.map((row, j) => (
+                        <tr key={j} className="border-b border-slate-50 last:border-0">
+                          {row.cells.map((cell, ci) => (
+                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-slate-700' : 'text-slate-500'}`}>
+                              {cell.replace(/\*\*/g, '').replace(/~~([^~]+)~~/g, '$1')}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </SectionCard>
+            );
+          })}
         </div>
       )}
     </div>

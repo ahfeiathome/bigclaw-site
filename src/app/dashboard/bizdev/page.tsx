@@ -191,25 +191,48 @@ export default async function GrowthPage() {
         </div>
       )}
 
-      {/* Pipeline Projects */}
-      {pipelineProjects.length > 0 && (
-        <SectionCard title="Pipeline by Stage" accent="blue" className="mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pipelineProjects.map((proj, i) => (
-              <div key={i} className="border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${proj.stageColor}`} />
-                  <span className="text-sm font-semibold text-slate-800">{proj.name}</span>
-                  <SignalPill label={proj.stage} tone="neutral" />
-                </div>
-                <div className="text-xs text-slate-400 truncate">
-                  {proj.status.replace(/\*\*/g, '').slice(0, 80) || 'No status'}
-                </div>
-              </div>
-            ))}
+      {/* Pipeline Projects — grouped by phase */}
+      {pipelineProjects.length > 0 && (() => {
+        const live = pipelineProjects.filter(p => p.stage.includes('S7') || p.stage.includes('S8'));
+        const building = pipelineProjects.filter(p => p.stage.includes('S4') || p.stage.includes('S5') || p.stage.includes('S6'));
+        const early = pipelineProjects.filter(p => p.stage.includes('S1') || p.stage.includes('S2') || p.stage.includes('S3'));
+
+        const cleanStage = (s: string) => {
+          const m = s.match(/S(\d)/);
+          if (!m) return s;
+          const labels: Record<string, string> = { '1': 'Discover', '2': 'Define', '3': 'Design', '4': 'Build', '5': 'Harden', '6': 'Pilot', '7': 'Launch', '8': 'Grow' };
+          return `S${m[1]} ${labels[m[1]] || ''}`;
+        };
+
+        const ProjectRow = ({ proj }: { proj: PipelineProject }) => (
+          <div className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${proj.stageColor}`} />
+            <span className="text-sm font-medium text-slate-700 w-24 shrink-0">{proj.name}</span>
+            <SignalPill label={cleanStage(proj.stage)} tone={proj.stageColor.includes('green') ? 'success' : proj.stageColor.includes('blue') ? 'info' : 'neutral'} />
+            <span className="text-xs text-slate-400 truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
           </div>
-        </SectionCard>
-      )}
+        );
+
+        const PhaseSection = ({ title, items, color }: { title: string; items: PipelineProject[]; color: string }) => (
+          items.length > 0 ? (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`text-xs font-semibold ${color} uppercase tracking-wide`}>{title}</span>
+                <span className="text-xs text-slate-400">{items.length}</span>
+              </div>
+              <div>{items.map((p, i) => <ProjectRow key={i} proj={p} />)}</div>
+            </div>
+          ) : null
+        );
+
+        return (
+          <SectionCard title="Project Pipeline" accent="blue" className="mb-6">
+            <PhaseSection title="Live" items={live} color="text-green-600" />
+            <PhaseSection title="Building" items={building} color="text-blue-600" />
+            <PhaseSection title="Early Stage" items={early} color="text-purple-600" />
+          </SectionCard>
+        );
+      })()}
 
       {/* Agent Activity as compact cards with SignalPills */}
       {agents.length > 0 && (
@@ -231,22 +254,41 @@ export default async function GrowthPage() {
         </SectionCard>
       )}
 
-      {/* COO Inbox as HealthRows */}
+      {/* COO Inbox — recent items only */}
       {inbox && (
-        <SectionCard title="COO Inbox" accent="cyan" className="mb-6">
+        <SectionCard title="COO Inbox (Recent)" accent="cyan" className="mb-6">
           {(() => {
             const rows = parseMarkdownTable(inbox);
             if (rows.length > 0) {
+              // Get headers
+              const headerLine = inbox.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| —/));
+              const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
+              const displayRows = rows.slice(0, 10); // Cap at 10 rows
               return (
-                <div className="space-y-2.5">
-                  {rows.map((row, i) => (
-                    <HealthRow
-                      key={i}
-                      label={row.cells[0]}
-                      value={row.cells.slice(1).join(' | ')}
-                      status="good"
-                    />
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    {headers.length > 1 && (
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          {headers.map((h, hi) => (
+                            <th key={hi} className="text-left text-xs text-slate-400 font-medium pb-2 pr-3">{h.replace(/\*\*/g, '')}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                    )}
+                    <tbody>
+                      {displayRows.map((row, i) => (
+                        <tr key={i} className="border-b border-slate-50 last:border-0">
+                          {row.cells.map((cell, ci) => (
+                            <td key={ci} className={`py-1.5 pr-3 text-sm ${ci === 0 ? 'font-medium text-slate-700' : 'text-slate-500'}`}>
+                              {cell.replace(/\*\*/g, '').slice(0, 60)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {rows.length > 10 && <div className="text-xs text-slate-400 mt-2">+{rows.length - 10} more items</div>}
                 </div>
               );
             }
@@ -254,7 +296,7 @@ export default async function GrowthPage() {
             if (bullets.length > 0) {
               return (
                 <div className="space-y-2">
-                  {bullets.map((item, i) => (
+                  {bullets.slice(0, 10).map((item, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm">
                       <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-cyan-400" />
                       <span className="text-slate-600">{item}</span>
