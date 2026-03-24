@@ -159,10 +159,10 @@ function PdlcCard({ project }: { project: PdlcProject }) {
       {/* PDLC Pipeline Track */}
       <div className="flex gap-0.5 mb-2">
         {PDLC_STAGES.map((stage, idx) => (
-          <div key={stage} className="flex-1 flex flex-col items-center">
+          <div key={stage} className="flex-1 flex flex-col items-center" title={`${stage}: ${PDLC_LABELS[stage]}`}>
             <div className={`w-full h-1.5 rounded-full ${stageColors(stage, idx)}`} />
-            <span className={`text-[7px] mt-0.5 ${idx === currentIdx ? 'text-blue-400 font-bold' : idx < currentIdx ? 'text-green-500/70' : 'text-muted/50'}`}>
-              {stage}
+            <span className={`text-[6px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-blue-400 font-bold' : idx < currentIdx ? 'text-green-500/70' : 'text-muted/40'}`}>
+              {PDLC_LABELS[stage]?.slice(0, 5) || stage}
             </span>
           </div>
         ))}
@@ -410,6 +410,26 @@ export default async function DashboardOverview() {
             <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-green-500 inline-block" /> Completed</span>
             <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-blue-400 ring-1 ring-blue-400/40 inline-block" /> Current</span>
             <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-zinc-700 inline-block" /> Upcoming</span>
+          </div>
+        </div>
+        {/* PDLC Phase Reference */}
+        <div className="border border-border/50 rounded-lg p-3 mb-3 bg-zinc-900/30">
+          <div className="flex items-center gap-1 mb-2">
+            <span className="text-[10px] text-muted font-medium">PDLC Lifecycle:</span>
+            <div className="flex gap-0.5 flex-1 max-w-md">
+              {PDLC_STAGES.map((s, i) => (
+                <div key={s} className="flex-1 text-center">
+                  <div className={`h-1 rounded-full ${i < 3 ? 'bg-purple-500/40' : i < 5 ? 'bg-blue-500/40' : i < 6 ? 'bg-cyan-500/40' : 'bg-green-500/40'}`} />
+                  <span className="text-[7px] text-muted/60">{PDLC_LABELS[s]?.slice(0, 5)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-muted/70">
+            <span>S1-S3: Research &amp; Design</span>
+            <span>S4-S5: Build &amp; Harden</span>
+            <span>S6: Pilot (TestFlight)</span>
+            <span>S7-S8: Launch &amp; Grow</span>
           </div>
         </div>
         {pdlcProjects.length > 0 && (() => {
