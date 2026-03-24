@@ -40,25 +40,25 @@ function StatusBadge({ value }: { value: string }) {
   const isGood = value.includes('✅') || value === 'UP' || value === 'OK' || value.includes('HEALTHY') || value.includes('active') || value.includes('green') || value.includes('LIVE');
   const isWarn = value.includes('⚠️') || value.includes('STALE') || value.includes('Blocked') || value.includes('QUEUE');
   const isBad = value.includes('❌') || value === 'DOWN' || value.includes('FAIL');
-  const color = isBad ? 'text-red-400' : isWarn ? 'text-amber-400' : isGood ? 'text-green-400' : 'text-foreground/80';
+  const color = isBad ? 'text-red-600' : isWarn ? 'text-amber-600' : isGood ? 'text-green-600' : 'text-foreground/80';
   return <span className={`font-mono ${color}`}>{value}</span>;
 }
 
 function KpiCard({ title, color, rows, showTrend }: { title: string; color: string; rows: TableRow[]; showTrend?: boolean }) {
   return (
-    <div className="border border-border rounded-lg p-4">
-      <div className={`text-xs font-semibold ${color} uppercase tracking-wide mb-3`}>{title}</div>
-      <div className="space-y-2">
+    <div className="border border-border rounded-lg p-5">
+      <div className={`text-sm font-semibold ${color} uppercase tracking-wide mb-3`}>{title}</div>
+      <div className="space-y-2.5">
         {rows.map((row, i) => (
-          <div key={i} className="flex justify-between items-center text-xs gap-2">
+          <div key={i} className="flex justify-between items-center text-sm gap-2">
             <span className="text-muted shrink-0">{row.cells[0]}</span>
             <StatusBadge value={row.cells[1] || ''} />
             {showTrend && row.cells[2] && (
-              <span className="text-muted text-[10px] shrink-0 w-4 text-center">{row.cells[2]}</span>
+              <span className="text-muted text-xs shrink-0 w-4 text-center">{row.cells[2]}</span>
             )}
           </div>
         ))}
-        {rows.length === 0 && <div className="text-xs text-muted">No data</div>}
+        {rows.length === 0 && <div className="text-sm text-muted">No data</div>}
       </div>
     </div>
   );
@@ -134,8 +134,8 @@ function PdlcCard({ project }: { project: PdlcProject }) {
 
   const stageColors = (stage: string, idx: number) => {
     if (idx < currentIdx) return 'bg-green-500'; // completed
-    if (idx === currentIdx) return 'bg-blue-400 ring-2 ring-blue-400/40'; // current
-    return 'bg-zinc-700'; // future
+    if (idx === currentIdx) return 'bg-blue-500 ring-2 ring-blue-500/30'; // current
+    return 'bg-slate-200'; // future
   };
 
   const statusDot =
@@ -150,26 +150,26 @@ function PdlcCard({ project }: { project: PdlcProject }) {
       : 'bg-zinc-500';
 
   return (
-    <div className="border border-border rounded-lg p-3">
+    <div className="border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 mb-2">
-        <span className={`w-2 h-2 rounded-full ${statusDot}`} />
-        <span className="text-xs font-semibold text-foreground">{project.codename}</span>
-        <span className="text-[10px] text-muted ml-auto">{project.publicName}</span>
+        <span className={`w-2.5 h-2.5 rounded-full ${statusDot}`} />
+        <span className="text-sm font-semibold text-foreground">{project.codename}</span>
+        <span className="text-xs text-muted ml-auto">{project.publicName}</span>
       </div>
       {/* PDLC Pipeline Track */}
       <div className="flex gap-0.5 mb-2">
         {PDLC_STAGES.map((stage, idx) => (
           <div key={stage} className="flex-1 flex flex-col items-center" title={`${stage}: ${PDLC_LABELS[stage]}`}>
-            <div className={`w-full h-1.5 rounded-full ${stageColors(stage, idx)}`} />
-            <span className={`text-[6px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-blue-400 font-bold' : idx < currentIdx ? 'text-green-500/70' : 'text-muted/40'}`}>
+            <div className={`w-full h-2 rounded-full ${stageColors(stage, idx)}`} />
+            <span className={`text-[9px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-blue-600 font-bold' : idx < currentIdx ? 'text-green-600/70' : 'text-muted/50'}`}>
               {PDLC_LABELS[stage]?.slice(0, 5) || stage}
             </span>
           </div>
         ))}
       </div>
-      <div className="text-[10px] text-muted truncate">{PDLC_LABELS[current] || current} — {project.status.replace(/\*\*/g, '').slice(0, 50)}</div>
+      <div className="text-xs text-muted truncate">{PDLC_LABELS[current] || current} — {project.status.replace(/\*\*/g, '').slice(0, 60)}</div>
       {project.revenue && project.revenue !== '—' && project.revenue !== 'Internal' && (
-        <div className="text-[9px] text-green-400/70 mt-0.5">{project.revenue}</div>
+        <div className="text-xs text-green-600 mt-0.5">{project.revenue}</div>
       )}
     </div>
   );
@@ -204,13 +204,13 @@ function AlertsCard({ rows }: { rows: TableRow[] }) {
   const hasAlerts = rows.length > 0 && !(rows.length === 1 && rows[0].cells[0] === '—');
   return (
     <div className={`border rounded-lg p-4 ${hasAlerts ? 'border-red-500/50 bg-red-500/5' : 'border-border'}`}>
-      <div className="text-xs font-semibold text-red-400 uppercase tracking-wide mb-3">Alerts</div>
+      <div className="text-sm font-semibold text-red-500 uppercase tracking-wide mb-3">Alerts</div>
       {!hasAlerts ? (
-        <div className="text-sm text-green-400">No alerts</div>
+        <div className="text-sm text-green-600">No alerts</div>
       ) : (
         <div className="space-y-2">
           {rows.map((row, i) => (
-            <div key={i} className="flex items-start gap-2 text-xs">
+            <div key={i} className="flex items-start gap-2 text-sm">
               <span className={`shrink-0 mt-0.5 w-2 h-2 rounded-full ${
                 row.cells[0]?.includes('CRITICAL') ? 'bg-red-400' : row.cells[0]?.includes('WARN') ? 'bg-amber-400' : 'bg-blue-400'
               }`} />
@@ -229,15 +229,15 @@ function AlertsCard({ rows }: { rows: TableRow[] }) {
 function ActionsCard({ rows }: { rows: TableRow[] }) {
   return (
     <div className="border border-border rounded-lg p-4">
-      <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Actions Taken</div>
-      <div className="space-y-1.5">
+      <div className="text-sm font-semibold text-accent uppercase tracking-wide mb-3">Actions Taken</div>
+      <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs">
-            <span className="shrink-0 text-green-400">{row.cells[1]?.includes('✅') ? '✓' : '·'}</span>
+          <div key={i} className="flex items-start gap-2 text-sm">
+            <span className="shrink-0 text-green-600">{row.cells[1]?.includes('✅') ? '✓' : '·'}</span>
             <span className="text-foreground/80">{row.cells[0]}</span>
           </div>
         ))}
-        {rows.length === 0 && <div className="text-xs text-muted">No actions this patrol</div>}
+        {rows.length === 0 && <div className="text-sm text-muted">No actions this patrol</div>}
       </div>
     </div>
   );
@@ -246,19 +246,19 @@ function ActionsCard({ rows }: { rows: TableRow[] }) {
 function BlockedCard({ rows }: { rows: TableRow[] }) {
   return (
     <div className="border border-border rounded-lg p-4">
-      <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-3">Needs Sponsor</div>
+      <div className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">Needs Sponsor</div>
       <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="text-xs">
+          <div key={i} className="text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-amber-400">●</span>
+              <span className="text-amber-500">●</span>
               <span className="text-foreground/90 font-medium">{row.cells[0]}</span>
-              <span className="text-muted text-[10px] ml-auto">{row.cells[1]}</span>
+              <span className="text-muted text-xs ml-auto">{row.cells[1]}</span>
             </div>
             {row.cells[2] && <div className="text-muted ml-4 mt-0.5">{row.cells[2]}</div>}
           </div>
         ))}
-        {rows.length === 0 && <div className="text-xs text-green-400">Nothing blocked</div>}
+        {rows.length === 0 && <div className="text-sm text-green-600">Nothing blocked</div>}
       </div>
     </div>
   );
@@ -338,13 +338,13 @@ function buildExecSummary(
 
 function ExecSummaryCard({ lines, title, accentColor }: { lines: string[]; title: string; accentColor: string }) {
   return (
-    <div className="border border-border rounded-lg p-5 mb-6 bg-zinc-900/50">
-      <div className={`text-xs font-semibold ${accentColor} uppercase tracking-wide mb-3`}>{title}</div>
-      <div className="space-y-1.5">
+    <div className="border border-border rounded-lg p-5 mb-6 bg-slate-50">
+      <div className={`text-sm font-semibold ${accentColor} uppercase tracking-wide mb-3`}>{title}</div>
+      <div className="space-y-2">
         {lines.map((line, i) => (
-          <p key={i} className="text-xs text-foreground/80 leading-relaxed">{line}</p>
+          <p key={i} className="text-sm text-foreground/80 leading-relaxed">{line}</p>
         ))}
-        {lines.length === 0 && <p className="text-xs text-muted">No summary data available.</p>}
+        {lines.length === 0 && <p className="text-sm text-muted">No summary data available.</p>}
       </div>
     </div>
   );
@@ -380,9 +380,9 @@ export default async function DashboardOverview() {
   const execLines = buildExecSummary(meta, alerts, velocity, projects, blocked, actions, pdlcProjects, financial, infra);
 
   const statusColor =
-    meta['Status'] === 'HEALTHY' ? 'text-green-400' :
-    meta['Status']?.includes('WARN') ? 'text-amber-400' :
-    meta['Status']?.includes('CRITICAL') ? 'text-red-400' : 'text-foreground';
+    meta['Status'] === 'HEALTHY' ? 'text-green-600' :
+    meta['Status']?.includes('WARN') ? 'text-amber-600' :
+    meta['Status']?.includes('CRITICAL') ? 'text-red-600' : 'text-foreground';
 
   return (
     <div>
@@ -390,13 +390,13 @@ export default async function DashboardOverview() {
         <div className="flex items-center gap-3">
           <div className={`w-2.5 h-2.5 rounded-full ${meta['Status'] === 'HEALTHY' ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
           <div>
-            <div className="text-sm font-medium">Felix Heartbeat — {meta['Timestamp'] || 'unknown'}</div>
-            <div className="text-[10px] text-muted">
+            <div className="text-base font-medium">Felix Heartbeat — {meta['Timestamp'] || 'unknown'}</div>
+            <div className="text-xs text-muted">
               {meta['Type'] || `Market: ${meta['Market Phase'] || '?'} · Mode: ${meta['Mode'] || '?'}`} · Duration: {meta['Duration'] || '?'}
             </div>
           </div>
         </div>
-        <div className={`text-xs font-mono font-semibold ${statusColor}`}>{meta['Status'] || 'UNKNOWN'}</div>
+        <div className={`text-sm font-mono font-semibold ${statusColor}`}>{meta['Status'] || 'UNKNOWN'}</div>
       </div>
 
       <ExecSummaryCard lines={execLines} title="Executive Summary" accentColor="text-accent" />
@@ -405,27 +405,27 @@ export default async function DashboardOverview() {
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="text-xs font-semibold text-accent uppercase tracking-wide">Projects — PDLC Pipeline</div>
-          <div className="flex items-center gap-4 text-[10px] text-muted">
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-green-500 inline-block" /> Completed</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-blue-400 ring-1 ring-blue-400/40 inline-block" /> Current</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-zinc-700 inline-block" /> Upcoming</span>
+          <div className="text-sm font-semibold text-accent uppercase tracking-wide">Projects — PDLC Pipeline</div>
+          <div className="flex items-center gap-4 text-xs text-muted">
+            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-green-500 inline-block" /> Completed</span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-blue-500 ring-1 ring-blue-500/30 inline-block" /> Current</span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-slate-200 inline-block" /> Upcoming</span>
           </div>
         </div>
         {/* PDLC Phase Reference */}
-        <div className="border border-border/50 rounded-lg p-3 mb-3 bg-zinc-900/30">
-          <div className="flex items-center gap-1 mb-2">
-            <span className="text-[10px] text-muted font-medium">PDLC Lifecycle:</span>
-            <div className="flex gap-0.5 flex-1 max-w-md">
+        <div className="border border-border/50 rounded-lg p-4 mb-3 bg-slate-50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-muted font-medium">PDLC Lifecycle:</span>
+            <div className="flex gap-1 flex-1 max-w-lg">
               {PDLC_STAGES.map((s, i) => (
                 <div key={s} className="flex-1 text-center">
-                  <div className={`h-1 rounded-full ${i < 3 ? 'bg-purple-500/40' : i < 5 ? 'bg-blue-500/40' : i < 6 ? 'bg-cyan-500/40' : 'bg-green-500/40'}`} />
-                  <span className="text-[7px] text-muted/60">{PDLC_LABELS[s]?.slice(0, 5)}</span>
+                  <div className={`h-1.5 rounded-full ${i < 3 ? 'bg-purple-400/50' : i < 5 ? 'bg-blue-400/50' : i < 6 ? 'bg-cyan-400/50' : 'bg-green-400/50'}`} />
+                  <span className="text-[10px] text-muted/70">{PDLC_LABELS[s]?.slice(0, 5)}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-muted/70">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted/80">
             <span>S1-S3: Research &amp; Design</span>
             <span>S4-S5: Build &amp; Harden</span>
             <span>S6: Pilot (TestFlight)</span>
@@ -456,9 +456,9 @@ export default async function DashboardOverview() {
             items.length > 0 ? (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[11px] font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                  <span className="text-[9px] text-muted">— {desc}</span>
-                  <span className="text-[9px] text-muted ml-auto">{items.length} project{items.length > 1 ? 's' : ''}</span>
+                  <span className={`text-sm font-semibold ${color} uppercase tracking-wide`}>{title}</span>
+                  <span className="text-xs text-muted">— {desc}</span>
+                  <span className="text-xs text-muted ml-auto">{items.length} project{items.length > 1 ? 's' : ''}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {items.map((p) => <PdlcCard key={p.codename} project={p} />)}
@@ -470,9 +470,9 @@ export default async function DashboardOverview() {
           return (
             <>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-[10px] text-muted">{pdlcProjects.length} projects:</span>
+                <span className="text-xs text-muted">{pdlcProjects.length} projects:</span>
                 {Object.entries(stageCounts).map(([label, count]) => (
-                  <span key={label} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-foreground/70">
+                  <span key={label} className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-foreground/70">
                     {label} ({count})
                   </span>
                 ))}
