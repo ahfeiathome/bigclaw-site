@@ -88,28 +88,40 @@ interface PdlcProject {
 
 function parsePdlcProjects(content: string): PdlcProject[] {
   const projects: PdlcProject[] = [];
-  const sections = ['Active', 'FOUNDRY — App Factory', 'Pipeline'];
+  const seen = new Set<string>();
+  const sections = ['Active', 'FOUNDRY — App Factory', 'Autonomous', 'Pipeline'];
   for (const section of sections) {
     const regex = new RegExp(`## ${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n`, 'm');
     const match = content.search(regex);
     if (match === -1) continue;
     const rest = content.slice(match);
     const lines = rest.split('\n');
-    for (const line of lines) {
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      // Stop at the next section heading or horizontal rule
+      if (line.match(/^## /) || line.match(/^---\s*$/)) break;
       if (!line.startsWith('|') || line.includes('Codename') || line.match(/^\|[\s-|]+\|$/)) continue;
       if (line.startsWith('| —') || line.startsWith('|---')) continue;
       const cols = line.split('|').map(c => c.trim()).filter(Boolean);
       if (cols.length < 6) continue;
       const codename = cols[0].replace(/\*\*/g, '');
+      // Skip archived and duplicates
       const pdlcRaw = cols[3] || '';
       if (pdlcRaw.includes('ARCHIVED') || pdlcRaw === '—') continue;
+      if (seen.has(codename)) continue;
+      seen.add(codename);
+      // Pipeline table has an extra "Type" column at index 4, shifting Status to 5
+      const isPipeline = section === 'Pipeline';
+      const statusIdx = isPipeline ? 5 : 4;
+      const revenueIdx = isPipeline ? 7 : 6;
+      const notesIdx = isPipeline ? 8 : 7;
       projects.push({
         codename,
         publicName: cols[1],
         pdlcStage: pdlcRaw,
-        status: cols[4],
-        revenue: cols[6] || '',
-        notes: cols[7] || '',
+        status: cols[statusIdx] || '',
+        revenue: cols[revenueIdx] || '',
+        notes: cols[notesIdx] || '',
       });
     }
   }
@@ -260,6 +272,8 @@ function buildExecSummary(
   blocked: TableRow[],
   actions: TableRow[],
   pdlcProjects: PdlcProject[],
+  financial: TableRow[],
+  infra: TableRow[],
 ): string[] {
   const lines: string[] = [];
 
@@ -268,17 +282,21 @@ function buildExecSummary(
   if (status === 'HEALTHY') {
     lines.push('All systems operational. No critical issues detected this patrol cycle.');
   } else if (status.includes('WARN')) {
-    lines.push(`System health degraded — ${status}. Review alerts below for action items.`);
+    lines.push(`System health degraded — ${status}. Review alerts below.`);
   } else if (status.includes('CRITICAL')) {
     lines.push(`Critical issues detected — ${status}. Immediate attention required.`);
   }
 
-  // Active projects count
-  const activeCount = pdlcProjects.filter(p =>
-    p.status.includes('Active') || p.status.includes('PRIORITY') || p.status.includes('active') || p.status.includes('Live') || p.status.includes('live') || p.status.includes('Paper')
-  ).length;
-  if (activeCount > 0) {
-    lines.push(`${activeCount} projects actively in motion across the PDLC pipeline.`);
+  // Project phase distribution
+  if (pdlcProjects.length > 0) {
+    const liveCount = pdlcProjects.filter(p => p.pdlcStage.includes('S7') || p.pdlcStage.includes('S8')).length;
+    const buildCount = pdlcProjects.filter(p => p.pdlcStage.includes('S4') || p.pdlcStage.includes('S5')).length;
+    const earlyCount = pdlcProjects.filter(p => p.pdlcStage.includes('S1') || p.pdlcStage.includes('S2') || p.pdlcStage.includes('S3')).length;
+    const parts = [];
+    if (liveCount > 0) parts.push(`${liveCount} live`);
+    if (buildCount > 0) parts.push(`${buildCount} in build/harden`);
+    if (earlyCount > 0) parts.push(`${earlyCount} in discovery/define`);
+    lines.push(`${pdlcProjects.length} projects: ${parts.join(', ')}.`);
   }
 
   // Git velocity
@@ -287,21 +305,32 @@ function buildExecSummary(
     lines.push(`Git velocity: ${commitsRow.cells[1]} commits in the last 24h.`);
   }
 
-  // Blockers
-  const hasAlerts = alerts.length > 0 && !(alerts.length === 1 && alerts[0].cells[0] === '—');
-  const hasBlocked = blocked.length > 0;
-  if (hasAlerts) {
-    lines.push(`${alerts.length} alert(s) flagged — check the alerts panel for details.`);
-  } else if (!hasBlocked) {
-    lines.push('No alerts or blockers. Clear runway for execution.');
-  }
-  if (hasBlocked) {
-    lines.push(`${blocked.length} item(s) blocked on sponsor decision.`);
+  // Finance health
+  const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn') || r.cells[0]?.toLowerCase().includes('cost'));
+  const freeRow = financial.find(r => r.cells[0]?.toLowerCase().includes('free') || r.cells[0]?.toLowerCase().includes('tier'));
+  if (burnRow) {
+    lines.push(`Finance: ${burnRow.cells[0]} ${burnRow.cells[1]}.${freeRow ? ` Free tier: ${freeRow.cells[1]}.` : ''}`);
   }
 
-  // Actions taken
-  if (actions.length > 0) {
-    lines.push(`Felix completed ${actions.length} action(s) this cycle.`);
+  // Infra health
+  const downItems = infra.filter(r => r.cells[1]?.includes('DOWN') || r.cells[1]?.includes('FAIL') || r.cells[1]?.includes('❌'));
+  if (downItems.length > 0) {
+    lines.push(`Infra: ${downItems.length} service(s) down — ${downItems.map(r => r.cells[0]).join(', ')}.`);
+  } else if (infra.length > 0) {
+    lines.push(`Infra: all ${infra.length} services healthy.`);
+  }
+
+  // Blockers and alerts
+  const hasAlerts = alerts.length > 0 && !(alerts.length === 1 && alerts[0].cells[0] === '—');
+  const hasBlocked = blocked.length > 0;
+  if (hasAlerts && hasBlocked) {
+    lines.push(`${alerts.length} alert(s) + ${blocked.length} item(s) blocked on sponsor.`);
+  } else if (hasAlerts) {
+    lines.push(`${alerts.length} alert(s) flagged.`);
+  } else if (hasBlocked) {
+    lines.push(`${blocked.length} item(s) blocked on sponsor decision.`);
+  } else {
+    lines.push('No alerts or blockers. Clear runway.');
   }
 
   return lines;
@@ -348,7 +377,7 @@ export default async function DashboardOverview() {
   const actions = parseMarkdownTable(extractSection(content, 'Actions'));
   const blocked = parseMarkdownTable(extractSection(content, 'Blocked on Sponsor'));
 
-  const execLines = buildExecSummary(meta, alerts, velocity, projects, blocked, actions, pdlcProjects);
+  const execLines = buildExecSummary(meta, alerts, velocity, projects, blocked, actions, pdlcProjects, financial, infra);
 
   const statusColor =
     meta['Status'] === 'HEALTHY' ? 'text-green-400' :
@@ -375,7 +404,32 @@ export default async function DashboardOverview() {
       <div className="mb-4"><AlertsCard rows={alerts} /></div>
 
       <div className="mb-4">
-        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Projects — PDLC Pipeline</div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold text-accent uppercase tracking-wide">Projects — PDLC Pipeline</div>
+          <div className="flex items-center gap-4 text-[10px] text-muted">
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-green-500 inline-block" /> Completed</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-blue-400 ring-1 ring-blue-400/40 inline-block" /> Current</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-full bg-zinc-700 inline-block" /> Upcoming</span>
+          </div>
+        </div>
+        {pdlcProjects.length > 0 && (() => {
+          const stageCounts: Record<string, number> = {};
+          pdlcProjects.forEach(p => {
+            const { current } = parsePdlcStage(p.pdlcStage);
+            const label = PDLC_LABELS[current] || current;
+            stageCounts[label] = (stageCounts[label] || 0) + 1;
+          });
+          return (
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className="text-[10px] text-muted">{pdlcProjects.length} projects:</span>
+              {Object.entries(stageCounts).map(([label, count]) => (
+                <span key={label} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-foreground/70">
+                  {label} ({count})
+                </span>
+              ))}
+            </div>
+          );
+        })()}
         {pdlcProjects.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {pdlcProjects.map((p) => <PdlcCard key={p.codename} project={p} />)}
