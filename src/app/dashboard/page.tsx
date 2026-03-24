@@ -46,7 +46,7 @@ function StatusBadge({ value }: { value: string }) {
 
 function KpiCard({ title, color, rows, showTrend }: { title: string; color: string; rows: TableRow[]; showTrend?: boolean }) {
   return (
-    <div className="border border-border rounded-lg p-5">
+    <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-md hover:shadow-lg transition-shadow">
       <div className={`text-sm font-semibold ${color} uppercase tracking-wide mb-3`}>{title}</div>
       <div className="space-y-2.5">
         {rows.map((row, i) => (
@@ -150,7 +150,7 @@ function PdlcCard({ project }: { project: PdlcProject }) {
       : 'bg-zinc-500';
 
   return (
-    <div className="border border-border rounded-lg p-4">
+    <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-md hover:shadow-lg transition-shadow">
       <div className="flex items-center gap-2 mb-2">
         <span className={`w-2.5 h-2.5 rounded-full ${statusDot}`} />
         <span className="text-sm font-semibold text-foreground">{project.codename}</span>
@@ -203,7 +203,7 @@ function ProjectCard({ row }: { row: TableRow }) {
 function AlertsCard({ rows }: { rows: TableRow[] }) {
   const hasAlerts = rows.length > 0 && !(rows.length === 1 && rows[0].cells[0] === '—');
   return (
-    <div className={`border rounded-lg p-4 ${hasAlerts ? 'border-red-500/50 bg-red-500/5' : 'border-border'}`}>
+    <div className={`rounded-xl p-5 shadow-md ${hasAlerts ? 'border border-red-300 bg-red-50' : 'border border-slate-200 bg-white'}`}>
       <div className="text-sm font-semibold text-red-500 uppercase tracking-wide mb-3">Alerts</div>
       {!hasAlerts ? (
         <div className="text-sm text-green-600">No alerts</div>
@@ -228,7 +228,7 @@ function AlertsCard({ rows }: { rows: TableRow[] }) {
 
 function ActionsCard({ rows }: { rows: TableRow[] }) {
   return (
-    <div className="border border-border rounded-lg p-4">
+    <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-md">
       <div className="text-sm font-semibold text-accent uppercase tracking-wide mb-3">Actions Taken</div>
       <div className="space-y-2">
         {rows.map((row, i) => (
@@ -245,7 +245,7 @@ function ActionsCard({ rows }: { rows: TableRow[] }) {
 
 function BlockedCard({ rows }: { rows: TableRow[] }) {
   return (
-    <div className="border border-border rounded-lg p-4">
+    <div className="border border-amber-200 rounded-xl p-5 bg-amber-50/50 shadow-md">
       <div className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">Needs Sponsor</div>
       <div className="space-y-2">
         {rows.map((row, i) => (
@@ -338,7 +338,7 @@ function buildExecSummary(
 
 function ExecSummaryCard({ lines, title, accentColor }: { lines: string[]; title: string; accentColor: string }) {
   return (
-    <div className="border border-border rounded-lg p-5 mb-6 bg-slate-50">
+    <div className="border border-slate-200 rounded-xl p-5 mb-6 bg-gradient-to-r from-slate-50 to-white shadow-md">
       <div className={`text-sm font-semibold ${accentColor} uppercase tracking-wide mb-3`}>{title}</div>
       <div className="space-y-2">
         {lines.map((line, i) => (
@@ -401,7 +401,15 @@ export default async function DashboardOverview() {
 
       <ExecSummaryCard lines={execLines} title="Executive Summary" accentColor="text-accent" />
 
-      <div className="mb-4"><AlertsCard rows={alerts} /></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <AlertsCard rows={alerts} />
+        <BlockedCard rows={blocked} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <KpiCard title="Financial" color="text-amber-600" rows={financial} showTrend />
+        <KpiCard title="Infrastructure" color="text-emerald-600" rows={[...infra, ...tooling, ...velocity]} />
+      </div>
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
@@ -413,7 +421,7 @@ export default async function DashboardOverview() {
           </div>
         </div>
         {/* PDLC Phase Reference */}
-        <div className="border border-border/50 rounded-lg p-4 mb-3 bg-slate-50">
+        <div className="border border-slate-200 rounded-xl p-4 mb-3 bg-slate-50 shadow-sm">
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted font-medium shrink-0">PDLC Lifecycle:</span>
             <div className="flex items-center gap-0.5 flex-1 max-w-xl">
@@ -435,7 +443,6 @@ export default async function DashboardOverview() {
           const foundry = pdlcProjects.filter(p => foundryNames.has(p.codename));
           const collaborate = pdlcProjects.filter(p => collaborateNames.has(p.codename));
           const service = pdlcProjects.filter(p => serviceNames.has(p.codename));
-          // Catch anything uncategorized
           const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
           const other = pdlcProjects.filter(p => !categorized.has(p.codename));
 
@@ -448,7 +455,7 @@ export default async function DashboardOverview() {
 
           const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => (
             items.length > 0 ? (
-              <div className="mb-4">
+              <div className="mb-5">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-sm font-semibold ${color} uppercase tracking-wide`}>{title}</span>
                   <span className="text-xs text-muted">— {desc}</span>
@@ -466,33 +473,18 @@ export default async function DashboardOverview() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className="text-xs text-muted">{pdlcProjects.length} projects:</span>
                 {Object.entries(stageCounts).map(([label, count]) => (
-                  <span key={label} className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-foreground/70">
+                  <span key={label} className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-foreground/70 shadow-sm">
                     {label} ({count})
                   </span>
                 ))}
               </div>
-              <CategorySection title="Foundry" desc="Apps & internal products" color="text-emerald-400" items={foundry} />
-              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-400" items={collaborate} />
-              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-400" items={service} />
-              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-zinc-400" items={other} />}
+              <CategorySection title="Foundry" desc="Apps & internal products" color="text-emerald-600" items={foundry} />
+              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-600" items={collaborate} />
+              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-600" items={service} />
+              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-zinc-500" items={other} />}
             </>
           );
         })()}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <KpiCard title="💰 Financial" color="text-amber-400" rows={financial} showTrend />
-        <KpiCard title="🖥️ Infrastructure" color="text-emerald-400" rows={infra} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <KpiCard title="🔧 Tooling" color="text-purple-400" rows={tooling} />
-        <KpiCard title="🚀 Velocity" color="text-blue-400" rows={velocity} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ActionsCard rows={actions} />
-        <BlockedCard rows={blocked} />
       </div>
     </div>
   );
