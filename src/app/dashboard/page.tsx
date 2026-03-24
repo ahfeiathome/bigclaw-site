@@ -252,6 +252,75 @@ function BlockedCard({ rows }: { rows: TableRow[] }) {
   );
 }
 
+function buildExecSummary(
+  meta: Record<string, string>,
+  alerts: TableRow[],
+  velocity: TableRow[],
+  projects: TableRow[],
+  blocked: TableRow[],
+  actions: TableRow[],
+  pdlcProjects: PdlcProject[],
+): string[] {
+  const lines: string[] = [];
+
+  // Health narrative
+  const status = meta['Status'] || 'UNKNOWN';
+  if (status === 'HEALTHY') {
+    lines.push('All systems operational. No critical issues detected this patrol cycle.');
+  } else if (status.includes('WARN')) {
+    lines.push(`System health degraded — ${status}. Review alerts below for action items.`);
+  } else if (status.includes('CRITICAL')) {
+    lines.push(`Critical issues detected — ${status}. Immediate attention required.`);
+  }
+
+  // Active projects count
+  const activeCount = pdlcProjects.filter(p =>
+    p.status.includes('Active') || p.status.includes('PRIORITY') || p.status.includes('active') || p.status.includes('Live') || p.status.includes('live') || p.status.includes('Paper')
+  ).length;
+  if (activeCount > 0) {
+    lines.push(`${activeCount} projects actively in motion across the PDLC pipeline.`);
+  }
+
+  // Git velocity
+  const commitsRow = velocity.find(r => r.cells[0]?.toLowerCase().includes('commit'));
+  if (commitsRow) {
+    lines.push(`Git velocity: ${commitsRow.cells[1]} commits in the last 24h.`);
+  }
+
+  // Blockers
+  const hasAlerts = alerts.length > 0 && !(alerts.length === 1 && alerts[0].cells[0] === '—');
+  const hasBlocked = blocked.length > 0;
+  if (hasAlerts) {
+    lines.push(`${alerts.length} alert(s) flagged — check the alerts panel for details.`);
+  } else if (!hasBlocked) {
+    lines.push('No alerts or blockers. Clear runway for execution.');
+  }
+  if (hasBlocked) {
+    lines.push(`${blocked.length} item(s) blocked on sponsor decision.`);
+  }
+
+  // Actions taken
+  if (actions.length > 0) {
+    lines.push(`Felix completed ${actions.length} action(s) this cycle.`);
+  }
+
+  return lines;
+}
+
+function ExecSummaryCard({ lines, title, accentColor }: { lines: string[]; title: string; accentColor: string }) {
+  return (
+    <div className="border border-border rounded-lg p-5 mb-6 bg-zinc-900/50">
+      <div className={`text-xs font-semibold ${accentColor} uppercase tracking-wide mb-3`}>{title}</div>
+      <div className="space-y-1.5">
+        {lines.map((line, i) => (
+          <p key={i} className="text-xs text-foreground/80 leading-relaxed">{line}</p>
+        ))}
+        {lines.length === 0 && <p className="text-xs text-muted">No summary data available.</p>}
+      </div>
+    </div>
+  );
+}
+
 export default async function DashboardOverview() {
   const [content, projectsMd] = await Promise.all([
     fetchPatrolReport(),
@@ -279,6 +348,8 @@ export default async function DashboardOverview() {
   const actions = parseMarkdownTable(extractSection(content, 'Actions'));
   const blocked = parseMarkdownTable(extractSection(content, 'Blocked on Sponsor'));
 
+  const execLines = buildExecSummary(meta, alerts, velocity, projects, blocked, actions, pdlcProjects);
+
   const statusColor =
     meta['Status'] === 'HEALTHY' ? 'text-green-400' :
     meta['Status']?.includes('WARN') ? 'text-amber-400' :
@@ -298,6 +369,8 @@ export default async function DashboardOverview() {
         </div>
         <div className={`text-xs font-mono font-semibold ${statusColor}`}>{meta['Status'] || 'UNKNOWN'}</div>
       </div>
+
+      <ExecSummaryCard lines={execLines} title="Executive Summary" accentColor="text-accent" />
 
       <div className="mb-4"><AlertsCard rows={alerts} /></div>
 

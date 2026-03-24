@@ -418,6 +418,37 @@ function GateProgress({ content }: { content: string }) {
   );
 }
 
+function parseExecSummary(content: string): string[] {
+  const section = extractSection(content, 'Exec Summary');
+  if (!section) return [];
+  const lines = section.split('\n')
+    .filter(l => l.startsWith('- ') || l.startsWith('* '))
+    .map(l => l.replace(/^[-*]\s+/, '').replace(/\*\*/g, '').trim())
+    .filter(Boolean);
+  // If no bullet points, try plain text lines (skip the heading)
+  if (lines.length === 0) {
+    return section.split('\n')
+      .slice(1)
+      .map(l => l.trim())
+      .filter(l => l.length > 0 && !l.startsWith('#'));
+  }
+  return lines;
+}
+
+function RadarExecSummaryCard({ lines }: { lines: string[] }) {
+  if (lines.length === 0) return null;
+  return (
+    <div className="border border-border rounded-lg p-5 mb-6 bg-zinc-900/50">
+      <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-3">Executive Summary</div>
+      <div className="space-y-1.5">
+        {lines.map((line, i) => (
+          <p key={i} className="text-xs text-foreground/80 leading-relaxed">{line}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function RadarPage() {
   const [tradeLog, scorecard, dashboard] = await Promise.all([
     fetchRadarStatus(),
@@ -436,6 +467,7 @@ export default async function RadarPage() {
   }
 
   const meta = parseDashboardMeta(dashboard);
+  const execSummaryLines = parseExecSummary(dashboard);
 
   // Parse signal feed sections
   const pead = parseMarkdownTable(extractSection(dashboard, 'PEAD'));
@@ -464,6 +496,9 @@ export default async function RadarPage() {
           </span>
         </div>
       </div>
+
+      {/* Exec Summary */}
+      <RadarExecSummaryCard lines={execSummaryLines} />
 
       {/* Portfolio Summary — full width hero */}
       <PortfolioSummary meta={meta} />

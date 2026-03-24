@@ -118,6 +118,42 @@ const PROJECTS: ProjectData[] = [
   },
 ];
 
+function buildProjectsSummary(projects: ProjectData[], checkpoint: string | null): string[] {
+  const lines: string[] = [];
+
+  const live = projects.filter(p => p.status === 'LIVE');
+  const building = projects.filter(p => p.status === 'BUILD' || p.status === 'PAPER' || p.status === 'DESIGN');
+  const queued = projects.filter(p => p.status === 'QUEUE');
+
+  if (live.length > 0) {
+    lines.push(`${live.length} project(s) live in production: ${live.map(p => p.name).join(', ')}.`);
+  }
+  if (building.length > 0) {
+    lines.push(`${building.length} actively in development: ${building.map(p => `${p.name} (${p.status})`).join(', ')}.`);
+  }
+  if (queued.length > 0) {
+    lines.push(`${queued.length} queued for build: ${queued.map(p => p.name).join(', ')}.`);
+  }
+
+  const blocked = projects.filter(p => p.blocker);
+  if (blocked.length > 0) {
+    lines.push(`Blockers: ${blocked.map(p => `${p.name} — ${p.blocker}`).join('; ')}.`);
+  } else {
+    lines.push('No blockers across the portfolio. Clear to execute.');
+  }
+
+  // CP summary from checkpoint
+  if (checkpoint) {
+    const todoCount = (checkpoint.match(/⏳/g) || []).length;
+    const doneCount = (checkpoint.match(/✅ DONE/g) || []).length;
+    if (todoCount > 0 || doneCount > 0) {
+      lines.push(`Checkpoint: ${doneCount} CPs completed, ${todoCount} pending across all ventures.`);
+    }
+  }
+
+  return lines;
+}
+
 export default async function ProjectsPage() {
   const [patrolReport, checkpoint, learnieHealth] = await Promise.all([
     fetchPatrolReport(),
@@ -125,12 +161,23 @@ export default async function ProjectsPage() {
     fetchLearnieHealth(),
   ]);
 
+  const execLines = buildProjectsSummary(PROJECTS, checkpoint);
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-1">Projects</h2>
       <p className="text-xs text-muted mb-6">
         Expanded view of all BigClaw AI ventures · sourced from CHECKPOINT.md + PATROL_REPORT.md
       </p>
+
+      <div className="border border-border rounded-lg p-5 mb-6 bg-zinc-900/50">
+        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Executive Summary</div>
+        <div className="space-y-1.5">
+          {execLines.map((line, i) => (
+            <p key={i} className="text-xs text-foreground/80 leading-relaxed">{line}</p>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-4">
         {PROJECTS.map((project) => {
