@@ -414,22 +414,16 @@ export default async function DashboardOverview() {
         </div>
         {/* PDLC Phase Reference */}
         <div className="border border-border/50 rounded-lg p-4 mb-3 bg-slate-50">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-muted font-medium">PDLC Lifecycle:</span>
-            <div className="flex gap-1 flex-1 max-w-lg">
-              {PDLC_STAGES.map((s, i) => (
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted font-medium shrink-0">PDLC Lifecycle:</span>
+            <div className="flex items-center gap-0.5 flex-1 max-w-xl">
+              {PDLC_STAGES.map((s) => (
                 <div key={s} className="flex-1 text-center">
-                  <div className={`h-1.5 rounded-full ${i < 3 ? 'bg-purple-400/50' : i < 5 ? 'bg-blue-400/50' : i < 6 ? 'bg-cyan-400/50' : 'bg-green-400/50'}`} />
-                  <span className="text-[10px] text-muted/70">{PDLC_LABELS[s]?.slice(0, 5)}</span>
+                  <div className="h-1.5 rounded-full bg-slate-200" />
+                  <span className="text-[10px] text-muted/70">{PDLC_LABELS[s]}</span>
                 </div>
               ))}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted/80">
-            <span>S1-S3: Research &amp; Design</span>
-            <span>S4-S5: Build &amp; Harden</span>
-            <span>S6: Pilot (TestFlight)</span>
-            <span>S7-S8: Launch &amp; Grow</span>
           </div>
         </div>
         {(() => {
