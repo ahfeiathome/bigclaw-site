@@ -170,7 +170,7 @@ export default async function ProjectsPage() {
         Expanded view of all BigClaw AI ventures · sourced from CHECKPOINT.md + PATROL_REPORT.md
       </p>
 
-      <div className="border border-border rounded-lg p-5 mb-6 bg-zinc-900/50">
+      <div className="border border-slate-200 rounded-xl shadow-md p-5 mb-6 bg-gradient-to-r from-slate-50 to-white">
         <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Executive Summary</div>
         <div className="space-y-1.5">
           {execLines.map((line, i) => (
@@ -189,12 +189,12 @@ export default async function ProjectsPage() {
             project.status === 'BUILD' ? 'bg-blue-400' : 'bg-zinc-500';
 
           return (
-            <div key={project.name} className="border border-border rounded-lg p-5">
+            <div key={project.name} className="border border-slate-200 rounded-xl shadow-md bg-white hover:shadow-lg transition-shadow p-5">
               {/* Header */}
               <div className="flex items-center gap-3 mb-3">
                 <span className={`w-2.5 h-2.5 rounded-full ${statusColor}`} />
                 <h3 className="font-semibold">{project.name}</h3>
-                <span className="text-[10px] font-mono text-muted px-2 py-0.5 border border-border rounded">
+                <span className="text-[10px] font-mono text-muted px-2 py-0.5 border border-slate-200 rounded">
                   {project.status}
                 </span>
                 {project.links?.map((link) => (
@@ -222,14 +222,14 @@ export default async function ProjectsPage() {
                 {project.blocker && (
                   <div>
                     <span className="text-muted">Blocker: </span>
-                    <span className="text-amber-400">{project.blocker}</span>
+                    <span className="text-amber-600">{project.blocker}</span>
                   </div>
                 )}
               </div>
 
               {/* CPs */}
               {(cps.todo.length > 0 || cps.done.length > 0) && (
-                <div className="border-t border-border pt-3 mt-3">
+                <div className="border-t border-slate-200 pt-3 mt-3">
                   <div className="flex gap-6 text-xs">
                     {cps.todo.length > 0 && (
                       <div>
@@ -244,7 +244,7 @@ export default async function ProjectsPage() {
                     )}
                     {cps.done.length > 0 && (
                       <div>
-                        <span className="text-green-400 font-semibold">{cps.done.length} DONE</span>
+                        <span className="text-green-600 font-semibold">{cps.done.length} DONE</span>
                       </div>
                     )}
                   </div>
