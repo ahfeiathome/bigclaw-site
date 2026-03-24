@@ -432,33 +432,58 @@ export default async function DashboardOverview() {
             <span>S7-S8: Launch &amp; Grow</span>
           </div>
         </div>
-        {pdlcProjects.length > 0 && (() => {
+        {(() => {
+          // Categorize projects
+          const foundryNames = new Set(['VERDE', 'VAULT', 'CORTEX', 'REHEARSAL', 'AXIOM', 'PHOENIX', 'CLAW', 'RADAR']);
+          const collaborateNames = new Set(['LEARNIE']);
+          const serviceNames = new Set(['WINGMAN']);
+
+          const foundry = pdlcProjects.filter(p => foundryNames.has(p.codename));
+          const collaborate = pdlcProjects.filter(p => collaborateNames.has(p.codename));
+          const service = pdlcProjects.filter(p => serviceNames.has(p.codename));
+          // Catch anything uncategorized
+          const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
+          const other = pdlcProjects.filter(p => !categorized.has(p.codename));
+
           const stageCounts: Record<string, number> = {};
           pdlcProjects.forEach(p => {
             const { current } = parsePdlcStage(p.pdlcStage);
             const label = PDLC_LABELS[current] || current;
             stageCounts[label] = (stageCounts[label] || 0) + 1;
           });
+
+          const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => (
+            items.length > 0 ? (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-[11px] font-semibold ${color} uppercase tracking-wide`}>{title}</span>
+                  <span className="text-[9px] text-muted">— {desc}</span>
+                  <span className="text-[9px] text-muted ml-auto">{items.length} project{items.length > 1 ? 's' : ''}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {items.map((p) => <PdlcCard key={p.codename} project={p} />)}
+                </div>
+              </div>
+            ) : null
+          );
+
           return (
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span className="text-[10px] text-muted">{pdlcProjects.length} projects:</span>
-              {Object.entries(stageCounts).map(([label, count]) => (
-                <span key={label} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-foreground/70">
-                  {label} ({count})
-                </span>
-              ))}
-            </div>
+            <>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="text-[10px] text-muted">{pdlcProjects.length} projects:</span>
+                {Object.entries(stageCounts).map(([label, count]) => (
+                  <span key={label} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-foreground/70">
+                    {label} ({count})
+                  </span>
+                ))}
+              </div>
+              <CategorySection title="Foundry" desc="Apps & internal products" color="text-emerald-400" items={foundry} />
+              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-400" items={collaborate} />
+              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-400" items={service} />
+              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-zinc-400" items={other} />}
+            </>
           );
         })()}
-        {pdlcProjects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pdlcProjects.map((p) => <PdlcCard key={p.codename} project={p} />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {projects.map((row, i) => <ProjectCard key={i} row={row} />)}
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
