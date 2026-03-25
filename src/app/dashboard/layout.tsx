@@ -23,14 +23,8 @@ function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-52 lg:w-56 shrink-0 border-r border-border bg-card min-h-[calc(100vh-3.5rem)]">
-      <div className="px-4 pt-6 pb-4">
-        <h1 className="text-base font-bold tracking-tight text-foreground">THE FIRM</h1>
-        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-          Private Dashboard
-        </span>
-      </div>
-      <nav className="flex flex-col gap-0.5 px-2 flex-1">
+    <aside className="hidden md:flex flex-col w-16 shrink-0 border-r border-gray-200 bg-white min-h-[calc(100vh-3.5rem)] items-center py-4">
+      <nav className="flex flex-col gap-1 items-center flex-1">
         {navItems.map((item) => {
           const isActive = item.href === '/dashboard'
             ? pathname === '/dashboard'
@@ -40,35 +34,20 @@ function SidebarNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-150 no-underline hover:no-underline group relative ${
+              title={item.label}
+              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-150 no-underline hover:no-underline ${
                 isActive
-                  ? 'bg-secondary text-foreground font-semibold'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-cyan-400" />
-              )}
-              <span className={`transition-colors ${isActive ? 'text-cyan-400' : 'text-muted-foreground group-hover:text-foreground'}`}>
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-              {item.label === 'RADAR' && (
-                <span className="ml-auto">
-                  <StatusDot status="good" size="sm" />
-                </span>
-              )}
+              <span className="w-5 h-5">{item.icon}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="px-4 py-4 border-t border-border">
-        <div className="bg-secondary rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <StatusDot status="good" size="sm" />
-            <span className="text-[10px] text-muted-foreground font-mono">Systems OK</span>
-          </div>
-        </div>
+      <div className="mt-auto">
+        <StatusDot status="good" size="sm" />
       </div>
     </aside>
   );
@@ -78,11 +57,8 @@ function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <div className="md:hidden border-b border-border bg-card">
-      <div className="px-4 pt-4 pb-2">
-        <h1 className="text-base font-bold tracking-tight text-foreground">THE FIRM</h1>
-      </div>
-      <nav className="flex gap-1 px-4 pb-2 overflow-x-auto">
+    <div className="md:hidden border-b border-gray-200 bg-white">
+      <nav className="flex gap-1 px-4 py-2 overflow-x-auto">
         {navItems.map((item) => {
           const isActive = item.href === '/dashboard'
             ? pathname === '/dashboard'
@@ -92,14 +68,13 @@ function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors no-underline hover:no-underline whitespace-nowrap ${
+              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-colors no-underline hover:no-underline ${
                 isActive
-                  ? 'bg-cyan-500/15 text-cyan-400 font-semibold'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <span className={isActive ? 'text-cyan-400' : 'text-muted-foreground'}>{item.icon}</span>
-              {item.label}
+              <span className="w-5 h-5">{item.icon}</span>
             </Link>
           );
         })}
@@ -118,7 +93,7 @@ export default function DashboardLayout({
 
   if (isLoginPage) {
     return (
-      <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center">
+      <div className="min-h-[calc(100vh-3.5rem)] bg-[#f5f5f0] flex items-center justify-center">
         <div className="w-full max-w-md px-6">{children}</div>
       </div>
     );
@@ -127,7 +102,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
       <SidebarNav />
-      <div className="flex-1 min-w-0 bg-background">
+      <div className="flex-1 min-w-0 bg-[#f5f5f0]">
         <MobileNav />
         <div className="max-w-6xl mx-auto px-6 py-6">
           {children}

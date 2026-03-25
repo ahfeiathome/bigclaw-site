@@ -72,9 +72,9 @@ function extractPipelineProjects(projectsMd: string | null): PipelineProject[] {
       const stageMatch = pdlc.match(/S(\d)/);
       const stageNum = stageMatch ? parseInt(stageMatch[1]) : 0;
       const stageColor =
-        stageNum >= 7 ? 'bg-green-400' :
-        stageNum >= 4 ? 'bg-blue-400' :
-        stageNum >= 1 ? 'bg-purple-400' : 'bg-slate-500';
+        stageNum >= 7 ? 'bg-green-500' :
+        stageNum >= 4 ? 'bg-blue-500' :
+        stageNum >= 1 ? 'bg-purple-500' : 'bg-gray-400';
       const isPipeline = section === 'Pipeline';
       const statusIdx = isPipeline ? 5 : 4;
       projects.push({
@@ -174,30 +174,30 @@ export default async function GrowthPage() {
         <div className="flex items-center gap-3">
           <StatusDot status="good" size="lg" />
           <div>
-            <div className="text-lg font-semibold text-foreground">Growth</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-lg font-semibold text-gray-900">Growth</div>
+            <div className="text-xs text-gray-500">
               Sources: COO_INBOX.md, MARKETING.md, PROJECTS.md, AGENTS.md
             </div>
           </div>
         </div>
-        <SignalPill label="ACTIVE" tone="success" pulse />
+        <SignalPill label="ACTIVE" tone="success" />
       </div>
 
       {/* Hero MetricCards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Total Projects" value={pipelineProjects.length} color="blue" trend="up" />
-        <MetricCard label="Live / Growing" value={stageCounts.live} color="green" trend="up" />
-        <MetricCard label="Building" value={stageCounts.build} color="blue" trend="flat" />
-        <MetricCard label="Discovery" value={stageCounts.early} color="purple" />
+        <MetricCard label="Total Projects" value={pipelineProjects.length} trend="up" />
+        <MetricCard label="Live / Growing" value={stageCounts.live} trend="up" />
+        <MetricCard label="Building" value={stageCounts.build} trend="flat" />
+        <MetricCard label="Discovery" value={stageCounts.early} />
       </div>
 
       {/* Velocity row */}
       {velocityMetrics.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {velocityMetrics.map((v, i) => (
-            <MetricCard key={i} label={v.label} value={v.value} color="cyan" trend="up" />
+            <MetricCard key={i} label={v.label} value={v.value} trend="up" />
           ))}
-          <MetricCard label="Active Agents" value={activeAgents || agents.length} color="green" trend="up" />
+          <MetricCard label="Active Agents" value={activeAgents || agents.length} trend="up" />
         </div>
       )}
 
@@ -215,11 +215,11 @@ export default async function GrowthPage() {
         };
 
         const ProjectRow = ({ proj }: { proj: PipelineProject }) => (
-          <div className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0 hover:bg-secondary/50 transition-colors rounded-lg px-2">
+          <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-2">
             <StatusDot status={proj.stageColor.includes('green') ? 'good' : proj.stageColor.includes('blue') ? 'neutral' : 'warn'} size="sm" />
-            <span className="text-sm font-semibold text-foreground/80 w-24 shrink-0 font-mono">{proj.name}</span>
+            <span className="text-sm font-semibold text-gray-700 w-24 shrink-0 font-mono">{proj.name}</span>
             <SignalPill label={cleanStage(proj.stage)} tone={proj.stageColor.includes('green') ? 'success' : proj.stageColor.includes('blue') ? 'info' : 'neutral'} />
-            <span className="text-xs text-muted-foreground truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
+            <span className="text-xs text-gray-400 truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
           </div>
         );
 
@@ -228,7 +228,7 @@ export default async function GrowthPage() {
             <div className="mb-4">
               <div className={`flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg ${headerBg}`}>
                 <span className={`text-xs font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                <span className="text-xs text-muted-foreground font-mono">{items.length}</span>
+                <span className="text-xs text-gray-400 font-mono">{items.length}</span>
               </div>
               <div>{items.map((p, i) => <ProjectRow key={i} proj={p} />)}</div>
             </div>
@@ -236,28 +236,28 @@ export default async function GrowthPage() {
         );
 
         return (
-          <SectionCard title="Project Pipeline" accent="blue" className="mb-6">
-            <PhaseSection title="Live" items={live} color="text-green-400" headerBg="bg-green-500/10" />
-            <PhaseSection title="Building" items={building} color="text-blue-400" headerBg="bg-blue-500/10" />
-            <PhaseSection title="Early Stage" items={early} color="text-purple-400" headerBg="bg-purple-500/10" />
+          <SectionCard title="Project Pipeline" className="mb-6">
+            <PhaseSection title="Live" items={live} color="text-green-600" headerBg="bg-green-50" />
+            <PhaseSection title="Building" items={building} color="text-blue-600" headerBg="bg-blue-50" />
+            <PhaseSection title="Early Stage" items={early} color="text-purple-600" headerBg="bg-purple-50" />
           </SectionCard>
         );
       })()}
 
       {/* Agent Activity */}
       {agents.length > 0 && (
-        <SectionCard title="Agent Activity" accent="green" className="mb-6">
+        <SectionCard title="Agent Activity" className="mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {agents.map((agent, i) => (
-              <div key={i} className="animate-fade-in border border-border rounded-lg p-3.5 hover:border-primary/20 transition-all duration-200 bg-secondary/30">
+              <div key={i} className="animate-fade-in border border-gray-100 rounded-2xl p-3.5 hover:shadow-sm transition-all duration-200 bg-white">
                 <div className="flex items-center gap-2.5 mb-1.5">
                   <StatusDot status={getAgentDotStatus(agent.status)} size="sm" />
-                  <span className="text-sm font-semibold text-foreground">{agent.name}</span>
+                  <span className="text-sm font-semibold text-gray-900">{agent.name}</span>
                   <SignalPill label={agent.status || 'unknown'} tone={getAgentTone(agent.status)} />
                 </div>
-                <div className="text-xs text-muted-foreground ml-5">{agent.role}</div>
+                <div className="text-xs text-gray-400 ml-5">{agent.role}</div>
                 {agent.activity && (
-                  <div className="text-xs text-muted-foreground truncate mt-1 ml-5">{agent.activity}</div>
+                  <div className="text-xs text-gray-400 truncate mt-1 ml-5">{agent.activity}</div>
                 )}
               </div>
             ))}
@@ -267,7 +267,7 @@ export default async function GrowthPage() {
 
       {/* COO Inbox */}
       {inbox && (
-        <SectionCard title="COO Inbox (Recent)" accent="cyan" className="mb-6">
+        <SectionCard title="COO Inbox (Recent)" className="mb-6">
           {(() => {
             const rows = parseMarkdownTable(inbox);
             if (rows.length > 0) {
@@ -279,9 +279,9 @@ export default async function GrowthPage() {
                   <table className="w-full text-sm">
                     {headers.length > 1 && (
                       <thead>
-                        <tr className="border-b border-border bg-secondary/50">
+                        <tr className="border-b border-gray-100 bg-gray-50">
                           {headers.map((h, hi) => (
-                            <th key={hi} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
+                            <th key={hi} className={`text-left text-xs text-gray-400 font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
                               {h.replace(/\*\*/g, '')}
                             </th>
                           ))}
@@ -290,9 +290,9 @@ export default async function GrowthPage() {
                     )}
                     <tbody>
                       {displayRows.map((row, i) => (
-                        <tr key={i} className={`border-b border-border/50 last:border-0 ${i % 2 === 1 ? 'bg-secondary/30' : ''} hover:bg-primary/5 transition-colors`}>
+                        <tr key={i} className={`border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
                           {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground'}`}>
+                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-gray-700 pl-3' : 'text-gray-500'}`}>
                               {cell.replace(/\*\*/g, '').slice(0, 60)}
                             </td>
                           ))}
@@ -300,7 +300,7 @@ export default async function GrowthPage() {
                       ))}
                     </tbody>
                   </table>
-                  {rows.length > 10 && <div className="text-xs text-muted-foreground mt-2 font-mono">+{rows.length - 10} more items</div>}
+                  {rows.length > 10 && <div className="text-xs text-gray-400 mt-2 font-mono">+{rows.length - 10} more items</div>}
                 </div>
               );
             }
@@ -311,7 +311,7 @@ export default async function GrowthPage() {
                   {bullets.slice(0, 10).map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5 text-sm">
                       <StatusDot status="neutral" size="sm" />
-                      <span className="text-muted-foreground">{item}</span>
+                      <span className="text-gray-500">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -321,7 +321,7 @@ export default async function GrowthPage() {
             return (
               <div className="space-y-1.5">
                 {lines.map((line, i) => (
-                  <p key={i} className="text-sm text-muted-foreground">{line}</p>
+                  <p key={i} className="text-sm text-gray-500">{line}</p>
                 ))}
               </div>
             );
@@ -331,7 +331,7 @@ export default async function GrowthPage() {
 
       {/* No data fallback */}
       {!inbox && !marketing && pipelineProjects.length === 0 && agents.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground animate-fade-in">
+        <div className="text-center py-10 text-gray-500 animate-fade-in">
           <div className="text-sm">No growth data available yet.</div>
           <div className="text-xs mt-1">Data will appear when COO_INBOX.md, MARKETING.md, or PROJECTS.md are populated.</div>
         </div>

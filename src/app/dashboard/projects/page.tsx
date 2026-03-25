@@ -46,8 +46,6 @@ interface ProjectData {
   status: string;
   phase: string;
   blocker: string;
-  color: string;
-  accentColor: string;
   description: string;
   cpKeywords: string[];
   links?: { label: string; url: string }[];
@@ -59,8 +57,6 @@ const PROJECTS: ProjectData[] = [
     status: 'LIVE',
     phase: 'Pre-revenue \u00B7 233/233 tests passing',
     blocker: 'Stripe blocked on credit card',
-    color: 'bg-green-400',
-    accentColor: 'text-green-400',
     description: 'AI-powered K-5 tutoring platform. Print worksheets, scan answers, get personalized feedback and adaptive learning paths.',
     cpKeywords: ['learnie', 'TASK-'],
     links: [{ label: 'Live App', url: 'https://learnie-ai-ten.vercel.app' }],
@@ -70,8 +66,6 @@ const PROJECTS: ProjectData[] = [
     status: 'QUEUE',
     phase: 'fatfrogmodels.com rebuild (CP-072\u2192076)',
     blocker: 'Blocked on Apple Dev ($99)',
-    color: 'bg-zinc-500',
-    accentColor: 'text-zinc-400',
     description: 'E-commerce site for Fat Frog Models. Full rebuild: foundation, catalog, admin panel, friend validation, DNS cutover.',
     cpKeywords: ['WINGMAN', 'fatfrog', 'CP-072', 'CP-073', 'CP-074', 'CP-075', 'CP-076'],
   },
@@ -80,8 +74,6 @@ const PROJECTS: ProjectData[] = [
     status: 'PAPER',
     phase: '3 signal feeds active \u00B7 Gate review ~May 2',
     blocker: 'Alpaca TOS review needed',
-    color: 'bg-cyan-400',
-    accentColor: 'text-cyan-400',
     description: 'Systematic trading engine with constitution-enforced risk management. PEAD + Momentum + BTD signal feeds. $100K paper capital.',
     cpKeywords: ['RADAR', 'CP-038', 'CP-090'],
     links: [{ label: 'RADAR Dashboard', url: '/dashboard/radar' }],
@@ -91,8 +83,6 @@ const PROJECTS: ProjectData[] = [
     status: 'QUEUE',
     phase: 'UI polish + market research (P2)',
     blocker: '',
-    color: 'bg-zinc-500',
-    accentColor: 'text-zinc-400',
     description: 'App factory \u2014 VAULT (receipt scan), VERDE (plant ID), TEMPO (calorie scan). Awaiting App Store category research before publish.',
     cpKeywords: ['FOUNDRY', 'CP-041', 'CP-077', 'VAULT', 'VERDE', 'TEMPO'],
   },
@@ -101,8 +91,6 @@ const PROJECTS: ProjectData[] = [
     status: 'LIVE',
     phase: 'bigclaw.com deployed on Vercel',
     blocker: 'DNS cutover pending',
-    color: 'bg-green-400',
-    accentColor: 'text-green-400',
     description: 'BigClaw AI company site + executive dashboard. Next.js on Vercel. Houses Felix Patrol, RADAR dashboard, and all project reporting.',
     cpKeywords: ['CLAW', 'bigclaw', 'CP-040'],
     links: [{ label: 'Live Site', url: 'https://bigclaw-site.vercel.app' }],
@@ -112,8 +100,6 @@ const PROJECTS: ProjectData[] = [
     status: 'DESIGN',
     phase: 'OpenRouter built, pending API key',
     blocker: 'Michael creates OpenRouter account',
-    color: 'bg-purple-400',
-    accentColor: 'text-purple-400',
     description: 'Multi-model routing via OpenRouter. Per-agent model selection (Anthropic, Google, etc.) with privacy tiers. Phase I code ready.',
     cpKeywords: ['PHOENIX', 'OpenRouter'],
   },
@@ -175,22 +161,22 @@ export default async function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Projects</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h2 className="text-xl font-bold text-gray-900">Projects</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
             Expanded view of all BigClaw AI ventures \u00B7 sourced from CHECKPOINT.md + PATROL_REPORT.md
           </p>
         </div>
         <div className="flex items-center gap-2">
           <StatusDot status="good" size="sm" />
-          <span className="text-xs text-muted-foreground font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
+          <span className="text-xs text-gray-400 font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
         </div>
       </div>
 
       {/* Executive Summary */}
-      <SectionCard title="Executive Summary" accent="blue" className="mb-6">
+      <SectionCard title="Executive Summary" className="mb-6">
         <div className="space-y-1.5">
           {execLines.map((line, i) => (
-            <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
+            <p key={i} className="text-sm text-gray-500 leading-relaxed">{line}</p>
           ))}
         </div>
       </SectionCard>
@@ -201,11 +187,11 @@ export default async function ProjectsPage() {
           const cps = checkpoint ? extractCPsForProject(checkpoint, project.cpKeywords) : { todo: [], done: [] };
 
           return (
-            <div key={project.name} className="animate-fade-in border border-border rounded-lg bg-card/90 backdrop-blur-sm transition-all duration-200 p-5">
+            <div key={project.name} className="animate-fade-in border border-gray-100 rounded-2xl bg-white shadow-sm transition-all duration-200 p-5">
               {/* Header */}
               <div className="flex items-center gap-3 mb-3">
                 <StatusDot status={getProjectDotStatus(project.status)} size="md" />
-                <h3 className="font-semibold text-foreground">{project.name}</h3>
+                <h3 className="font-semibold text-gray-900">{project.name}</h3>
                 <SignalPill
                   label={project.status}
                   tone={
@@ -222,7 +208,7 @@ export default async function ProjectsPage() {
                     href={link.url}
                     target={link.url.startsWith('/') ? undefined : '_blank'}
                     rel={link.url.startsWith('/') ? undefined : 'noopener noreferrer'}
-                    className="text-xs text-cyan-400 ml-auto no-underline hover:underline font-medium"
+                    className="text-xs text-blue-600 ml-auto no-underline hover:underline font-medium"
                   >
                     {link.label} \u2192
                   </a>
@@ -230,30 +216,30 @@ export default async function ProjectsPage() {
               </div>
 
               {/* Description */}
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{project.description}</p>
+              <p className="text-xs text-gray-500 mb-3 leading-relaxed">{project.description}</p>
 
               {/* Phase + Blocker */}
               <div className="flex flex-wrap gap-4 mb-3 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-muted-foreground uppercase tracking-wide">Phase:</span>
-                  <span className="font-mono text-foreground/80">{project.phase}</span>
+                  <span className="text-gray-400 uppercase tracking-wide">Phase:</span>
+                  <span className="font-mono text-gray-700">{project.phase}</span>
                 </div>
                 {project.blocker && (
-                  <div className="flex items-center gap-1.5 border-l-2 border-amber-500/40 pl-3">
-                    <span className="text-muted-foreground uppercase tracking-wide">Blocker:</span>
-                    <span className="text-amber-400 font-medium">{project.blocker}</span>
+                  <div className="flex items-center gap-1.5 border-l-2 border-amber-200 pl-3">
+                    <span className="text-gray-400 uppercase tracking-wide">Blocker:</span>
+                    <span className="text-amber-600 font-medium">{project.blocker}</span>
                   </div>
                 )}
               </div>
 
               {/* CPs */}
               {(cps.todo.length > 0 || cps.done.length > 0) && (
-                <div className="border-t border-border pt-3 mt-3">
+                <div className="border-t border-gray-100 pt-3 mt-3">
                   <div className="flex gap-6 text-xs">
                     {cps.todo.length > 0 && (
                       <div>
-                        <span className="text-blue-400 font-semibold">{cps.todo.length} TODO</span>
-                        <div className="text-muted-foreground mt-1 space-y-0.5">
+                        <span className="text-blue-600 font-semibold">{cps.todo.length} TODO</span>
+                        <div className="text-gray-400 mt-1 space-y-0.5">
                           {cps.todo.slice(0, 3).map((cp, i) => (
                             <div key={i} className="truncate max-w-[300px] font-mono">{cp}</div>
                           ))}
@@ -263,8 +249,8 @@ export default async function ProjectsPage() {
                     )}
                     {cps.done.length > 0 && (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-green-400 font-semibold">{cps.done.length} DONE</span>
-                        <span className="text-green-400">\u2713</span>
+                        <span className="text-green-600 font-semibold">{cps.done.length} DONE</span>
+                        <span className="text-green-600">\u2713</span>
                       </div>
                     )}
                   </div>

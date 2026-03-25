@@ -1,10 +1,10 @@
-// Shared Dashboard Components — dark void design system
-// Dark mode: glass cards, glow effects, color-coded status, font-mono numbers
+// Shared Dashboard Components — clean light executive design system
+// Light mode: white cards, subtle shadows, color-coded status, font-mono numbers
 
 import React from 'react';
 
 // ─── StatusDot ──────────────────────────────────────────────────────────────
-// Animated status indicator with glow
+// Status indicator dot
 
 export function StatusDot({ status, size = 'md' }: {
   status: 'good' | 'warn' | 'bad' | 'neutral';
@@ -12,63 +12,45 @@ export function StatusDot({ status, size = 'md' }: {
 }) {
   const sizeMap = { sm: 'w-2 h-2', md: 'w-2.5 h-2.5', lg: 'w-3 h-3' };
   const colorMap = {
-    good: 'bg-green-400 shadow-[0_0_8px_hsl(160_60%_52%/0.5)] animate-pulse-dot',
-    warn: 'bg-amber-400',
-    bad: 'bg-red-400 animate-pulse',
-    neutral: 'bg-slate-500',
+    good: 'bg-green-500 shadow-[0_0_4px_rgba(22,163,74,0.3)]',
+    warn: 'bg-amber-500',
+    bad: 'bg-red-500 animate-pulse',
+    neutral: 'bg-gray-400',
   };
   return <span className={`inline-block rounded-full shrink-0 ${sizeMap[size]} ${colorMap[status]}`} />;
 }
 
 // ─── MetricCard ─────────────────────────────────────────────────────────────
-// Dark themed KPI card with colored background tint
+// Clean white KPI card with large mono number
 
-const metricColorMap = {
-  green:  'bg-green-500/10 text-green-400 border-green-500/20',
-  blue:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  amber:  'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  red:    'bg-red-500/10 text-red-400 border-red-500/20',
-  purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  cyan:   'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-} as const;
-
-type MetricColor = keyof typeof metricColorMap;
-
-export function MetricCard({ label, value, subtitle, icon, color = 'blue', trend }: {
+export function MetricCard({ label, value, subtitle, icon, trend }: {
   label: string;
   value: string | number;
   subtitle?: string;
   icon?: React.ReactNode;
-  color?: MetricColor;
+  color?: string;
   trend?: 'up' | 'down' | 'flat';
 }) {
-  const c = metricColorMap[color];
   const trendIcon = trend === 'up' ? '\u2197' : trend === 'down' ? '\u2198' : trend === 'flat' ? '\u2192' : null;
-  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground';
+  const trendColor = trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400';
 
   return (
-    <div className={`animate-fade-in rounded-lg border p-3.5 ${c} transition-all duration-200`}>
+    <div className="animate-fade-in rounded-2xl bg-white shadow-sm p-5 transition-all duration-200">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium opacity-80">{label}</span>
-        {icon && <div className="w-4 h-4 opacity-60">{icon}</div>}
+        <span className="text-xs font-medium tracking-wide uppercase text-gray-400">{label}</span>
+        {icon && <div className="w-4 h-4 text-gray-400">{icon}</div>}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold font-mono">{value}</span>
+        <span className="text-3xl font-bold font-mono text-gray-900">{value}</span>
         {trendIcon && <span className={`text-lg ${trendColor}`}>{trendIcon}</span>}
       </div>
-      {subtitle && <span className="text-[10px] opacity-50 font-mono mt-0.5 block">{subtitle}</span>}
+      {subtitle && <span className="text-sm text-gray-400 mt-0.5 block">{subtitle}</span>}
     </div>
   );
 }
 
 // ─── HealthRow ──────────────────────────────────────────────────────────────
-// Status row with animated progress bar — dark theme
-
-const healthStatusColorMap = {
-  good: 'text-green-400',
-  warn: 'text-amber-400',
-  bad: 'text-red-400',
-} as const;
+// Status row with optional progress bar
 
 export function HealthRow({ label, value, status, bar, icon }: {
   label: string;
@@ -86,13 +68,13 @@ export function HealthRow({ label, value, status, bar, icon }: {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StatusDot status={status} size="sm" />
-          {icon && <span className="w-4 h-4 text-muted-foreground">{icon}</span>}
-          <span className="text-xs text-muted-foreground">{label}</span>
+          {icon && <span className="w-4 h-4 text-gray-400">{icon}</span>}
+          <span className="text-sm text-gray-500">{label}</span>
         </div>
-        <span className={`text-xs font-medium font-mono ${healthStatusColorMap[status]}`}>{value}</span>
+        <span className="text-sm font-medium font-mono text-gray-900">{value}</span>
       </div>
       {bar != null && (
-        <div className="h-1 rounded-full bg-secondary overflow-hidden">
+        <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
           <div
             className={`h-full rounded-full animate-bar-fill ${barColor}`}
             style={{ width: `${Math.min(bar, 100)}%` }}
@@ -104,62 +86,58 @@ export function HealthRow({ label, value, status, bar, icon }: {
 }
 
 // ─── SignalPill ──────────────────────────────────────────────────────────────
-// Dark themed inline status badge with glow on hover
+// Colored dot + tinted background status badge
 
 const pillToneMap = {
-  success: 'bg-green-500/15 text-green-400 border border-green-500/20 hover:shadow-[0_0_12px_hsl(160_60%_52%/0.25)]',
-  warning: 'bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:shadow-[0_0_12px_hsl(38_92%_50%/0.25)]',
-  error:   'bg-red-500/15 text-red-400 border border-red-500/20 hover:shadow-[0_0_12px_hsl(0_72%_51%/0.25)]',
-  info:    'bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:shadow-[0_0_12px_hsl(217_91%_60%/0.25)]',
-  neutral: 'bg-secondary text-muted-foreground border border-border',
+  success: 'bg-green-50 text-green-700',
+  warning: 'bg-orange-50 text-orange-700',
+  error:   'bg-red-50 text-red-700',
+  info:    'bg-blue-50 text-blue-700',
+  neutral: 'bg-gray-100 text-gray-600',
 } as const;
 
-export function SignalPill({ label, tone = 'neutral', pulse = false }: {
+const pillDotMap = {
+  success: 'bg-green-500',
+  warning: 'bg-orange-500',
+  error:   'bg-red-500',
+  info:    'bg-blue-500',
+  neutral: 'bg-gray-400',
+} as const;
+
+export function SignalPill({ label, tone = 'neutral' }: {
   label: string;
   tone?: keyof typeof pillToneMap;
   pulse?: boolean;
 }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-shadow ${pillToneMap[tone]} ${pulse ? 'animate-pulse-glow' : ''}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${pillToneMap[tone]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${pillDotMap[tone]}`} />
       {label}
     </span>
   );
 }
 
 // ─── SectionCard ────────────────────────────────────────────────────────────
-// Glass container card with dark theme
+// White container card with subtle shadow
 
-const sectionAccentBarMap = {
-  green:  'bg-green-500',
-  blue:   'bg-blue-500',
-  amber:  'bg-amber-500',
-  red:    'bg-red-500',
-  purple: 'bg-purple-500',
-  cyan:   'bg-cyan-500',
-  slate:  'bg-slate-500',
-} as const;
-
-export function SectionCard({ title, children, accent = 'slate', className, action }: {
+export function SectionCard({ title, children, className, action }: {
   title: string;
   children: React.ReactNode;
-  accent?: keyof typeof sectionAccentBarMap;
+  accent?: string;
   className?: string;
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`animate-fade-in rounded-lg border border-border bg-card/90 backdrop-blur-sm ${className || ''}`}>
-      <div className="px-4 py-3 border-b border-border">
+    <div className={`animate-fade-in rounded-2xl bg-white shadow-sm border border-gray-100 ${className || ''}`}>
+      <div className="px-5 pt-5 pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className={`w-[3px] h-4 rounded-full ${sectionAccentBarMap[accent]}`} />
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {title}
-            </span>
-          </div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {title}
+          </span>
           {action && <div>{action}</div>}
         </div>
       </div>
-      <div className="p-4">
+      <div className="px-5 pb-5">
         {children}
       </div>
     </div>

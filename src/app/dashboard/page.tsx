@@ -114,21 +114,14 @@ function parsePdlcProjects(content: string): PdlcProject[] {
   return projects;
 }
 
-const categoryGradients = {
-  foundry: 'bg-green-500/5 border-green-500/10',
-  collaborate: 'bg-blue-500/5 border-blue-500/10',
-  service: 'bg-purple-500/5 border-purple-500/10',
-  other: 'bg-secondary/50 border-border',
-};
-
-function PdlcCard({ project, category }: { project: PdlcProject; category: keyof typeof categoryGradients }) {
+function PdlcCard({ project }: { project: PdlcProject }) {
   const { current } = parsePdlcStage(project.pdlcStage);
   const currentIdx = PDLC_STAGES.indexOf(current);
 
   const stageColors = (stage: string, idx: number) => {
     if (idx < currentIdx) return 'bg-green-500';
-    if (idx === currentIdx) return 'bg-cyan-400 ring-2 ring-cyan-400/30';
-    return 'bg-secondary';
+    if (idx === currentIdx) return 'bg-blue-500 ring-2 ring-blue-200';
+    return 'bg-gray-200';
   };
 
   const statusTone =
@@ -141,25 +134,25 @@ function PdlcCard({ project, category }: { project: PdlcProject; category: keyof
       : 'neutral' as const;
 
   return (
-    <div className={`animate-fade-in border rounded-lg p-4 ${categoryGradients[category]} transition-all duration-200 hover:-translate-y-0.5`}>
+    <div className="animate-fade-in border border-gray-100 rounded-2xl p-4 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-2 mb-2">
         <SignalPill label={project.status.replace(/\*\*/g, '').slice(0, 20)} tone={statusTone} />
-        <span className="text-sm font-semibold text-foreground">{project.codename}</span>
-        <span className="text-xs text-muted-foreground ml-auto font-mono">{project.publicName}</span>
+        <span className="text-sm font-semibold text-gray-900">{project.codename}</span>
+        <span className="text-xs text-gray-400 ml-auto font-mono">{project.publicName}</span>
       </div>
       <div className="flex gap-0.5 mb-2">
         {PDLC_STAGES.map((stage, idx) => (
           <div key={stage} className="flex-1 flex flex-col items-center" title={`${stage}: ${PDLC_LABELS[stage]}`}>
             <div className={`w-full h-2 rounded-full ${stageColors(stage, idx)}`} />
-            <span className={`text-[9px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-cyan-400 font-bold' : idx < currentIdx ? 'text-green-400/70' : 'text-muted-foreground/50'}`}>
+            <span className={`text-[9px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-blue-600 font-bold' : idx < currentIdx ? 'text-green-600/70' : 'text-gray-300'}`}>
               {PDLC_LABELS[stage] || stage}
             </span>
           </div>
         ))}
       </div>
-      <div className="text-xs text-muted-foreground truncate font-mono">{PDLC_LABELS[current] || current} -- {project.status.replace(/\*\*/g, '').slice(0, 60)}</div>
+      <div className="text-xs text-gray-500 truncate font-mono">{PDLC_LABELS[current] || current} -- {project.status.replace(/\*\*/g, '').slice(0, 60)}</div>
       {project.revenue && project.revenue !== '\u2014' && project.revenue !== 'Internal' && (
-        <div className="text-xs text-green-400 mt-0.5 font-mono">{project.revenue}</div>
+        <div className="text-xs text-green-600 mt-0.5 font-mono">{project.revenue}</div>
       )}
     </div>
   );
@@ -207,7 +200,7 @@ export default async function DashboardOverview() {
 
   if (!content) {
     return (
-      <div className="text-center py-20 text-muted-foreground animate-fade-in">
+      <div className="text-center py-20 text-gray-500 animate-fade-in">
         <div className="text-3xl font-mono mb-2">--</div>
         <div>No patrol report yet.</div>
         <div className="text-xs mt-1">Felix will generate one on next heartbeat.</div>
@@ -231,12 +224,16 @@ export default async function DashboardOverview() {
   const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn') || r.cells[0]?.toLowerCase().includes('cost'));
   const freeRow = financial.find(r => r.cells[0]?.toLowerCase().includes('free'));
 
-  // Parse numeric bars for infra
   function parseBarPercent(value: string): number | undefined {
     const match = value.match(/([\d.]+)\s*%/);
     if (match) return parseFloat(match[1]);
     return undefined;
   }
+
+  // Filter tab counts
+  const liveCount = pdlcProjects.filter(p => p.pdlcStage.includes('S7') || p.pdlcStage.includes('S8')).length;
+  const buildCount = pdlcProjects.filter(p => p.pdlcStage.includes('S4') || p.pdlcStage.includes('S5') || p.pdlcStage.includes('S6')).length;
+  const earlyCount = pdlcProjects.filter(p => p.pdlcStage.includes('S1') || p.pdlcStage.includes('S2') || p.pdlcStage.includes('S3')).length;
 
   return (
     <div>
@@ -248,8 +245,8 @@ export default async function DashboardOverview() {
             size="lg"
           />
           <div>
-            <div className="text-lg font-semibold text-foreground">Felix Heartbeat</div>
-            <div className="text-xs text-muted-foreground font-mono">
+            <div className="text-lg font-semibold text-gray-900">Felix Heartbeat</div>
+            <div className="text-xs text-gray-500 font-mono">
               {meta['Timestamp'] || 'unknown'} | {meta['Type'] || `Market: ${meta['Market Phase'] || '?'} | Mode: ${meta['Mode'] || '?'}`} | Duration: {meta['Duration'] || '?'}
             </div>
           </div>
@@ -257,64 +254,63 @@ export default async function DashboardOverview() {
         <SignalPill
           label={meta['Status'] || 'UNKNOWN'}
           tone={meta['Status'] === 'HEALTHY' ? 'success' : meta['Status']?.includes('WARN') ? 'warning' : meta['Status']?.includes('CRITICAL') ? 'error' : 'neutral'}
-          pulse={meta['Status'] === 'HEALTHY'}
         />
       </div>
 
       {/* Exec Summary */}
-      <SectionCard title="Executive Summary" accent="blue" className="mb-6">
+      <SectionCard title="Executive Summary" className="mb-6">
         <div className="space-y-2">
           {execLines.map((line, i) => (
-            <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
+            <p key={i} className="text-sm text-gray-500 leading-relaxed">{line}</p>
           ))}
         </div>
       </SectionCard>
 
       {/* Hero MetricCards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-        <MetricCard label="Projects" value={pdlcProjects.length} color="blue" subtitle={`${pdlcProjects.filter(p => p.pdlcStage.includes('S7') || p.pdlcStage.includes('S8')).length} live`} trend="up" />
-        <MetricCard label="Status" value={meta['Status'] || '?'} color={meta['Status'] === 'HEALTHY' ? 'green' : 'amber'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} />
-        {burnRow && <MetricCard label={burnRow.cells[0]} value={burnRow.cells[1]} color="amber" trend="flat" />}
-        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} color="green" trend="up" />}
-        <MetricCard label="Alerts" value={hasAlerts ? alerts.length : 0} color={hasAlerts ? 'red' : 'green'} subtitle={hasAlerts ? 'Review below' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} />
+        <MetricCard label="Projects" value={pdlcProjects.length} subtitle={`${liveCount} live`} trend="up" />
+        <MetricCard label="Status" value={meta['Status'] || '?'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} />
+        {burnRow && <MetricCard label={burnRow.cells[0]} value={burnRow.cells[1]} trend="flat" />}
+        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} trend="up" />}
+        <MetricCard label="Alerts" value={hasAlerts ? alerts.length : 0} subtitle={hasAlerts ? 'Review below' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} />
       </div>
 
       {/* Alerts + Blocked */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <SectionCard title="Alerts" accent={hasAlerts ? 'red' : 'green'} className={hasAlerts ? 'border-red-500/20' : ''}>
+        <SectionCard title="Alerts">
           {!hasAlerts ? (
-            <div className="flex items-center gap-2 text-sm text-green-400">
+            <div className="flex items-center gap-2 text-sm text-green-600">
               <StatusDot status="good" size="sm" />
               No alerts
             </div>
           ) : (
             <div className="space-y-2.5">
               {alerts.map((row, i) => (
-                <div key={i} className="flex items-start gap-2.5 text-sm border-l-2 border-red-500/40 pl-3 py-1">
+                <div key={i} className="flex items-start gap-2.5 text-sm border-l-2 border-red-200 pl-3 py-1">
                   <div>
-                    <span className="text-foreground/80">{row.cells[1]}</span>
-                    {row.cells[2] && <span className="text-muted-foreground ml-2 text-xs">{row.cells[2]}</span>}
+                    <span className="text-gray-700">{row.cells[1]}</span>
+                    {row.cells[2] && <span className="text-gray-400 ml-2 text-xs">{row.cells[2]}</span>}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </SectionCard>
-        <SectionCard title="Needs Sponsor" accent="amber" className={blocked.length > 0 ? 'border-amber-500/20' : ''}>
+        <SectionCard title="Needs Sponsor">
           {blocked.length === 0 ? (
-            <div className="flex items-center gap-2 text-sm text-green-400">
+            <div className="flex items-center gap-2 text-sm text-green-600">
               <StatusDot status="good" size="sm" />
               Nothing blocked
             </div>
           ) : (
             <div className="space-y-2.5">
               {blocked.map((row, i) => (
-                <div key={i} className="border-l-2 border-amber-500/40 pl-3 py-1">
+                <div key={i} className="border-l-2 border-amber-200 pl-3 py-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-foreground/80 font-medium">{row.cells[0]}</span>
-                    <span className="text-muted-foreground text-xs ml-auto font-mono">{row.cells[1]}</span>
+                    <span className="text-sm text-gray-700 font-medium">{row.cells[0]}</span>
+                    <span className="text-gray-400 text-xs ml-auto font-mono">{row.cells[1]}</span>
                   </div>
-                  {row.cells[2] && <div className="text-muted-foreground text-xs mt-0.5">{row.cells[2]}</div>}
+                  {row.cells[2] && <div className="text-gray-400 text-xs mt-0.5">{row.cells[2]}</div>}
                 </div>
               ))}
             </div>
@@ -324,7 +320,7 @@ export default async function DashboardOverview() {
 
       {/* Infrastructure HealthRows with progress bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <SectionCard title="Infrastructure" accent="green">
+        <SectionCard title="Infrastructure">
           <div className="space-y-3">
             {[...infra, ...tooling].map((row, i) => (
               <HealthRow
@@ -335,10 +331,10 @@ export default async function DashboardOverview() {
                 bar={parseBarPercent(row.cells[1] || '')}
               />
             ))}
-            {infra.length === 0 && tooling.length === 0 && <div className="text-sm text-muted-foreground">No data</div>}
+            {infra.length === 0 && tooling.length === 0 && <div className="text-sm text-gray-400">No data</div>}
           </div>
         </SectionCard>
-        <SectionCard title="Financial" accent="amber">
+        <SectionCard title="Financial">
           <div className="space-y-3">
             {financial.map((row, i) => (
               <HealthRow
@@ -348,7 +344,7 @@ export default async function DashboardOverview() {
                 status={getHealthStatus(row.cells[1] || '')}
               />
             ))}
-            {financial.length === 0 && <div className="text-sm text-muted-foreground">No data</div>}
+            {financial.length === 0 && <div className="text-sm text-gray-400">No data</div>}
           </div>
         </SectionCard>
       </div>
@@ -356,7 +352,7 @@ export default async function DashboardOverview() {
       {/* Velocity + Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {velocity.length > 0 && (
-          <SectionCard title="Velocity" accent="blue">
+          <SectionCard title="Velocity">
             <div className="space-y-3">
               {velocity.map((row, i) => (
                 <HealthRow key={i} label={row.cells[0]} value={row.cells[1] || ''} status="good" />
@@ -365,14 +361,14 @@ export default async function DashboardOverview() {
           </SectionCard>
         )}
         {actions.length > 0 && (
-          <SectionCard title="Actions Taken" accent="green">
+          <SectionCard title="Actions Taken">
             <div className="space-y-2">
               {actions.map((row, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-sm">
-                  <span className="shrink-0 text-green-400 mt-0.5 font-mono text-xs">
+                  <span className="shrink-0 text-green-600 mt-0.5 font-mono text-xs">
                     {row.cells[1]?.includes('Done') || row.cells[1]?.includes('done') ? '\u2713' : '\u2022'}
                   </span>
-                  <span className="text-muted-foreground">{row.cells[0]}</span>
+                  <span className="text-gray-500">{row.cells[0]}</span>
                 </div>
               ))}
             </div>
@@ -383,26 +379,31 @@ export default async function DashboardOverview() {
       {/* Projects PDLC Pipeline */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-[3px] h-4 rounded-full bg-cyan-400" />
-            <span className="text-sm font-semibold text-cyan-400 uppercase tracking-wide">Projects -- PDLC Pipeline</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Projects -- PDLC Pipeline</span>
+          <div className="flex items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-green-500 inline-block" /> Completed</span>
-            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-cyan-400 ring-1 ring-cyan-400/30 inline-block" /> Current</span>
-            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-secondary inline-block" /> Upcoming</span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-blue-500 ring-1 ring-blue-200 inline-block" /> Current</span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-gray-200 inline-block" /> Upcoming</span>
           </div>
         </div>
 
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-4">
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-900 text-white">All {pdlcProjects.length}</span>
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Live {liveCount}</span>
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Building {buildCount}</span>
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Early {earlyCount}</span>
+        </div>
+
         {/* PDLC Phase Reference */}
-        <div className="border border-border rounded-lg p-4 mb-3 bg-card/90">
+        <div className="border border-gray-100 rounded-2xl p-4 mb-3 bg-white shadow-sm">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground font-medium shrink-0">PDLC Lifecycle:</span>
+            <span className="text-xs text-gray-400 font-medium shrink-0">PDLC Lifecycle:</span>
             <div className="flex items-center gap-0.5 flex-1 max-w-xl">
               {PDLC_STAGES.map((s) => (
                 <div key={s} className="flex-1 text-center">
-                  <div className="h-1.5 rounded-full bg-secondary" />
-                  <span className="text-[10px] text-muted-foreground font-mono">{PDLC_LABELS[s]}</span>
+                  <div className="h-1.5 rounded-full bg-gray-200" />
+                  <span className="text-[10px] text-gray-400 font-mono">{PDLC_LABELS[s]}</span>
                 </div>
               ))}
             </div>
@@ -428,17 +429,17 @@ export default async function DashboardOverview() {
           const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
           const other = pdlcProjects.filter(p => !categorized.has(p.codename));
 
-          const CategorySection = ({ title, desc, color, gradientKey, items }: { title: string; desc: string; color: string; gradientKey: keyof typeof categoryGradients; items: PdlcProject[] }) => {
+          const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => {
             if (items.length === 0) return null;
             return (
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-sm font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                  <span className="text-xs text-muted-foreground">-- {desc}</span>
-                  <span className="text-xs text-muted-foreground ml-auto font-mono">{items.length} project{items.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-gray-400">-- {desc}</span>
+                  <span className="text-xs text-gray-400 ml-auto font-mono">{items.length} project{items.length > 1 ? 's' : ''}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {items.map((p) => <PdlcCard key={p.codename} project={p} category={gradientKey} />)}
+                  {items.map((p) => <PdlcCard key={p.codename} project={p} />)}
                 </div>
               </div>
             );
@@ -447,15 +448,15 @@ export default async function DashboardOverview() {
           return (
             <>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs text-muted-foreground font-mono">{pdlcProjects.length} projects:</span>
+                <span className="text-xs text-gray-400 font-mono">{pdlcProjects.length} projects:</span>
                 {Object.entries(stageCounts).map(([label, count]) => (
                   <SignalPill key={label} label={`${label} (${count})`} tone="neutral" />
                 ))}
               </div>
-              <CategorySection title="Foundry" desc="Apps & internal products" color="text-green-400" gradientKey="foundry" items={foundry} />
-              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-400" gradientKey="collaborate" items={collaborate} />
-              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-400" gradientKey="service" items={service} />
-              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-muted-foreground" gradientKey="other" items={other} />}
+              <CategorySection title="Foundry" desc="Apps & internal products" color="text-green-600" items={foundry} />
+              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-600" items={collaborate} />
+              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-600" items={service} />
+              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-gray-500" items={other} />}
             </>
           );
         })()}
