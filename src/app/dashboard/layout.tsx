@@ -111,6 +111,17 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/dashboard/login';
+
+  if (isLoginPage) {
+    return (
+      <div className="min-h-[calc(100vh-3.5rem)] bg-[var(--surface-0)] flex items-center justify-center">
+        <div className="w-full max-w-md px-6">{children}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
       <SidebarNav />

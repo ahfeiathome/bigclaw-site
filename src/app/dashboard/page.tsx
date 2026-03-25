@@ -152,7 +152,7 @@ function PdlcCard({ project, category }: { project: PdlcProject; category: keyof
           <div key={stage} className="flex-1 flex flex-col items-center" title={`${stage}: ${PDLC_LABELS[stage]}`}>
             <div className={`w-full h-2 rounded-full ${stageColors(stage, idx)}`} />
             <span className={`text-[9px] mt-0.5 leading-tight text-center ${idx === currentIdx ? 'text-blue-600 font-bold' : idx < currentIdx ? 'text-emerald-600/70' : 'text-slate-300'}`}>
-              {PDLC_LABELS[stage]?.slice(0, 5) || stage}
+              {PDLC_LABELS[stage] || stage}
             </span>
           </div>
         ))}
