@@ -1,5 +1,5 @@
 import { fetchCeoInbox, fetchMarketing, fetchAgentsMd, fetchProjects, fetchBandwidth } from '@/lib/github';
-import { MetricCard, HealthRow, SignalPill, SectionCard } from '@/components/dashboard';
+import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 
 interface TableRow {
   cells: string[];
@@ -61,18 +61,18 @@ function extractPipelineProjects(projectsMd: string | null): PipelineProject[] {
       const line = lines[i];
       if (line.match(/^## /) || line.match(/^---\s*$/)) break;
       if (!line.startsWith('|') || line.includes('Codename') || line.match(/^\|[\s-|]+\|$/)) continue;
-      if (line.startsWith('| —') || line.startsWith('|---')) continue;
+      if (line.startsWith('| \u2014') || line.startsWith('|---')) continue;
       const cols = line.split('|').map((c) => c.trim()).filter(Boolean);
       if (cols.length < 4) continue;
       const codename = cols[0].replace(/\*\*/g, '');
       if (seen.has(codename)) continue;
       seen.add(codename);
       const pdlc = cols[3] || '';
-      if (pdlc.includes('ARCHIVED') || pdlc === '—') continue;
+      if (pdlc.includes('ARCHIVED') || pdlc === '\u2014') continue;
       const stageMatch = pdlc.match(/S(\d)/);
       const stageNum = stageMatch ? parseInt(stageMatch[1]) : 0;
       const stageColor =
-        stageNum >= 7 ? 'bg-green-400' :
+        stageNum >= 7 ? 'bg-emerald-400' :
         stageNum >= 4 ? 'bg-blue-400' :
         stageNum >= 1 ? 'bg-purple-400' : 'bg-slate-400';
       const isPipeline = section === 'Pipeline';
@@ -129,6 +129,14 @@ function getAgentTone(status: string): 'success' | 'warning' | 'error' | 'info' 
   return 'neutral';
 }
 
+function getAgentDotStatus(status: string): 'good' | 'warn' | 'bad' | 'neutral' {
+  const lower = status.toLowerCase();
+  if (lower.includes('active') || lower.includes('live') || lower.includes('running')) return 'good';
+  if (lower.includes('blocked') || lower.includes('down') || lower.includes('fail')) return 'bad';
+  if (lower.includes('queue') || lower.includes('pending') || lower.includes('wait')) return 'warn';
+  return 'neutral';
+}
+
 export default async function GrowthPage() {
   const [inbox, marketing, agentsMd, projectsMd, bandwidth] = await Promise.all([
     fetchCeoInbox(),
@@ -149,7 +157,6 @@ export default async function GrowthPage() {
 
   const activeAgents = agents.filter((a) => a.status.toLowerCase().includes('active')).length;
 
-  // Velocity
   const velocityMetrics: { label: string; value: string }[] = [];
   if (inbox) {
     const actionItems = (inbox.match(/^[-*]\s/gm) || []).length;
@@ -163,21 +170,24 @@ export default async function GrowthPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="text-base font-medium text-slate-800">Growth</div>
-          <div className="text-xs text-slate-400">
-            Sources: COO_INBOX.md, MARKETING.md, PROJECTS.md, AGENTS.md
+      <div className="flex items-center justify-between mb-6 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <StatusDot status="good" size="lg" />
+          <div>
+            <div className="text-lg font-semibold text-slate-800">Growth</div>
+            <div className="text-xs text-slate-400">
+              Sources: COO_INBOX.md, MARKETING.md, PROJECTS.md, AGENTS.md
+            </div>
           </div>
         </div>
-        <SignalPill label="ACTIVE" tone="success" />
+        <SignalPill label="ACTIVE" tone="success" pulse />
       </div>
 
       {/* Hero MetricCards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Total Projects" value={pipelineProjects.length} color="blue" />
-        <MetricCard label="Live / Growing" value={stageCounts.live} color="green" />
-        <MetricCard label="Building" value={stageCounts.build} color="blue" />
+        <MetricCard label="Total Projects" value={pipelineProjects.length} color="blue" trend="up" />
+        <MetricCard label="Live / Growing" value={stageCounts.live} color="green" trend="up" />
+        <MetricCard label="Building" value={stageCounts.build} color="blue" trend="flat" />
         <MetricCard label="Discovery" value={stageCounts.early} color="purple" />
       </div>
 
@@ -185,13 +195,13 @@ export default async function GrowthPage() {
       {velocityMetrics.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {velocityMetrics.map((v, i) => (
-            <MetricCard key={i} label={v.label} value={v.value} color="cyan" />
+            <MetricCard key={i} label={v.label} value={v.value} color="cyan" trend="up" />
           ))}
-          <MetricCard label="Active Agents" value={activeAgents || agents.length} color="green" />
+          <MetricCard label="Active Agents" value={activeAgents || agents.length} color="green" trend="up" />
         </div>
       )}
 
-      {/* Pipeline Projects — grouped by phase */}
+      {/* Pipeline Projects -- grouped by phase */}
       {pipelineProjects.length > 0 && (() => {
         const live = pipelineProjects.filter(p => p.stage.includes('S7') || p.stage.includes('S8'));
         const building = pipelineProjects.filter(p => p.stage.includes('S4') || p.stage.includes('S5') || p.stage.includes('S6'));
@@ -205,20 +215,20 @@ export default async function GrowthPage() {
         };
 
         const ProjectRow = ({ proj }: { proj: PipelineProject }) => (
-          <div className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${proj.stageColor}`} />
-            <span className="text-sm font-medium text-slate-700 w-24 shrink-0">{proj.name}</span>
-            <SignalPill label={cleanStage(proj.stage)} tone={proj.stageColor.includes('green') ? 'success' : proj.stageColor.includes('blue') ? 'info' : 'neutral'} />
+          <div className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors rounded-lg px-2">
+            <StatusDot status={proj.stageColor.includes('emerald') ? 'good' : proj.stageColor.includes('blue') ? 'neutral' : 'warn'} size="sm" />
+            <span className="text-sm font-semibold text-slate-700 w-24 shrink-0 font-mono">{proj.name}</span>
+            <SignalPill label={cleanStage(proj.stage)} tone={proj.stageColor.includes('emerald') ? 'success' : proj.stageColor.includes('blue') ? 'info' : 'neutral'} />
             <span className="text-xs text-slate-400 truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
           </div>
         );
 
-        const PhaseSection = ({ title, items, color }: { title: string; items: PipelineProject[]; color: string }) => (
+        const PhaseSection = ({ title, items, color, headerBg }: { title: string; items: PipelineProject[]; color: string; headerBg: string }) => (
           items.length > 0 ? (
             <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className={`flex items-center gap-2 mb-2 px-3 py-1.5 rounded-xl ${headerBg}`}>
                 <span className={`text-xs font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                <span className="text-xs text-slate-400">{items.length}</span>
+                <span className="text-xs text-slate-400 font-mono">{items.length}</span>
               </div>
               <div>{items.map((p, i) => <ProjectRow key={i} proj={p} />)}</div>
             </div>
@@ -227,26 +237,27 @@ export default async function GrowthPage() {
 
         return (
           <SectionCard title="Project Pipeline" accent="blue" className="mb-6">
-            <PhaseSection title="Live" items={live} color="text-green-600" />
-            <PhaseSection title="Building" items={building} color="text-blue-600" />
-            <PhaseSection title="Early Stage" items={early} color="text-purple-600" />
+            <PhaseSection title="Live" items={live} color="text-emerald-600" headerBg="bg-emerald-50/50" />
+            <PhaseSection title="Building" items={building} color="text-blue-600" headerBg="bg-blue-50/50" />
+            <PhaseSection title="Early Stage" items={early} color="text-purple-600" headerBg="bg-purple-50/50" />
           </SectionCard>
         );
       })()}
 
-      {/* Agent Activity as compact cards with SignalPills */}
+      {/* Agent Activity */}
       {agents.length > 0 && (
         <SectionCard title="Agent Activity" accent="green" className="mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {agents.map((agent, i) => (
-              <div key={i} className="border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2 mb-1">
+              <div key={i} className="animate-fade-in border border-slate-100 rounded-2xl p-3.5 hover:shadow-md transition-all duration-200 bg-gradient-to-br from-white to-slate-50/50">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <StatusDot status={getAgentDotStatus(agent.status)} size="sm" />
                   <span className="text-sm font-semibold text-slate-800">{agent.name}</span>
                   <SignalPill label={agent.status || 'unknown'} tone={getAgentTone(agent.status)} />
-                  <span className="text-xs text-slate-400 ml-auto">{agent.role}</span>
                 </div>
+                <div className="text-xs text-slate-400 ml-5">{agent.role}</div>
                 {agent.activity && (
-                  <div className="text-xs text-slate-500 truncate">{agent.activity}</div>
+                  <div className="text-xs text-slate-500 truncate mt-1 ml-5">{agent.activity}</div>
                 )}
               </div>
             ))}
@@ -254,33 +265,34 @@ export default async function GrowthPage() {
         </SectionCard>
       )}
 
-      {/* COO Inbox — recent items only */}
+      {/* COO Inbox */}
       {inbox && (
         <SectionCard title="COO Inbox (Recent)" accent="cyan" className="mb-6">
           {(() => {
             const rows = parseMarkdownTable(inbox);
             if (rows.length > 0) {
-              // Get headers
-              const headerLine = inbox.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| —/));
+              const headerLine = inbox.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| \u2014/));
               const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
-              const displayRows = rows.slice(0, 10); // Cap at 10 rows
+              const displayRows = rows.slice(0, 10);
               return (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     {headers.length > 1 && (
                       <thead>
-                        <tr className="border-b border-slate-200">
+                        <tr className="border-b border-slate-100 bg-slate-50/50">
                           {headers.map((h, hi) => (
-                            <th key={hi} className="text-left text-xs text-slate-400 font-medium pb-2 pr-3">{h.replace(/\*\*/g, '')}</th>
+                            <th key={hi} className={`text-left text-xs text-slate-400 font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3 rounded-tl-xl' : ''} ${hi === headers.length - 1 ? 'rounded-tr-xl' : ''}`}>
+                              {h.replace(/\*\*/g, '')}
+                            </th>
                           ))}
                         </tr>
                       </thead>
                     )}
                     <tbody>
                       {displayRows.map((row, i) => (
-                        <tr key={i} className="border-b border-slate-50 last:border-0">
+                        <tr key={i} className={`border-b border-slate-50 last:border-0 ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-blue-50/30 transition-colors`}>
                           {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-1.5 pr-3 text-sm ${ci === 0 ? 'font-medium text-slate-700' : 'text-slate-500'}`}>
+                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-slate-700 pl-3' : 'text-slate-500'}`}>
                               {cell.replace(/\*\*/g, '').slice(0, 60)}
                             </td>
                           ))}
@@ -288,7 +300,7 @@ export default async function GrowthPage() {
                       ))}
                     </tbody>
                   </table>
-                  {rows.length > 10 && <div className="text-xs text-slate-400 mt-2">+{rows.length - 10} more items</div>}
+                  {rows.length > 10 && <div className="text-xs text-slate-400 mt-2 font-mono">+{rows.length - 10} more items</div>}
                 </div>
               );
             }
@@ -297,8 +309,8 @@ export default async function GrowthPage() {
               return (
                 <div className="space-y-2">
                   {bullets.slice(0, 10).map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                    <div key={i} className="flex items-start gap-2.5 text-sm">
+                      <StatusDot status="neutral" size="sm" />
                       <span className="text-slate-600">{item}</span>
                     </div>
                   ))}
@@ -319,7 +331,7 @@ export default async function GrowthPage() {
 
       {/* No data fallback */}
       {!inbox && !marketing && pipelineProjects.length === 0 && agents.length === 0 && (
-        <div className="text-center py-10 text-slate-400">
+        <div className="text-center py-10 text-slate-400 animate-fade-in">
           <div className="text-sm">No growth data available yet.</div>
           <div className="text-xs mt-1">Data will appear when COO_INBOX.md, MARKETING.md, or PROJECTS.md are populated.</div>
         </div>

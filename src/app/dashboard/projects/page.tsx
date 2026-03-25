@@ -1,4 +1,5 @@
 import { fetchPatrolReport, fetchCompanyCheckpoint, fetchRepoFile, fetchLearnieHealth } from '@/lib/github';
+import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 
 interface TableRow { cells: string[] }
 
@@ -34,8 +35,8 @@ function extractCPsForProject(checkpoint: string, keywords: string[]): { todo: s
     if (!keywords.some(k => lower.includes(k.toLowerCase()))) continue;
     const cols = line.split('|').map(c => c.trim()).filter(Boolean);
     const label = cols[0] || '';
-    if (line.includes('✅ DONE')) done.push(label);
-    else if (line.includes('⏳')) todo.push(label);
+    if (line.includes('\u2705 DONE')) done.push(label);
+    else if (line.includes('\u23F3')) todo.push(label);
   }
   return { todo, done };
 }
@@ -56,10 +57,10 @@ const PROJECTS: ProjectData[] = [
   {
     name: 'Learnie AI',
     status: 'LIVE',
-    phase: 'Pre-revenue · 233/233 tests passing',
+    phase: 'Pre-revenue \u00B7 233/233 tests passing',
     blocker: 'Stripe blocked on credit card',
-    color: 'bg-green-400',
-    accentColor: 'text-green-400',
+    color: 'bg-emerald-400',
+    accentColor: 'text-emerald-400',
     description: 'AI-powered K-5 tutoring platform. Print worksheets, scan answers, get personalized feedback and adaptive learning paths.',
     cpKeywords: ['learnie', 'TASK-'],
     links: [{ label: 'Live App', url: 'https://learnie-ai-ten.vercel.app' }],
@@ -67,7 +68,7 @@ const PROJECTS: ProjectData[] = [
   {
     name: 'WINGMAN',
     status: 'QUEUE',
-    phase: 'fatfrogmodels.com rebuild (CP-072→076)',
+    phase: 'fatfrogmodels.com rebuild (CP-072\u2192076)',
     blocker: 'Blocked on Apple Dev ($99)',
     color: 'bg-zinc-500',
     accentColor: 'text-zinc-400',
@@ -77,7 +78,7 @@ const PROJECTS: ProjectData[] = [
   {
     name: 'RADAR',
     status: 'PAPER',
-    phase: '3 signal feeds active · Gate review ~May 2',
+    phase: '3 signal feeds active \u00B7 Gate review ~May 2',
     blocker: 'Alpaca TOS review needed',
     color: 'bg-cyan-400',
     accentColor: 'text-cyan-400',
@@ -92,7 +93,7 @@ const PROJECTS: ProjectData[] = [
     blocker: '',
     color: 'bg-zinc-500',
     accentColor: 'text-zinc-400',
-    description: 'App factory — VAULT (receipt scan), VERDE (plant ID), TEMPO (calorie scan). Awaiting App Store category research before publish.',
+    description: 'App factory \u2014 VAULT (receipt scan), VERDE (plant ID), TEMPO (calorie scan). Awaiting App Store category research before publish.',
     cpKeywords: ['FOUNDRY', 'CP-041', 'CP-077', 'VAULT', 'VERDE', 'TEMPO'],
   },
   {
@@ -100,8 +101,8 @@ const PROJECTS: ProjectData[] = [
     status: 'LIVE',
     phase: 'bigclaw.com deployed on Vercel',
     blocker: 'DNS cutover pending',
-    color: 'bg-green-400',
-    accentColor: 'text-green-400',
+    color: 'bg-emerald-400',
+    accentColor: 'text-emerald-400',
     description: 'BigClaw AI company site + executive dashboard. Next.js on Vercel. Houses Felix Patrol, RADAR dashboard, and all project reporting.',
     cpKeywords: ['CLAW', 'bigclaw', 'CP-040'],
     links: [{ label: 'Live Site', url: 'https://bigclaw-site.vercel.app' }],
@@ -137,21 +138,27 @@ function buildProjectsSummary(projects: ProjectData[], checkpoint: string | null
 
   const blocked = projects.filter(p => p.blocker);
   if (blocked.length > 0) {
-    lines.push(`Blockers: ${blocked.map(p => `${p.name} — ${p.blocker}`).join('; ')}.`);
+    lines.push(`Blockers: ${blocked.map(p => `${p.name} \u2014 ${p.blocker}`).join('; ')}.`);
   } else {
     lines.push('No blockers across the portfolio. Clear to execute.');
   }
 
-  // CP summary from checkpoint
   if (checkpoint) {
-    const todoCount = (checkpoint.match(/⏳/g) || []).length;
-    const doneCount = (checkpoint.match(/✅ DONE/g) || []).length;
+    const todoCount = (checkpoint.match(/\u23F3/g) || []).length;
+    const doneCount = (checkpoint.match(/\u2705 DONE/g) || []).length;
     if (todoCount > 0 || doneCount > 0) {
       lines.push(`Checkpoint: ${doneCount} CPs completed, ${todoCount} pending across all ventures.`);
     }
   }
 
   return lines;
+}
+
+function getProjectDotStatus(status: string): 'good' | 'warn' | 'bad' | 'neutral' {
+  if (status === 'LIVE') return 'good';
+  if (status === 'PAPER' || status === 'DESIGN') return 'warn';
+  if (status === 'BUILD') return 'neutral';
+  return 'neutral';
 }
 
 export default async function ProjectsPage() {
@@ -165,86 +172,99 @@ export default async function ProjectsPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-1">Projects</h2>
-      <p className="text-xs text-muted mb-6">
-        Expanded view of all BigClaw AI ventures · sourced from CHECKPOINT.md + PATROL_REPORT.md
-      </p>
-
-      <div className="border border-slate-200 rounded-xl shadow-md p-5 mb-6 bg-gradient-to-r from-slate-50 to-white">
-        <div className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Executive Summary</div>
-        <div className="space-y-1.5">
-          {execLines.map((line, i) => (
-            <p key={i} className="text-xs text-foreground/80 leading-relaxed">{line}</p>
-          ))}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 animate-fade-in">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Projects</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Expanded view of all BigClaw AI ventures \u00B7 sourced from CHECKPOINT.md + PATROL_REPORT.md
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <StatusDot status="good" size="sm" />
+          <span className="text-xs text-slate-400 font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
         </div>
       </div>
 
+      {/* Executive Summary */}
+      <SectionCard title="Executive Summary" accent="blue" className="mb-6 bg-gradient-to-r from-blue-50/30 to-white">
+        <div className="space-y-1.5">
+          {execLines.map((line, i) => (
+            <p key={i} className="text-sm text-slate-600 leading-relaxed">{line}</p>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* Project Cards */}
       <div className="space-y-4">
         {PROJECTS.map((project) => {
           const cps = checkpoint ? extractCPsForProject(checkpoint, project.cpKeywords) : { todo: [], done: [] };
-          const statusColor =
-            project.status === 'LIVE' ? 'bg-green-400' :
-            project.status === 'PAPER' ? 'bg-cyan-400' :
-            project.status === 'DESIGN' ? 'bg-purple-400' :
-            project.status === 'BUILD' ? 'bg-blue-400' : 'bg-zinc-500';
 
           return (
-            <div key={project.name} className="border border-slate-200 rounded-xl shadow-md bg-white hover:shadow-lg transition-shadow p-5">
+            <div key={project.name} className="animate-fade-in border border-slate-100 rounded-2xl shadow-sm bg-white hover:shadow-lg transition-all duration-200 p-5">
               {/* Header */}
               <div className="flex items-center gap-3 mb-3">
-                <span className={`w-2.5 h-2.5 rounded-full ${statusColor}`} />
-                <h3 className="font-semibold">{project.name}</h3>
-                <span className="text-[10px] font-mono text-muted px-2 py-0.5 border border-slate-200 rounded">
-                  {project.status}
-                </span>
+                <StatusDot status={getProjectDotStatus(project.status)} size="md" />
+                <h3 className="font-semibold text-slate-800">{project.name}</h3>
+                <SignalPill
+                  label={project.status}
+                  tone={
+                    project.status === 'LIVE' ? 'success' :
+                    project.status === 'PAPER' ? 'warning' :
+                    project.status === 'DESIGN' ? 'info' :
+                    project.status === 'BUILD' ? 'info' :
+                    'neutral'
+                  }
+                />
                 {project.links?.map((link) => (
                   <a
                     key={link.url}
                     href={link.url}
                     target={link.url.startsWith('/') ? undefined : '_blank'}
                     rel={link.url.startsWith('/') ? undefined : 'noopener noreferrer'}
-                    className="text-xs text-accent ml-auto no-underline hover:underline"
+                    className="text-xs text-blue-600 ml-auto no-underline hover:underline font-medium"
                   >
-                    {link.label} →
+                    {link.label} \u2192
                   </a>
                 ))}
               </div>
 
               {/* Description */}
-              <p className="text-xs text-foreground/70 mb-3">{project.description}</p>
+              <p className="text-xs text-slate-500 mb-3 leading-relaxed">{project.description}</p>
 
               {/* Phase + Blocker */}
               <div className="flex flex-wrap gap-4 mb-3 text-xs">
-                <div>
-                  <span className="text-muted">Phase: </span>
-                  <span className="font-mono">{project.phase}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 uppercase tracking-wide">Phase:</span>
+                  <span className="font-mono text-slate-600">{project.phase}</span>
                 </div>
                 {project.blocker && (
-                  <div>
-                    <span className="text-muted">Blocker: </span>
-                    <span className="text-amber-600">{project.blocker}</span>
+                  <div className="flex items-center gap-1.5 border-l-2 border-amber-300 pl-3">
+                    <span className="text-slate-400 uppercase tracking-wide">Blocker:</span>
+                    <span className="text-amber-600 font-medium">{project.blocker}</span>
                   </div>
                 )}
               </div>
 
               {/* CPs */}
               {(cps.todo.length > 0 || cps.done.length > 0) && (
-                <div className="border-t border-slate-200 pt-3 mt-3">
+                <div className="border-t border-slate-100 pt-3 mt-3">
                   <div className="flex gap-6 text-xs">
                     {cps.todo.length > 0 && (
                       <div>
-                        <span className="text-accent font-semibold">{cps.todo.length} TODO</span>
-                        <div className="text-muted mt-1 space-y-0.5">
+                        <span className="text-blue-600 font-semibold">{cps.todo.length} TODO</span>
+                        <div className="text-slate-400 mt-1 space-y-0.5">
                           {cps.todo.slice(0, 3).map((cp, i) => (
-                            <div key={i} className="truncate max-w-[300px]">{cp}</div>
+                            <div key={i} className="truncate max-w-[300px] font-mono">{cp}</div>
                           ))}
-                          {cps.todo.length > 3 && <div>+{cps.todo.length - 3} more</div>}
+                          {cps.todo.length > 3 && <div className="font-mono">+{cps.todo.length - 3} more</div>}
                         </div>
                       </div>
                     )}
                     {cps.done.length > 0 && (
-                      <div>
-                        <span className="text-green-600 font-semibold">{cps.done.length} DONE</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-emerald-600 font-semibold">{cps.done.length} DONE</span>
+                        <span className="text-emerald-500">\u2713</span>
                       </div>
                     )}
                   </div>

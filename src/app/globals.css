@@ -1,6 +1,32 @@
 @import "tailwindcss";
 
 :root {
+  /* Surface levels for depth */
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+
+  /* Semantic status colors */
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --error: #ef4444;
+  --error-bg: #fef2f2;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+
+  /* Accent */
+  --primary: #2563eb;
+  --primary-bg: #eff6ff;
+
+  /* Typography */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* Legacy compat */
   --background: #ffffff;
   --foreground: #171717;
   --accent: #2563eb;
@@ -25,8 +51,8 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface-0);
+  color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
@@ -36,4 +62,53 @@ a {
 }
 a:hover {
   text-decoration: underline;
+}
+
+/* ─── Animations ─────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
+  50%      { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.15); }
+}
+
+@keyframes barFill {
+  from { width: 0; }
+}
+
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-bar-fill {
+  animation: barFill 0.8s ease-out both;
+}
+
+.animate-stagger-1 { animation: staggerFadeIn 0.3s ease-out 0.05s both; }
+.animate-stagger-2 { animation: staggerFadeIn 0.3s ease-out 0.10s both; }
+.animate-stagger-3 { animation: staggerFadeIn 0.3s ease-out 0.15s both; }
+.animate-stagger-4 { animation: staggerFadeIn 0.3s ease-out 0.20s both; }
+.animate-stagger-5 { animation: staggerFadeIn 0.3s ease-out 0.25s both; }
+
+/* Recharts overrides for consistent styling */
+.recharts-cartesian-axis-tick-value {
+  font-size: 11px;
+  fill: var(--text-muted);
+}
+
+.recharts-tooltip-wrapper {
+  outline: none;
 }
