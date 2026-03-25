@@ -1,59 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  /* Surface levels for depth */
-  --surface-0: #f8fafc;
-  --surface-1: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-3: #e2e8f0;
+  --background: 215 27% 4%;
+  --card: 220 30% 8%;
+  --foreground: 210 20% 92%;
+  --primary: 187 82% 53%;
+  --border: 220 20% 14%;
+  --muted: 220 20% 14%;
+  --muted-foreground: 220 15% 50%;
+  --secondary: 220 25% 11%;
 
-  /* Semantic status colors */
-  --success: #10b981;
-  --success-bg: #ecfdf5;
-  --warning: #f59e0b;
-  --warning-bg: #fffbeb;
-  --error: #ef4444;
-  --error-bg: #fef2f2;
-  --info: #3b82f6;
-  --info-bg: #eff6ff;
+  /* Void accent colors */
+  --void-cyan: 187 82% 53%;
+  --void-mint: 160 60% 52%;
+  --void-amber: 38 92% 50%;
+  --void-violet: 263 90% 66%;
+  --void-crimson: 0 72% 51%;
 
-  /* Accent */
-  --primary: #2563eb;
-  --primary-bg: #eff6ff;
-
-  /* Typography */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  /* Status */
+  --success: 160 60% 52%;
+  --warning: 38 92% 50%;
+  --error: 0 72% 51%;
+  --info: 187 82% 53%;
 
   /* Legacy compat */
-  --background: #ffffff;
-  --foreground: #171717;
-  --accent: #2563eb;
-  --accent-dim: #1d4ed8;
-  --surface: #f8fafc;
-  --surface-hover: #f1f5f9;
-  --border: #e2e8f0;
-  --muted: #64748b;
+  --accent: #22D3EE;
+  --accent-dim: #06B6D4;
+  --surface: hsl(220 30% 8%);
+  --surface-hover: hsl(220 25% 11%);
+  --surface-0: hsl(215 27% 4%);
+  --surface-1: hsl(220 30% 8%);
+  --surface-2: hsl(220 25% 11%);
+  --surface-3: hsl(220 20% 14%);
+  --text-primary: hsl(210 20% 92%);
+  --text-secondary: hsl(220 15% 50%);
+  --text-muted: hsl(220 15% 40%);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-primary: hsl(var(--primary));
+  --color-border: hsl(var(--border));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-secondary: hsl(var(--secondary));
   --color-accent: var(--accent);
   --color-accent-dim: var(--accent-dim);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
   background: var(--surface-0);
   color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Void background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, hsl(187 82% 53% / 0.06) 0%, transparent 60%),
+    linear-gradient(
+      hsl(220 20% 14% / 0.3) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      hsl(220 20% 14% / 0.3) 1px,
+      transparent 1px
+    );
+  background-size: 100% 100%, 60px 60px, 60px 60px;
+  pointer-events: none;
 }
 
 a {
@@ -64,6 +93,53 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220 20% 20%);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 20% 30%);
+}
+
+/* ─── Glass morphism utilities ──────────────────────────────── */
+
+.glass {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-card {
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+}
+
+/* ─── Glow utilities ───────────────────────────────────────── */
+
+.glow-mint {
+  box-shadow: 0 0 12px hsl(160 60% 52% / 0.25);
+}
+.glow-cyan {
+  box-shadow: 0 0 12px hsl(187 82% 53% / 0.25);
+}
+.glow-amber {
+  box-shadow: 0 0 12px hsl(38 92% 50% / 0.25);
+}
+.glow-crimson {
+  box-shadow: 0 0 12px hsl(0 72% 51% / 0.25);
+}
+
 /* ─── Animations ─────────────────────────────────────────────── */
 
 @keyframes fadeIn {
@@ -72,8 +148,13 @@ a:hover {
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
-  50%      { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.3); }
+  50%      { box-shadow: 0 0 8px 2px rgba(52, 211, 153, 0.15); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
 }
 
 @keyframes barFill {
@@ -93,6 +174,10 @@ a:hover {
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
+.animate-pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
 .animate-bar-fill {
   animation: barFill 0.8s ease-out both;
 }
@@ -103,10 +188,10 @@ a:hover {
 .animate-stagger-4 { animation: staggerFadeIn 0.3s ease-out 0.20s both; }
 .animate-stagger-5 { animation: staggerFadeIn 0.3s ease-out 0.25s both; }
 
-/* Recharts overrides for consistent styling */
+/* Recharts overrides for dark theme */
 .recharts-cartesian-axis-tick-value {
   font-size: 11px;
-  fill: var(--text-muted);
+  fill: hsl(220 15% 50%);
 }
 
 .recharts-tooltip-wrapper {

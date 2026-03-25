@@ -1,10 +1,10 @@
-// Shared Dashboard Components — executive dashboard design system
-// Light mode: surface depth, animated bars, color-coded status, font-mono numbers
+// Shared Dashboard Components — dark void design system
+// Dark mode: glass cards, glow effects, color-coded status, font-mono numbers
 
 import React from 'react';
 
 // ─── StatusDot ──────────────────────────────────────────────────────────────
-// Animated status indicator
+// Animated status indicator with glow
 
 export function StatusDot({ status, size = 'md' }: {
   status: 'good' | 'warn' | 'bad' | 'neutral';
@@ -12,24 +12,24 @@ export function StatusDot({ status, size = 'md' }: {
 }) {
   const sizeMap = { sm: 'w-2 h-2', md: 'w-2.5 h-2.5', lg: 'w-3 h-3' };
   const colorMap = {
-    good: 'bg-emerald-400 animate-pulse-glow',
+    good: 'bg-green-400 shadow-[0_0_8px_hsl(160_60%_52%/0.5)] animate-pulse-dot',
     warn: 'bg-amber-400',
     bad: 'bg-red-400 animate-pulse',
-    neutral: 'bg-slate-300',
+    neutral: 'bg-slate-500',
   };
   return <span className={`inline-block rounded-full shrink-0 ${sizeMap[size]} ${colorMap[status]}`} />;
 }
 
 // ─── MetricCard ─────────────────────────────────────────────────────────────
-// Big number KPI card with colored left border, trend arrow, fade-in animation
+// Dark themed KPI card with colored background tint
 
 const metricColorMap = {
-  green:  { border: 'border-l-emerald-500', bg: 'bg-emerald-50/40', text: 'text-emerald-600', hoverBorder: 'hover:border-l-emerald-600' },
-  blue:   { border: 'border-l-blue-500',    bg: 'bg-blue-50/40',    text: 'text-blue-600',    hoverBorder: 'hover:border-l-blue-600' },
-  amber:  { border: 'border-l-amber-500',   bg: 'bg-amber-50/40',   text: 'text-amber-600',   hoverBorder: 'hover:border-l-amber-600' },
-  red:    { border: 'border-l-red-500',      bg: 'bg-red-50/40',     text: 'text-red-600',     hoverBorder: 'hover:border-l-red-600' },
-  purple: { border: 'border-l-purple-500',   bg: 'bg-purple-50/40',  text: 'text-purple-600',  hoverBorder: 'hover:border-l-purple-600' },
-  cyan:   { border: 'border-l-cyan-500',     bg: 'bg-cyan-50/40',    text: 'text-cyan-600',    hoverBorder: 'hover:border-l-cyan-600' },
+  green:  'bg-green-500/10 text-green-400 border-green-500/20',
+  blue:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  amber:  'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  red:    'bg-red-500/10 text-red-400 border-red-500/20',
+  purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  cyan:   'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 } as const;
 
 type MetricColor = keyof typeof metricColorMap;
@@ -44,30 +44,30 @@ export function MetricCard({ label, value, subtitle, icon, color = 'blue', trend
 }) {
   const c = metricColorMap[color];
   const trendIcon = trend === 'up' ? '\u2197' : trend === 'down' ? '\u2198' : trend === 'flat' ? '\u2192' : null;
-  const trendColor = trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-slate-400';
+  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground';
 
   return (
-    <div className={`animate-fade-in rounded-2xl border border-slate-100 border-l-4 ${c.border} ${c.bg} ${c.hoverBorder} bg-white p-4 shadow-sm hover:shadow-lg transition-all duration-200`}>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[11px] font-medium text-slate-400 uppercase tracking-widest">{label}</span>
-        {icon && <div className="w-4 h-4 text-slate-400">{icon}</div>}
+    <div className={`animate-fade-in rounded-lg border p-3.5 ${c} transition-all duration-200`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium opacity-80">{label}</span>
+        {icon && <div className="w-4 h-4 opacity-60">{icon}</div>}
       </div>
-      <div className="flex items-baseline gap-2">
-        <span className={`text-3xl font-mono font-bold ${c.text}`}>{value}</span>
+      <div className="flex items-baseline gap-1">
+        <span className="text-2xl font-bold font-mono">{value}</span>
         {trendIcon && <span className={`text-lg ${trendColor}`}>{trendIcon}</span>}
       </div>
-      {subtitle && <div className="text-xs text-slate-400 mt-1">{subtitle}</div>}
+      {subtitle && <span className="text-[10px] opacity-50 font-mono mt-0.5 block">{subtitle}</span>}
     </div>
   );
 }
 
 // ─── HealthRow ──────────────────────────────────────────────────────────────
-// Status row with animated progress bar
+// Status row with animated progress bar — dark theme
 
 const healthStatusColorMap = {
-  good: 'text-emerald-600',
-  warn: 'text-amber-600',
-  bad: 'text-red-600',
+  good: 'text-green-400',
+  warn: 'text-amber-400',
+  bad: 'text-red-400',
 } as const;
 
 export function HealthRow({ label, value, status, bar, icon }: {
@@ -78,7 +78,7 @@ export function HealthRow({ label, value, status, bar, icon }: {
   icon?: React.ReactNode;
 }) {
   const barColor = bar != null
-    ? bar > 80 ? 'bg-red-500' : bar > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+    ? bar > 80 ? 'bg-red-500' : bar > 60 ? 'bg-amber-500' : 'bg-green-500'
     : '';
 
   return (
@@ -86,13 +86,13 @@ export function HealthRow({ label, value, status, bar, icon }: {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StatusDot status={status} size="sm" />
-          {icon && <span className="w-4 h-4 text-slate-400">{icon}</span>}
-          <span className="text-sm text-slate-600">{label}</span>
+          {icon && <span className="w-4 h-4 text-muted-foreground">{icon}</span>}
+          <span className="text-xs text-muted-foreground">{label}</span>
         </div>
-        <span className={`text-sm font-medium font-mono ${healthStatusColorMap[status]}`}>{value}</span>
+        <span className={`text-xs font-medium font-mono ${healthStatusColorMap[status]}`}>{value}</span>
       </div>
       {bar != null && (
-        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-1 rounded-full bg-secondary overflow-hidden">
           <div
             className={`h-full rounded-full animate-bar-fill ${barColor}`}
             style={{ width: `${Math.min(bar, 100)}%` }}
@@ -104,14 +104,14 @@ export function HealthRow({ label, value, status, bar, icon }: {
 }
 
 // ─── SignalPill ──────────────────────────────────────────────────────────────
-// Polished inline status badge
+// Dark themed inline status badge with glow on hover
 
 const pillToneMap = {
-  success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  warning: 'bg-amber-50 text-amber-700 border-amber-200',
-  error:   'bg-red-50 text-red-700 border-red-200',
-  info:    'bg-blue-50 text-blue-700 border-blue-200',
-  neutral: 'bg-slate-50 text-slate-600 border-slate-200',
+  success: 'bg-green-500/15 text-green-400 border border-green-500/20 hover:shadow-[0_0_12px_hsl(160_60%_52%/0.25)]',
+  warning: 'bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:shadow-[0_0_12px_hsl(38_92%_50%/0.25)]',
+  error:   'bg-red-500/15 text-red-400 border border-red-500/20 hover:shadow-[0_0_12px_hsl(0_72%_51%/0.25)]',
+  info:    'bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:shadow-[0_0_12px_hsl(217_91%_60%/0.25)]',
+  neutral: 'bg-secondary text-muted-foreground border border-border',
 } as const;
 
 export function SignalPill({ label, tone = 'neutral', pulse = false }: {
@@ -120,33 +120,23 @@ export function SignalPill({ label, tone = 'neutral', pulse = false }: {
   pulse?: boolean;
 }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${pillToneMap[tone]} ${pulse ? 'animate-pulse-glow' : ''}`}>
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-shadow ${pillToneMap[tone]} ${pulse ? 'animate-pulse-glow' : ''}`}>
       {label}
     </span>
   );
 }
 
 // ─── SectionCard ────────────────────────────────────────────────────────────
-// Container card with depth, colored left bar title, stagger fade-in
+// Glass container card with dark theme
 
 const sectionAccentBarMap = {
-  green:  'bg-emerald-500',
+  green:  'bg-green-500',
   blue:   'bg-blue-500',
   amber:  'bg-amber-500',
   red:    'bg-red-500',
   purple: 'bg-purple-500',
   cyan:   'bg-cyan-500',
-  slate:  'bg-slate-400',
-} as const;
-
-const sectionAccentTextMap = {
-  green:  'text-emerald-600',
-  blue:   'text-blue-600',
-  amber:  'text-amber-600',
-  red:    'text-red-600',
-  purple: 'text-purple-600',
-  cyan:   'text-cyan-600',
-  slate:  'text-slate-700',
+  slate:  'bg-slate-500',
 } as const;
 
 export function SectionCard({ title, children, accent = 'slate', className, action }: {
@@ -157,17 +147,21 @@ export function SectionCard({ title, children, accent = 'slate', className, acti
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`animate-fade-in rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 bg-white p-5 ${className || ''}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className={`w-[3px] h-4 rounded-full ${sectionAccentBarMap[accent]}`} />
-          <span className={`text-sm font-semibold uppercase tracking-wide ${sectionAccentTextMap[accent]}`}>
-            {title}
-          </span>
+    <div className={`animate-fade-in rounded-lg border border-border bg-card/90 backdrop-blur-sm ${className || ''}`}>
+      <div className="px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-[3px] h-4 rounded-full ${sectionAccentBarMap[accent]}`} />
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {title}
+            </span>
+          </div>
+          {action && <div>{action}</div>}
         </div>
-        {action && <div>{action}</div>}
       </div>
-      {children}
+      <div className="p-4">
+        {children}
+      </div>
     </div>
   );
 }

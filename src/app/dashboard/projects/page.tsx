@@ -59,8 +59,8 @@ const PROJECTS: ProjectData[] = [
     status: 'LIVE',
     phase: 'Pre-revenue \u00B7 233/233 tests passing',
     blocker: 'Stripe blocked on credit card',
-    color: 'bg-emerald-400',
-    accentColor: 'text-emerald-400',
+    color: 'bg-green-400',
+    accentColor: 'text-green-400',
     description: 'AI-powered K-5 tutoring platform. Print worksheets, scan answers, get personalized feedback and adaptive learning paths.',
     cpKeywords: ['learnie', 'TASK-'],
     links: [{ label: 'Live App', url: 'https://learnie-ai-ten.vercel.app' }],
@@ -101,8 +101,8 @@ const PROJECTS: ProjectData[] = [
     status: 'LIVE',
     phase: 'bigclaw.com deployed on Vercel',
     blocker: 'DNS cutover pending',
-    color: 'bg-emerald-400',
-    accentColor: 'text-emerald-400',
+    color: 'bg-green-400',
+    accentColor: 'text-green-400',
     description: 'BigClaw AI company site + executive dashboard. Next.js on Vercel. Houses Felix Patrol, RADAR dashboard, and all project reporting.',
     cpKeywords: ['CLAW', 'bigclaw', 'CP-040'],
     links: [{ label: 'Live Site', url: 'https://bigclaw-site.vercel.app' }],
@@ -175,22 +175,22 @@ export default async function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Projects</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h2 className="text-xl font-bold text-foreground">Projects</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Expanded view of all BigClaw AI ventures \u00B7 sourced from CHECKPOINT.md + PATROL_REPORT.md
           </p>
         </div>
         <div className="flex items-center gap-2">
           <StatusDot status="good" size="sm" />
-          <span className="text-xs text-slate-400 font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
+          <span className="text-xs text-muted-foreground font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
         </div>
       </div>
 
       {/* Executive Summary */}
-      <SectionCard title="Executive Summary" accent="blue" className="mb-6 bg-gradient-to-r from-blue-50/30 to-white">
+      <SectionCard title="Executive Summary" accent="blue" className="mb-6">
         <div className="space-y-1.5">
           {execLines.map((line, i) => (
-            <p key={i} className="text-sm text-slate-600 leading-relaxed">{line}</p>
+            <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
           ))}
         </div>
       </SectionCard>
@@ -201,11 +201,11 @@ export default async function ProjectsPage() {
           const cps = checkpoint ? extractCPsForProject(checkpoint, project.cpKeywords) : { todo: [], done: [] };
 
           return (
-            <div key={project.name} className="animate-fade-in border border-slate-100 rounded-2xl shadow-sm bg-white hover:shadow-lg transition-all duration-200 p-5">
+            <div key={project.name} className="animate-fade-in border border-border rounded-lg bg-card/90 backdrop-blur-sm transition-all duration-200 p-5">
               {/* Header */}
               <div className="flex items-center gap-3 mb-3">
                 <StatusDot status={getProjectDotStatus(project.status)} size="md" />
-                <h3 className="font-semibold text-slate-800">{project.name}</h3>
+                <h3 className="font-semibold text-foreground">{project.name}</h3>
                 <SignalPill
                   label={project.status}
                   tone={
@@ -222,7 +222,7 @@ export default async function ProjectsPage() {
                     href={link.url}
                     target={link.url.startsWith('/') ? undefined : '_blank'}
                     rel={link.url.startsWith('/') ? undefined : 'noopener noreferrer'}
-                    className="text-xs text-blue-600 ml-auto no-underline hover:underline font-medium"
+                    className="text-xs text-cyan-400 ml-auto no-underline hover:underline font-medium"
                   >
                     {link.label} \u2192
                   </a>
@@ -230,30 +230,30 @@ export default async function ProjectsPage() {
               </div>
 
               {/* Description */}
-              <p className="text-xs text-slate-500 mb-3 leading-relaxed">{project.description}</p>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{project.description}</p>
 
               {/* Phase + Blocker */}
               <div className="flex flex-wrap gap-4 mb-3 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400 uppercase tracking-wide">Phase:</span>
-                  <span className="font-mono text-slate-600">{project.phase}</span>
+                  <span className="text-muted-foreground uppercase tracking-wide">Phase:</span>
+                  <span className="font-mono text-foreground/80">{project.phase}</span>
                 </div>
                 {project.blocker && (
-                  <div className="flex items-center gap-1.5 border-l-2 border-amber-300 pl-3">
-                    <span className="text-slate-400 uppercase tracking-wide">Blocker:</span>
-                    <span className="text-amber-600 font-medium">{project.blocker}</span>
+                  <div className="flex items-center gap-1.5 border-l-2 border-amber-500/40 pl-3">
+                    <span className="text-muted-foreground uppercase tracking-wide">Blocker:</span>
+                    <span className="text-amber-400 font-medium">{project.blocker}</span>
                   </div>
                 )}
               </div>
 
               {/* CPs */}
               {(cps.todo.length > 0 || cps.done.length > 0) && (
-                <div className="border-t border-slate-100 pt-3 mt-3">
+                <div className="border-t border-border pt-3 mt-3">
                   <div className="flex gap-6 text-xs">
                     {cps.todo.length > 0 && (
                       <div>
-                        <span className="text-blue-600 font-semibold">{cps.todo.length} TODO</span>
-                        <div className="text-slate-400 mt-1 space-y-0.5">
+                        <span className="text-blue-400 font-semibold">{cps.todo.length} TODO</span>
+                        <div className="text-muted-foreground mt-1 space-y-0.5">
                           {cps.todo.slice(0, 3).map((cp, i) => (
                             <div key={i} className="truncate max-w-[300px] font-mono">{cp}</div>
                           ))}
@@ -263,8 +263,8 @@ export default async function ProjectsPage() {
                     )}
                     {cps.done.length > 0 && (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-emerald-600 font-semibold">{cps.done.length} DONE</span>
-                        <span className="text-emerald-500">\u2713</span>
+                        <span className="text-green-400 font-semibold">{cps.done.length} DONE</span>
+                        <span className="text-green-400">\u2713</span>
                       </div>
                     )}
                   </div>

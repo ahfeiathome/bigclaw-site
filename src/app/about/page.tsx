@@ -54,7 +54,7 @@ export default function AboutPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-16">
       <h1 className="text-3xl font-bold mb-2">About Big Claw</h1>
-      <p className="text-muted mb-12 max-w-2xl">
+      <p className="text-muted-foreground mb-12 max-w-2xl">
         Big Claw is an AI-native company. One human founder provides judgment, credit cards, and
         legal signatures. Everything else — code, strategy, finance, marketing, operations — is
         executed by AI agents.
@@ -64,26 +64,26 @@ export default function AboutPage() {
       <section className="mb-16">
         <h2 className="text-2xl font-bold mb-6">How It Works</h2>
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="border border-border rounded-lg p-6">
+          <div className="border border-border rounded-lg p-6 bg-card/50">
             <div className="text-accent text-2xl mb-3">01</div>
             <h3 className="font-semibold mb-2">CEO writes specs</h3>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               The CEO (Claude Chat) analyzes market data, writes product specs, and creates
               checkpoint tasks for the engineering team.
             </p>
           </div>
-          <div className="border border-border rounded-lg p-6">
+          <div className="border border-border rounded-lg p-6 bg-card/50">
             <div className="text-accent text-2xl mb-3">02</div>
             <h3 className="font-semibold mb-2">CDO builds autonomously</h3>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               The CDO (Claude Code) picks up tasks, writes code, runs tests, deploys to production,
               and verifies the live app — all without human intervention.
             </p>
           </div>
-          <div className="border border-border rounded-lg p-6">
+          <div className="border border-border rounded-lg p-6 bg-card/50">
             <div className="text-accent text-2xl mb-3">03</div>
             <h3 className="font-semibold mb-2">Agents coordinate</h3>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               CFO tracks spend, COO manages bandwidth, BDM scans markets, CMO plans growth. All
               agents write reports that feed into the dashboard.
             </p>
@@ -98,27 +98,27 @@ export default function AboutPage() {
           {team.map((member) => (
             <div
               key={member.role}
-              className="border border-border rounded-lg p-5 hover:border-accent/30 transition-colors"
+              className="border border-border rounded-lg p-5 hover:border-primary/30 transition-colors bg-card/50"
             >
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-xs font-mono px-2 py-0.5 bg-accent/10 text-accent rounded">
+                <span className="text-xs font-mono px-2 py-0.5 bg-primary/10 text-primary rounded">
                   {member.role}
                 </span>
                 <span className="font-semibold">{member.name}</span>
-                <span className="text-xs text-muted ml-auto">{member.model}</span>
+                <span className="text-xs text-muted-foreground ml-auto">{member.model}</span>
               </div>
-              <p className="text-sm text-muted">{member.description}</p>
+              <p className="text-sm text-muted-foreground">{member.description}</p>
             </div>
           ))}
-          <div className="border border-border rounded-lg p-5 border-dashed">
+          <div className="border border-border rounded-lg p-5 border-dashed bg-card/50">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-xs font-mono px-2 py-0.5 bg-foreground/10 text-foreground rounded">
                 Founder
               </span>
               <span className="font-semibold">Michael Liu</span>
-              <span className="text-xs text-muted ml-auto">Human</span>
+              <span className="text-xs text-muted-foreground ml-auto">Human</span>
             </div>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Provides judgment, credit cards, and legal signatures. Types &quot;next task&quot; to
               keep the machine running.
             </p>
@@ -129,25 +129,25 @@ export default function AboutPage() {
       {/* Human involvement */}
       <section>
         <h2 className="text-2xl font-bold mb-6">What Requires a Human</h2>
-        <div className="border border-border rounded-lg p-6">
+        <div className="border border-border rounded-lg p-6 bg-card/50">
           <div className="grid md:grid-cols-3 gap-6 text-sm">
             <div>
-              <span className="text-lg">💳</span>
+              <span className="text-lg">&#x1F4B3;</span>
               <h3 className="font-semibold mt-2 mb-1">Money</h3>
-              <p className="text-muted">Credit cards, paid accounts, billing decisions</p>
+              <p className="text-muted-foreground">Credit cards, paid accounts, billing decisions</p>
             </div>
             <div>
-              <span className="text-lg">⚖️</span>
+              <span className="text-lg">&#x2696;&#xFE0F;</span>
               <h3 className="font-semibold mt-2 mb-1">Legal</h3>
-              <p className="text-muted">Terms of service, contracts, entity decisions</p>
+              <p className="text-muted-foreground">Terms of service, contracts, entity decisions</p>
             </div>
             <div>
-              <span className="text-lg">🧠</span>
+              <span className="text-lg">&#x1F9E0;</span>
               <h3 className="font-semibold mt-2 mb-1">Judgment</h3>
-              <p className="text-muted">Product pivots, pricing, scope decisions</p>
+              <p className="text-muted-foreground">Product pivots, pricing, scope decisions</p>
             </div>
           </div>
-          <p className="text-muted text-sm mt-6 pt-4 border-t border-border">
+          <p className="text-muted-foreground text-sm mt-6 pt-4 border-t border-border">
             Everything else — code, deploys, testing, monitoring, reporting — is fully autonomous.
           </p>
         </div>

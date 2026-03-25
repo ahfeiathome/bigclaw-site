@@ -82,20 +82,20 @@ function PositionsTable({ content }: { content: string }) {
   return (
     <SectionCard title="Open Positions" accent="green" className="mb-4">
       {rows.length === 0 ? (
-        <div className="text-xs text-slate-400 py-4 text-center">No open positions</div>
+        <div className="text-xs text-muted-foreground py-4 text-center">No open positions</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left py-2.5 pr-4 pl-3 rounded-tl-xl">Symbol</th>
+              <tr className="text-muted-foreground border-b border-border bg-secondary/50">
+                <th className="text-left py-2.5 pr-4 pl-3">Symbol</th>
                 <th className="text-right py-2.5 px-2">Qty</th>
                 <th className="text-right py-2.5 px-2">Entry</th>
                 <th className="text-right py-2.5 px-2">Current</th>
                 <th className="text-right py-2.5 px-2">P/L</th>
                 <th className="text-right py-2.5 px-2">P/L %</th>
                 <th className="text-right py-2.5 pl-2">Stop</th>
-                <th className="text-right py-2.5 pl-2 pr-3 rounded-tr-xl">Target</th>
+                <th className="text-right py-2.5 pl-2 pr-3">Target</th>
               </tr>
             </thead>
             <tbody>
@@ -104,19 +104,19 @@ function PositionsTable({ content }: { content: string }) {
                 const isPos = !pnlPct.includes('-') && pnlPct !== '0%';
                 const isNeg = pnlPct.includes('-');
                 return (
-                  <tr key={i} className={`border-b border-slate-50 ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-blue-50/30 transition-colors`}>
-                    <td className="py-2.5 pr-4 pl-3 font-mono font-semibold text-slate-800">{row.cells[0]}</td>
+                  <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-secondary/30' : ''} hover:bg-primary/5 transition-colors`}>
+                    <td className="py-2.5 pr-4 pl-3 font-mono font-semibold text-foreground">{row.cells[0]}</td>
                     <td className="py-2.5 px-2 text-right font-mono">{row.cells[1]}</td>
                     <td className="py-2.5 px-2 text-right font-mono">{row.cells[2]}</td>
                     <td className="py-2.5 px-2 text-right font-mono">{row.cells[3]}</td>
-                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-emerald-600' : isNeg ? 'text-red-600' : ''}`}>
+                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-400' : isNeg ? 'text-red-400' : ''}`}>
                       {row.cells[4]}
                     </td>
-                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-emerald-600' : isNeg ? 'text-red-600' : ''}`}>
+                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-400' : isNeg ? 'text-red-400' : ''}`}>
                       {pnlPct}
                     </td>
-                    <td className="py-2.5 pl-2 text-right font-mono text-red-600/60">{row.cells[6]}</td>
-                    <td className="py-2.5 pl-2 pr-3 text-right font-mono text-emerald-600/60">{row.cells[7]}</td>
+                    <td className="py-2.5 pl-2 text-right font-mono text-red-400/60">{row.cells[6]}</td>
+                    <td className="py-2.5 pl-2 pr-3 text-right font-mono text-green-400/60">{row.cells[7]}</td>
                   </tr>
                 );
               })}
@@ -135,35 +135,35 @@ function TradeHistory({ tradeLog }: { tradeLog: string | null }) {
   return (
     <SectionCard title="Trade History" accent="blue" className="mb-4">
       {rows.length === 0 ? (
-        <div className="text-xs text-slate-400 py-4 text-center">No trades yet</div>
+        <div className="text-xs text-muted-foreground py-4 text-center">No trades yet</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left py-2.5 pr-3 pl-3 rounded-tl-xl">Date</th>
+              <tr className="text-muted-foreground border-b border-border bg-secondary/50">
+                <th className="text-left py-2.5 pr-3 pl-3">Date</th>
                 <th className="text-left py-2.5 px-2">Action</th>
                 <th className="text-left py-2.5 px-2">Symbol</th>
                 <th className="text-right py-2.5 px-2">Qty</th>
                 <th className="text-right py-2.5 px-2">Price</th>
                 <th className="text-right py-2.5 px-2">Amount</th>
-                <th className="text-left py-2.5 pl-2 pr-3 rounded-tr-xl">Notes</th>
+                <th className="text-left py-2.5 pl-2 pr-3">Notes</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={i} className={`border-b border-slate-50 ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-blue-50/30 transition-colors`}>
-                  <td className="py-2.5 pr-3 pl-3 font-mono text-slate-400">{row.cells[0]?.slice(0, 10)}</td>
+                <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-secondary/30' : ''} hover:bg-primary/5 transition-colors`}>
+                  <td className="py-2.5 pr-3 pl-3 font-mono text-muted-foreground">{row.cells[0]?.slice(0, 10)}</td>
                   <td className={`py-2.5 px-2 font-mono font-semibold ${
-                    row.cells[1] === 'BUY' ? 'text-emerald-600' : 'text-red-600'
+                    row.cells[1] === 'BUY' ? 'text-green-400' : 'text-red-400'
                   }`}>
                     {row.cells[1]}
                   </td>
-                  <td className="py-2.5 px-2 font-mono font-semibold text-slate-800">{row.cells[2]}</td>
+                  <td className="py-2.5 px-2 font-mono font-semibold text-foreground">{row.cells[2]}</td>
                   <td className="py-2.5 px-2 text-right font-mono">{row.cells[3]}</td>
                   <td className="py-2.5 px-2 text-right font-mono">{row.cells[4]}</td>
                   <td className="py-2.5 px-2 text-right font-mono">{row.cells[5]}</td>
-                  <td className="py-2.5 pl-2 pr-3 text-slate-400 max-w-[200px] truncate">{row.cells[6]}</td>
+                  <td className="py-2.5 pl-2 pr-3 text-muted-foreground max-w-[200px] truncate">{row.cells[6]}</td>
                 </tr>
               ))}
             </tbody>
@@ -183,7 +183,7 @@ export default async function RadarPage() {
 
   if (!dashboard) {
     return (
-      <div className="text-center py-20 text-slate-400 animate-fade-in">
+      <div className="text-center py-20 text-muted-foreground animate-fade-in">
         <div className="text-3xl font-mono mb-2">--</div>
         <div>RADAR dashboard data not available yet.</div>
         <div className="text-xs mt-1">Run the RADAR trading loop to generate dashboard data.</div>
@@ -213,8 +213,8 @@ export default async function RadarPage() {
         <div className="flex items-center gap-3">
           <StatusDot status={meta['Phase'] === 'Paper' ? 'warn' : 'good'} size="lg" />
           <div>
-            <div className="text-lg font-semibold text-slate-800">RADAR Trading System</div>
-            <div className="text-xs text-slate-400">
+            <div className="text-lg font-semibold text-foreground">RADAR Trading System</div>
+            <div className="text-xs text-muted-foreground">
               Systematic capital compounder | Constitution enforced | All trades logged
             </div>
           </div>
@@ -228,10 +228,10 @@ export default async function RadarPage() {
 
       {/* Exec Summary */}
       {execSummaryLines.length > 0 && (
-        <SectionCard title="Executive Summary" accent="cyan" className="mb-6 bg-gradient-to-r from-cyan-50/30 to-white">
+        <SectionCard title="Executive Summary" accent="cyan" className="mb-6">
           <div className="space-y-1.5">
             {execSummaryLines.map((line, i) => (
-              <p key={i} className="text-sm text-slate-600 leading-relaxed">{line}</p>
+              <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
             ))}
           </div>
         </SectionCard>
@@ -278,7 +278,7 @@ export default async function RadarPage() {
             <div className="space-y-2">
               {feed.rows.map((row, i) => (
                 <div key={i} className="flex justify-between items-center text-xs gap-2">
-                  <span className="text-slate-500 shrink-0">{row.cells[0]}</span>
+                  <span className="text-muted-foreground shrink-0">{row.cells[0]}</span>
                   <SignalPill
                     label={row.cells[1]}
                     tone={
@@ -291,7 +291,7 @@ export default async function RadarPage() {
                   />
                 </div>
               ))}
-              {feed.rows.length === 0 && <div className="text-xs text-slate-400">No data</div>}
+              {feed.rows.length === 0 && <div className="text-xs text-muted-foreground">No data</div>}
             </div>
           </SectionCard>
         ))}
@@ -307,10 +307,10 @@ export default async function RadarPage() {
               return (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <span className={`text-base ${passed ? 'text-emerald-500' : warned ? 'text-amber-500' : 'text-red-500'}`}>
+                    <span className={`text-base ${passed ? 'text-green-400' : warned ? 'text-amber-400' : 'text-red-400'}`}>
                       {passed ? '\u2713' : warned ? '!' : '\u2717'}
                     </span>
-                    <span className="text-slate-600">{row.cells[0]}</span>
+                    <span className="text-muted-foreground">{row.cells[0]}</span>
                   </div>
                   <SignalPill
                     label={passed ? 'PASS' : warned ? 'WARN' : row.cells[1] || '?'}
@@ -319,7 +319,7 @@ export default async function RadarPage() {
                 </div>
               );
             })}
-            {constitutionRows.length === 0 && <div className="text-xs text-slate-400">Constitution data not available</div>}
+            {constitutionRows.length === 0 && <div className="text-xs text-muted-foreground">Constitution data not available</div>}
           </div>
         </SectionCard>
         <SectionCard title="Paper to Live Gate Progress" accent="purple">
@@ -339,7 +339,7 @@ export default async function RadarPage() {
                 />
               );
             })}
-            {gateRows.length === 0 && <div className="text-xs text-slate-400">Gate criteria not available</div>}
+            {gateRows.length === 0 && <div className="text-xs text-muted-foreground">Gate criteria not available</div>}
           </div>
         </SectionCard>
       </div>
@@ -353,8 +353,8 @@ export default async function RadarPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-slate-400 border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left py-2.5 pr-2 pl-3 rounded-tl-xl">#</th>
+                <tr className="text-muted-foreground border-b border-border bg-secondary/50">
+                  <th className="text-left py-2.5 pr-2 pl-3">#</th>
                   <th className="text-left py-2.5 px-2">Strategy</th>
                   <th className="text-center py-2.5 px-1">Signal</th>
                   <th className="text-center py-2.5 px-1">Data</th>
@@ -362,7 +362,7 @@ export default async function RadarPage() {
                   <th className="text-center py-2.5 px-1">Indep</th>
                   <th className="text-center py-2.5 px-1">Fit</th>
                   <th className="text-center py-2.5 px-1 font-bold">Total</th>
-                  <th className="text-center py-2.5 pl-2 pr-3 rounded-tr-xl">Tier</th>
+                  <th className="text-center py-2.5 pl-2 pr-3">Tier</th>
                 </tr>
               </thead>
               <tbody>
@@ -370,9 +370,9 @@ export default async function RadarPage() {
                   const total = parseInt(row.cells[7]?.replace(/[^0-9]/g, '') || '0');
                   const tierTone = total >= 21 ? 'success' as const : total >= 18 ? 'warning' as const : 'neutral' as const;
                   return (
-                    <tr key={i} className={`border-b border-slate-50 ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-blue-50/30 transition-colors`}>
-                      <td className="py-2 pr-2 pl-3 text-slate-400 font-mono">{row.cells[0]}</td>
-                      <td className="py-2 px-2 text-slate-700 font-medium">{row.cells[1]}</td>
+                    <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-secondary/30' : ''} hover:bg-primary/5 transition-colors`}>
+                      <td className="py-2 pr-2 pl-3 text-muted-foreground font-mono">{row.cells[0]}</td>
+                      <td className="py-2 px-2 text-foreground/80 font-medium">{row.cells[1]}</td>
                       <td className="py-2 px-1 text-center font-mono">{row.cells[2]}</td>
                       <td className="py-2 px-1 text-center font-mono">{row.cells[3]}</td>
                       <td className="py-2 px-1 text-center font-mono">{row.cells[4]}</td>

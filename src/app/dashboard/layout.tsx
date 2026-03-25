@@ -23,10 +23,10 @@ function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-52 lg:w-56 shrink-0 border-r border-slate-100 bg-gradient-to-b from-slate-50/80 to-white min-h-[calc(100vh-3.5rem)]">
+    <aside className="hidden md:flex flex-col w-52 lg:w-56 shrink-0 border-r border-border bg-card min-h-[calc(100vh-3.5rem)]">
       <div className="px-4 pt-6 pb-4">
-        <h1 className="text-base font-bold tracking-tight text-slate-800">THE FIRM</h1>
-        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+        <h1 className="text-base font-bold tracking-tight text-foreground">THE FIRM</h1>
+        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
           Private Dashboard
         </span>
       </div>
@@ -40,16 +40,16 @@ function SidebarNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-all duration-150 no-underline hover:no-underline group relative ${
+              className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-150 no-underline hover:no-underline group relative ${
                 isActive
-                  ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/70'
+                  ? 'bg-secondary text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-blue-500" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-cyan-400" />
               )}
-              <span className={`transition-colors ${isActive ? 'text-blue-500' : 'text-slate-400 group-hover:text-slate-600'}`}>
+              <span className={`transition-colors ${isActive ? 'text-cyan-400' : 'text-muted-foreground group-hover:text-foreground'}`}>
                 {item.icon}
               </span>
               <span>{item.label}</span>
@@ -62,10 +62,12 @@ function SidebarNav() {
           );
         })}
       </nav>
-      <div className="px-4 py-4 border-t border-slate-100">
-        <div className="flex items-center gap-2">
-          <StatusDot status="good" size="sm" />
-          <span className="text-[10px] text-slate-400 font-mono">Systems OK</span>
+      <div className="px-4 py-4 border-t border-border">
+        <div className="bg-secondary rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <StatusDot status="good" size="sm" />
+            <span className="text-[10px] text-muted-foreground font-mono">Systems OK</span>
+          </div>
         </div>
       </div>
     </aside>
@@ -76,9 +78,9 @@ function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <div className="md:hidden border-b border-slate-100 bg-white">
+    <div className="md:hidden border-b border-border bg-card">
       <div className="px-4 pt-4 pb-2">
-        <h1 className="text-base font-bold tracking-tight text-slate-800">THE FIRM</h1>
+        <h1 className="text-base font-bold tracking-tight text-foreground">THE FIRM</h1>
       </div>
       <nav className="flex gap-1 px-4 pb-2 overflow-x-auto">
         {navItems.map((item) => {
@@ -92,11 +94,11 @@ function MobileNav() {
               href={item.href}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors no-underline hover:no-underline whitespace-nowrap ${
                 isActive
-                  ? 'bg-blue-50 text-blue-700 font-semibold'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                  ? 'bg-cyan-500/15 text-cyan-400 font-semibold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
-              <span className={isActive ? 'text-blue-500' : 'text-slate-400'}>{item.icon}</span>
+              <span className={isActive ? 'text-cyan-400' : 'text-muted-foreground'}>{item.icon}</span>
               {item.label}
             </Link>
           );
@@ -116,7 +118,7 @@ export default function DashboardLayout({
 
   if (isLoginPage) {
     return (
-      <div className="min-h-[calc(100vh-3.5rem)] bg-[var(--surface-0)] flex items-center justify-center">
+      <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center">
         <div className="w-full max-w-md px-6">{children}</div>
       </div>
     );
@@ -125,7 +127,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
       <SidebarNav />
-      <div className="flex-1 min-w-0 bg-[var(--surface-0)]">
+      <div className="flex-1 min-w-0 bg-background">
         <MobileNav />
         <div className="max-w-6xl mx-auto px-6 py-6">
           {children}
