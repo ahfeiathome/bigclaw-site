@@ -64,7 +64,7 @@ test.describe('Dashboard pages load with data', () => {
 
   test('projects page loads', async ({ page }) => {
     await page.goto('/dashboard/projects')
-    await expect(page.getByText('Projects')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible()
   })
 
   test('RADAR page loads', async ({ page }) => {
@@ -74,6 +74,6 @@ test.describe('Dashboard pages load with data', () => {
 
   test('growth page loads', async ({ page }) => {
     await page.goto('/dashboard/bizdev')
-    await expect(page.getByText('Growth')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /growth/i })).toBeVisible()
   })
 })
