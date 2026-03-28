@@ -74,6 +74,6 @@ test.describe('Dashboard pages load with data', () => {
 
   test('growth page loads', async ({ page }) => {
     await page.goto('/dashboard/bizdev')
-    await expect(page.getByRole('heading', { name: /growth/i })).toBeVisible()
+    await expect(page.locator('div.text-lg').filter({ hasText: 'Growth' })).toBeVisible()
   })
 })
