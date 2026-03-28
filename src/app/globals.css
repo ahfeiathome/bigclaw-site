@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f5f0;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
-  --primary: #2563eb;
-  --border: #e8e8e3;
-  --muted: #f0f0eb;
-  --muted-foreground: #6b7280;
-  --secondary: #f5f5f0;
-  --success: #16a34a;
-  --warning: #ea580c;
-  --error: #dc2626;
-  --info: #2563eb;
+  /* Dark operator terminal palette */
+  --background: #0a0a0b;
+  --foreground: #e4e4e7;
+  --card: #141416;
+  --card-foreground: #e4e4e7;
+  --primary: #3b82f6;
+  --border: #27272a;
+  --muted: #1c1c1f;
+  --muted-foreground: #71717a;
+  --secondary: #18181b;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  --accent: #a78bfa;
 }
 
 @theme inline {
@@ -26,18 +28,18 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-secondary: var(--secondary);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ibm-plex);
+  --font-mono: var(--font-jetbrains);
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 a {
@@ -87,10 +89,14 @@ a:hover {
 .animate-stagger-4 { animation: staggerFadeIn 0.3s ease-out 0.20s both; }
 .animate-stagger-5 { animation: staggerFadeIn 0.3s ease-out 0.25s both; }
 
-/* Recharts overrides for light theme */
+/* Recharts overrides for dark theme */
 .recharts-cartesian-axis-tick-value {
   font-size: 11px;
-  fill: #6b7280;
+  fill: #71717a;
+}
+
+.recharts-cartesian-grid line {
+  stroke: #27272a;
 }
 
 .recharts-tooltip-wrapper {

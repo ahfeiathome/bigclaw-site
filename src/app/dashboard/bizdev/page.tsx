@@ -174,8 +174,8 @@ export default async function GrowthPage() {
         <div className="flex items-center gap-3">
           <StatusDot status="good" size="lg" />
           <div>
-            <div className="text-lg font-semibold text-gray-900">Growth</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-lg font-semibold text-foreground">Growth</div>
+            <div className="text-xs text-muted-foreground">
               Sources: COO_INBOX.md, MARKETING.md, PROJECTS.md, AGENTS.md
             </div>
           </div>
@@ -215,11 +215,11 @@ export default async function GrowthPage() {
         };
 
         const ProjectRow = ({ proj }: { proj: PipelineProject }) => (
-          <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-2">
+          <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0 hover:bg-muted transition-colors rounded-lg px-2">
             <StatusDot status={proj.stageColor.includes('green') ? 'good' : proj.stageColor.includes('blue') ? 'neutral' : 'warn'} size="sm" />
-            <span className="text-sm font-semibold text-gray-700 w-24 shrink-0 font-mono">{proj.name}</span>
+            <span className="text-sm font-semibold text-foreground/80 w-24 shrink-0 font-mono">{proj.name}</span>
             <SignalPill label={cleanStage(proj.stage)} tone={proj.stageColor.includes('green') ? 'success' : proj.stageColor.includes('blue') ? 'info' : 'neutral'} />
-            <span className="text-xs text-gray-400 truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
+            <span className="text-xs text-muted-foreground truncate ml-auto">{proj.status.replace(/\*\*/g, '').slice(0, 50)}</span>
           </div>
         );
 
@@ -228,7 +228,7 @@ export default async function GrowthPage() {
             <div className="mb-4">
               <div className={`flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg ${headerBg}`}>
                 <span className={`text-xs font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                <span className="text-xs text-gray-400 font-mono">{items.length}</span>
+                <span className="text-xs text-muted-foreground font-mono">{items.length}</span>
               </div>
               <div>{items.map((p, i) => <ProjectRow key={i} proj={p} />)}</div>
             </div>
@@ -249,15 +249,15 @@ export default async function GrowthPage() {
         <SectionCard title="Agent Activity" className="mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {agents.map((agent, i) => (
-              <div key={i} className="animate-fade-in border border-gray-100 rounded-2xl p-3.5 hover:shadow-sm transition-all duration-200 bg-white">
+              <div key={i} className="animate-fade-in border border-border rounded-2xl p-3.5 hover:shadow-sm transition-all duration-200 bg-card">
                 <div className="flex items-center gap-2.5 mb-1.5">
                   <StatusDot status={getAgentDotStatus(agent.status)} size="sm" />
-                  <span className="text-sm font-semibold text-gray-900">{agent.name}</span>
+                  <span className="text-sm font-semibold text-foreground">{agent.name}</span>
                   <SignalPill label={agent.status || 'unknown'} tone={getAgentTone(agent.status)} />
                 </div>
-                <div className="text-xs text-gray-400 ml-5">{agent.role}</div>
+                <div className="text-xs text-muted-foreground ml-5">{agent.role}</div>
                 {agent.activity && (
-                  <div className="text-xs text-gray-400 truncate mt-1 ml-5">{agent.activity}</div>
+                  <div className="text-xs text-muted-foreground truncate mt-1 ml-5">{agent.activity}</div>
                 )}
               </div>
             ))}
@@ -279,9 +279,9 @@ export default async function GrowthPage() {
                   <table className="w-full text-sm">
                     {headers.length > 1 && (
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
+                        <tr className="border-b border-border bg-muted">
                           {headers.map((h, hi) => (
-                            <th key={hi} className={`text-left text-xs text-gray-400 font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
+                            <th key={hi} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
                               {h.replace(/\*\*/g, '')}
                             </th>
                           ))}
@@ -290,9 +290,9 @@ export default async function GrowthPage() {
                     )}
                     <tbody>
                       {displayRows.map((row, i) => (
-                        <tr key={i} className={`border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                        <tr key={i} className={`border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
                           {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-gray-700 pl-3' : 'text-gray-500'}`}>
+                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground'}`}>
                               {cell.replace(/\*\*/g, '').slice(0, 60)}
                             </td>
                           ))}
@@ -300,7 +300,7 @@ export default async function GrowthPage() {
                       ))}
                     </tbody>
                   </table>
-                  {rows.length > 10 && <div className="text-xs text-gray-400 mt-2 font-mono">+{rows.length - 10} more items</div>}
+                  {rows.length > 10 && <div className="text-xs text-muted-foreground mt-2 font-mono">+{rows.length - 10} more items</div>}
                 </div>
               );
             }
@@ -311,7 +311,7 @@ export default async function GrowthPage() {
                   {bullets.slice(0, 10).map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5 text-sm">
                       <StatusDot status="neutral" size="sm" />
-                      <span className="text-gray-500">{item}</span>
+                      <span className="text-muted-foreground">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -321,7 +321,7 @@ export default async function GrowthPage() {
             return (
               <div className="space-y-1.5">
                 {lines.map((line, i) => (
-                  <p key={i} className="text-sm text-gray-500">{line}</p>
+                  <p key={i} className="text-sm text-muted-foreground">{line}</p>
                 ))}
               </div>
             );
@@ -331,7 +331,7 @@ export default async function GrowthPage() {
 
       {/* No data fallback */}
       {!inbox && !marketing && pipelineProjects.length === 0 && agents.length === 0 && (
-        <div className="text-center py-10 text-gray-500 animate-fade-in">
+        <div className="text-center py-10 text-muted-foreground animate-fade-in">
           <div className="text-sm">No growth data available yet.</div>
           <div className="text-xs mt-1">Data will appear when COO_INBOX.md, MARKETING.md, or PROJECTS.md are populated.</div>
         </div>

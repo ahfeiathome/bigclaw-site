@@ -82,12 +82,12 @@ function PositionsTable({ content }: { content: string }) {
   return (
     <SectionCard title="Open Positions" className="mb-4">
       {rows.length === 0 ? (
-        <div className="text-xs text-gray-400 py-4 text-center">No open positions</div>
+        <div className="text-xs text-muted-foreground py-4 text-center">No open positions</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-400 border-b border-gray-100 bg-gray-50">
+              <tr className="text-muted-foreground border-b border-border bg-muted">
                 <th className="text-left py-2.5 pr-4 pl-3">Symbol</th>
                 <th className="text-right py-2.5 px-2">Qty</th>
                 <th className="text-right py-2.5 px-2">Entry</th>
@@ -104,15 +104,15 @@ function PositionsTable({ content }: { content: string }) {
                 const isPos = !pnlPct.includes('-') && pnlPct !== '0%';
                 const isNeg = pnlPct.includes('-');
                 return (
-                  <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
-                    <td className="py-2.5 pr-4 pl-3 font-mono font-semibold text-gray-900">{row.cells[0]}</td>
-                    <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[1]}</td>
-                    <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[2]}</td>
-                    <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[3]}</td>
-                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-600' : isNeg ? 'text-red-600' : 'text-gray-600'}`}>
+                  <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                    <td className="py-2.5 pr-4 pl-3 font-mono font-semibold text-foreground">{row.cells[0]}</td>
+                    <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[1]}</td>
+                    <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[2]}</td>
+                    <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[3]}</td>
+                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-600' : isNeg ? 'text-red-600' : 'text-muted-foreground'}`}>
                       {row.cells[4]}
                     </td>
-                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-600' : isNeg ? 'text-red-600' : 'text-gray-600'}`}>
+                    <td className={`py-2.5 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-600' : isNeg ? 'text-red-600' : 'text-muted-foreground'}`}>
                       {pnlPct}
                     </td>
                     <td className="py-2.5 pl-2 text-right font-mono text-red-400">{row.cells[6]}</td>
@@ -135,12 +135,12 @@ function TradeHistory({ tradeLog }: { tradeLog: string | null }) {
   return (
     <SectionCard title="Trade History" className="mb-4">
       {rows.length === 0 ? (
-        <div className="text-xs text-gray-400 py-4 text-center">No trades yet</div>
+        <div className="text-xs text-muted-foreground py-4 text-center">No trades yet</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-400 border-b border-gray-100 bg-gray-50">
+              <tr className="text-muted-foreground border-b border-border bg-muted">
                 <th className="text-left py-2.5 pr-3 pl-3">Date</th>
                 <th className="text-left py-2.5 px-2">Action</th>
                 <th className="text-left py-2.5 px-2">Symbol</th>
@@ -152,18 +152,18 @@ function TradeHistory({ tradeLog }: { tradeLog: string | null }) {
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
-                  <td className="py-2.5 pr-3 pl-3 font-mono text-gray-400">{row.cells[0]?.slice(0, 10)}</td>
+                <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                  <td className="py-2.5 pr-3 pl-3 font-mono text-muted-foreground">{row.cells[0]?.slice(0, 10)}</td>
                   <td className={`py-2.5 px-2 font-mono font-semibold ${
                     row.cells[1] === 'BUY' ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {row.cells[1]}
                   </td>
-                  <td className="py-2.5 px-2 font-mono font-semibold text-gray-900">{row.cells[2]}</td>
-                  <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[3]}</td>
-                  <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[4]}</td>
-                  <td className="py-2.5 px-2 text-right font-mono text-gray-600">{row.cells[5]}</td>
-                  <td className="py-2.5 pl-2 pr-3 text-gray-400 max-w-[200px] truncate">{row.cells[6]}</td>
+                  <td className="py-2.5 px-2 font-mono font-semibold text-foreground">{row.cells[2]}</td>
+                  <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[3]}</td>
+                  <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[4]}</td>
+                  <td className="py-2.5 px-2 text-right font-mono text-muted-foreground">{row.cells[5]}</td>
+                  <td className="py-2.5 pl-2 pr-3 text-muted-foreground max-w-[200px] truncate">{row.cells[6]}</td>
                 </tr>
               ))}
             </tbody>
@@ -183,7 +183,7 @@ export default async function RadarPage() {
 
   if (!dashboard) {
     return (
-      <div className="text-center py-20 text-gray-500 animate-fade-in">
+      <div className="text-center py-20 text-muted-foreground animate-fade-in">
         <div className="text-3xl font-mono mb-2">--</div>
         <div>RADAR dashboard data not available yet.</div>
         <div className="text-xs mt-1">Run the RADAR trading loop to generate dashboard data.</div>
@@ -213,8 +213,8 @@ export default async function RadarPage() {
         <div className="flex items-center gap-3">
           <StatusDot status={meta['Phase'] === 'Paper' ? 'warn' : 'good'} size="lg" />
           <div>
-            <div className="text-lg font-semibold text-gray-900">RADAR Trading System</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-lg font-semibold text-foreground">RADAR Trading System</div>
+            <div className="text-xs text-muted-foreground">
               Systematic capital compounder | Constitution enforced | All trades logged
             </div>
           </div>
@@ -230,7 +230,7 @@ export default async function RadarPage() {
         <SectionCard title="Executive Summary" className="mb-6">
           <div className="space-y-1.5">
             {execSummaryLines.map((line, i) => (
-              <p key={i} className="text-sm text-gray-500 leading-relaxed">{line}</p>
+              <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
             ))}
           </div>
         </SectionCard>
@@ -276,7 +276,7 @@ export default async function RadarPage() {
             <div className="space-y-2">
               {feed.rows.map((row, i) => (
                 <div key={i} className="flex justify-between items-center text-xs gap-2">
-                  <span className="text-gray-500 shrink-0">{row.cells[0]}</span>
+                  <span className="text-muted-foreground shrink-0">{row.cells[0]}</span>
                   <SignalPill
                     label={row.cells[1]}
                     tone={
@@ -289,7 +289,7 @@ export default async function RadarPage() {
                   />
                 </div>
               ))}
-              {feed.rows.length === 0 && <div className="text-xs text-gray-400">No data</div>}
+              {feed.rows.length === 0 && <div className="text-xs text-muted-foreground">No data</div>}
             </div>
           </SectionCard>
         ))}
@@ -308,7 +308,7 @@ export default async function RadarPage() {
                     <span className={`text-base ${passed ? 'text-green-600' : warned ? 'text-amber-500' : 'text-red-600'}`}>
                       {passed ? '\u2713' : warned ? '!' : '\u2717'}
                     </span>
-                    <span className="text-gray-500">{row.cells[0]}</span>
+                    <span className="text-muted-foreground">{row.cells[0]}</span>
                   </div>
                   <SignalPill
                     label={passed ? 'PASS' : warned ? 'WARN' : row.cells[1] || '?'}
@@ -317,7 +317,7 @@ export default async function RadarPage() {
                 </div>
               );
             })}
-            {constitutionRows.length === 0 && <div className="text-xs text-gray-400">Constitution data not available</div>}
+            {constitutionRows.length === 0 && <div className="text-xs text-muted-foreground">Constitution data not available</div>}
           </div>
         </SectionCard>
         <SectionCard title="Paper to Live Gate Progress">
@@ -337,7 +337,7 @@ export default async function RadarPage() {
                 />
               );
             })}
-            {gateRows.length === 0 && <div className="text-xs text-gray-400">Gate criteria not available</div>}
+            {gateRows.length === 0 && <div className="text-xs text-muted-foreground">Gate criteria not available</div>}
           </div>
         </SectionCard>
       </div>
@@ -351,7 +351,7 @@ export default async function RadarPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-gray-400 border-b border-gray-100 bg-gray-50">
+                <tr className="text-muted-foreground border-b border-border bg-muted">
                   <th className="text-left py-2.5 pr-2 pl-3">#</th>
                   <th className="text-left py-2.5 px-2">Strategy</th>
                   <th className="text-center py-2.5 px-1">Signal</th>
@@ -368,18 +368,18 @@ export default async function RadarPage() {
                   const total = parseInt(row.cells[7]?.replace(/[^0-9]/g, '') || '0');
                   const tierTone = total >= 21 ? 'success' as const : total >= 18 ? 'warning' as const : 'neutral' as const;
                   return (
-                    <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
-                      <td className="py-2 pr-2 pl-3 text-gray-400 font-mono">{row.cells[0]}</td>
-                      <td className="py-2 px-2 text-gray-700 font-medium">{row.cells[1]}</td>
-                      <td className="py-2 px-1 text-center font-mono text-gray-600">{row.cells[2]}</td>
-                      <td className="py-2 px-1 text-center font-mono text-gray-600">{row.cells[3]}</td>
-                      <td className="py-2 px-1 text-center font-mono text-gray-600">{row.cells[4]}</td>
-                      <td className="py-2 px-1 text-center font-mono text-gray-600">{row.cells[5]}</td>
-                      <td className="py-2 px-1 text-center font-mono text-gray-600">{row.cells[6]}</td>
+                    <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                      <td className="py-2 pr-2 pl-3 text-muted-foreground font-mono">{row.cells[0]}</td>
+                      <td className="py-2 px-2 text-foreground/80 font-medium">{row.cells[1]}</td>
+                      <td className="py-2 px-1 text-center font-mono text-muted-foreground">{row.cells[2]}</td>
+                      <td className="py-2 px-1 text-center font-mono text-muted-foreground">{row.cells[3]}</td>
+                      <td className="py-2 px-1 text-center font-mono text-muted-foreground">{row.cells[4]}</td>
+                      <td className="py-2 px-1 text-center font-mono text-muted-foreground">{row.cells[5]}</td>
+                      <td className="py-2 px-1 text-center font-mono text-muted-foreground">{row.cells[6]}</td>
                       <td className="py-2 px-1 text-center font-mono font-bold">
                         <SignalPill label={row.cells[7]} tone={tierTone} />
                       </td>
-                      <td className="py-2 pl-2 pr-3 text-center font-mono text-gray-600">{row.cells[8]}</td>
+                      <td className="py-2 pl-2 pr-3 text-center font-mono text-muted-foreground">{row.cells[8]}</td>
                     </tr>
                   );
                 })}
