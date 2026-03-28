@@ -179,7 +179,7 @@ export default async function FinancePage() {
 
   if (!finance) {
     return (
-      <div className="text-center py-20 text-gray-500 animate-fade-in">
+      <div className="text-center py-20 text-muted-foreground animate-fade-in">
         <div className="text-3xl font-mono mb-2">--</div>
         <div>Unable to fetch financial data from GitHub.</div>
         <div className="text-xs mt-2">Ensure GITHUB_TOKEN is set and the company repo is accessible.</div>
@@ -211,8 +211,8 @@ export default async function FinancePage() {
         <div className="flex items-center gap-3">
           <StatusDot status={alerts.length > 0 ? 'warn' : 'good'} size="lg" />
           <div>
-            <div className="text-lg font-semibold text-gray-900">Financial Health</div>
-            <div className="text-xs text-gray-500">Source: company/FINANCE.md</div>
+            <div className="text-lg font-semibold text-foreground">Financial Health</div>
+            <div className="text-xs text-muted-foreground">Source: company/FINANCE.md</div>
           </div>
         </div>
         <SignalPill
@@ -245,7 +245,7 @@ export default async function FinancePage() {
           <div className="space-y-2.5">
             {alerts.map((alert, i) => (
               <div key={i} className="flex items-start gap-2.5 text-sm border-l-2 border-red-200 pl-3 py-1">
-                <span className="text-gray-700">{alert}</span>
+                <span className="text-foreground/80">{alert}</span>
               </div>
             ))}
           </div>
@@ -299,9 +299,9 @@ export default async function FinancePage() {
                   <table className="w-full text-sm">
                     {headers.length > 1 && (
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
+                        <tr className="border-b border-border bg-muted">
                           {headers.map((h, hi) => (
-                            <th key={hi} className={`text-left text-xs text-gray-400 font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
+                            <th key={hi} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
                               {h.replace(/\*\*/g, '')}
                             </th>
                           ))}
@@ -310,9 +310,9 @@ export default async function FinancePage() {
                     )}
                     <tbody>
                       {sec.rows.map((row, j) => (
-                        <tr key={j} className={`border-b border-gray-50 last:border-0 ${j % 2 === 1 ? 'bg-gray-50/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                        <tr key={j} className={`border-b border-gray-50 last:border-0 ${j % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
                           {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-gray-700 pl-3' : 'text-gray-500 font-mono'}`}>
+                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground font-mono'}`}>
                               {cell.replace(/\*\*/g, '').replace(/~~([^~]+)~~/g, '$1')}
                             </td>
                           ))}

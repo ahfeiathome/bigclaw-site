@@ -1,10 +1,9 @@
-// Shared Dashboard Components — clean light executive design system
-// Light mode: white cards, subtle shadows, color-coded status, font-mono numbers
+// Shared Dashboard Components — dark operator terminal design system
+// Dark mode: card backgrounds, subtle borders, color-coded status, font-mono numbers
 
 import React from 'react';
 
 // ─── StatusDot ──────────────────────────────────────────────────────────────
-// Status indicator dot
 
 export function StatusDot({ status, size = 'md' }: {
   status: 'good' | 'warn' | 'bad' | 'neutral';
@@ -12,16 +11,15 @@ export function StatusDot({ status, size = 'md' }: {
 }) {
   const sizeMap = { sm: 'w-2 h-2', md: 'w-2.5 h-2.5', lg: 'w-3 h-3' };
   const colorMap = {
-    good: 'bg-green-500 shadow-[0_0_4px_rgba(22,163,74,0.3)]',
-    warn: 'bg-amber-500',
-    bad: 'bg-red-500 animate-pulse',
-    neutral: 'bg-gray-400',
+    good: 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]',
+    warn: 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]',
+    bad: 'bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.4)]',
+    neutral: 'bg-zinc-500',
   };
   return <span className={`inline-block rounded-full shrink-0 ${sizeMap[size]} ${colorMap[status]}`} />;
 }
 
 // ─── MetricCard ─────────────────────────────────────────────────────────────
-// Clean white KPI card with large mono number
 
 export function MetricCard({ label, value, subtitle, icon, trend }: {
   label: string;
@@ -32,25 +30,24 @@ export function MetricCard({ label, value, subtitle, icon, trend }: {
   trend?: 'up' | 'down' | 'flat';
 }) {
   const trendIcon = trend === 'up' ? '\u2197' : trend === 'down' ? '\u2198' : trend === 'flat' ? '\u2192' : null;
-  const trendColor = trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400';
+  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-zinc-500';
 
   return (
-    <div className="animate-fade-in rounded-2xl bg-white shadow-sm p-5 transition-all duration-200">
+    <div className="animate-fade-in rounded-xl bg-card border border-border p-4 transition-all duration-200">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium tracking-wide uppercase text-gray-400">{label}</span>
-        {icon && <div className="w-4 h-4 text-gray-400">{icon}</div>}
+        <span className="text-xs font-medium tracking-wide uppercase text-muted-foreground">{label}</span>
+        {icon && <div className="w-4 h-4 text-muted-foreground">{icon}</div>}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-bold font-mono text-gray-900">{value}</span>
+        <span className="text-2xl font-bold font-mono text-foreground">{value}</span>
         {trendIcon && <span className={`text-lg ${trendColor}`}>{trendIcon}</span>}
       </div>
-      {subtitle && <span className="text-sm text-gray-400 mt-0.5 block">{subtitle}</span>}
+      {subtitle && <span className="text-xs text-muted-foreground mt-0.5 block">{subtitle}</span>}
     </div>
   );
 }
 
 // ─── HealthRow ──────────────────────────────────────────────────────────────
-// Status row with optional progress bar
 
 export function HealthRow({ label, value, status, bar, icon }: {
   label: string;
@@ -68,13 +65,13 @@ export function HealthRow({ label, value, status, bar, icon }: {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StatusDot status={status} size="sm" />
-          {icon && <span className="w-4 h-4 text-gray-400">{icon}</span>}
-          <span className="text-sm text-gray-500">{label}</span>
+          {icon && <span className="w-4 h-4 text-muted-foreground">{icon}</span>}
+          <span className="text-sm text-muted-foreground">{label}</span>
         </div>
-        <span className="text-sm font-medium font-mono text-gray-900">{value}</span>
+        <span className="text-sm font-medium font-mono text-foreground">{value}</span>
       </div>
       {bar != null && (
-        <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
           <div
             className={`h-full rounded-full animate-bar-fill ${barColor}`}
             style={{ width: `${Math.min(bar, 100)}%` }}
@@ -86,22 +83,21 @@ export function HealthRow({ label, value, status, bar, icon }: {
 }
 
 // ─── SignalPill ──────────────────────────────────────────────────────────────
-// Colored dot + tinted background status badge
 
 const pillToneMap = {
-  success: 'bg-green-50 text-green-700',
-  warning: 'bg-orange-50 text-orange-700',
-  error:   'bg-red-50 text-red-700',
-  info:    'bg-blue-50 text-blue-700',
-  neutral: 'bg-gray-100 text-gray-600',
+  success: 'bg-green-500/10 text-green-400 border border-green-500/20',
+  warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  error:   'bg-red-500/10 text-red-400 border border-red-500/20',
+  info:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  neutral: 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20',
 } as const;
 
 const pillDotMap = {
   success: 'bg-green-500',
-  warning: 'bg-orange-500',
+  warning: 'bg-amber-500',
   error:   'bg-red-500',
   info:    'bg-blue-500',
-  neutral: 'bg-gray-400',
+  neutral: 'bg-zinc-500',
 } as const;
 
 export function SignalPill({ label, tone = 'neutral' }: {
@@ -118,7 +114,6 @@ export function SignalPill({ label, tone = 'neutral' }: {
 }
 
 // ─── SectionCard ────────────────────────────────────────────────────────────
-// White container card with subtle shadow
 
 export function SectionCard({ title, children, className, action }: {
   title: string;
@@ -128,16 +123,16 @@ export function SectionCard({ title, children, className, action }: {
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`animate-fade-in rounded-2xl bg-white shadow-sm border border-gray-100 ${className || ''}`}>
-      <div className="px-5 pt-5 pb-3">
+    <div className={`animate-fade-in rounded-xl bg-card border border-border ${className || ''}`}>
+      <div className="px-4 pt-4 pb-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {title}
           </span>
           {action && <div>{action}</div>}
         </div>
       </div>
-      <div className="px-5 pb-5">
+      <div className="px-4 pb-4">
         {children}
       </div>
     </div>
