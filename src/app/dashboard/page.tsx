@@ -1,5 +1,6 @@
 import { fetchPatrolReport, fetchProjects } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
+import { CollapsibleSection } from '@/components/collapsible-section';
 
 interface TableRow {
   cells: string[];
@@ -237,8 +238,10 @@ export default async function DashboardOverview() {
 
   return (
     <div>
+      {/* ── ZONE 1: Header + Alerts + Blocked (above the fold) ─────────── */}
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
+      <div className="flex items-center justify-between mb-4 animate-fade-in">
         <div className="flex items-center gap-3">
           <StatusDot
             status={meta['Status'] === 'HEALTHY' ? 'good' : meta['Status']?.includes('CRITICAL') ? 'bad' : 'warn'}
@@ -257,25 +260,12 @@ export default async function DashboardOverview() {
         />
       </div>
 
-      {/* Exec Summary */}
-      <SectionCard title="Executive Summary" className="mb-6">
-        <div className="space-y-2">
-          {execLines.map((line, i) => (
-            <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
-          ))}
-        </div>
-      </SectionCard>
-
-      {/* Hero MetricCards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-        <MetricCard label="Projects" value={pdlcProjects.length} subtitle={`${liveCount} live`} trend="up" />
-        <MetricCard label="Status" value={meta['Status'] || '?'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} />
-        {burnRow && <MetricCard label={burnRow.cells[0]} value={burnRow.cells[1]} trend="flat" />}
-        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} trend="up" />}
-        <MetricCard label="Alerts" value={hasAlerts ? alerts.length : 0} subtitle={hasAlerts ? 'Review below' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} />
+      {/* Brief exec summary — condensed inline, not a full card */}
+      <div className="text-sm text-muted-foreground mb-4 animate-fade-in font-mono leading-relaxed">
+        {execLines.join(' ')}
       </div>
 
-      {/* Alerts + Blocked */}
+      {/* Alerts + Blocked on Sponsor — top of page, actionable */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <SectionCard title="Alerts">
           {!hasAlerts ? (
@@ -318,7 +308,18 @@ export default async function DashboardOverview() {
         </SectionCard>
       </div>
 
-      {/* Infrastructure HealthRows with progress bars */}
+      {/* ── ZONE 2: Metric strip + Health panels ──────────────────────── */}
+
+      {/* Hero MetricCards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+        <MetricCard label="Projects" value={pdlcProjects.length} subtitle={`${liveCount} live`} trend="up" />
+        <MetricCard label="Status" value={meta['Status'] || '?'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} />
+        {burnRow && <MetricCard label={burnRow.cells[0]} value={burnRow.cells[1]} trend="flat" />}
+        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} trend="up" />}
+        <MetricCard label="Alerts" value={hasAlerts ? alerts.length : 0} subtitle={hasAlerts ? 'Review above' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} />
+      </div>
+
+      {/* Infrastructure + Financial health panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <SectionCard title="Infrastructure">
           <div className="space-y-3">
@@ -376,90 +377,98 @@ export default async function DashboardOverview() {
         )}
       </div>
 
-      {/* Projects PDLC Pipeline */}
+      {/* ── ZONE 3: PDLC Pipeline (collapsible) ──────────────────────── */}
+
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Projects -- PDLC Pipeline</span>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <CollapsibleSection
+          title="Projects -- PDLC Pipeline"
+          defaultOpen={false}
+          badge={
+            <span className="text-[10px] text-muted-foreground font-mono ml-1">
+              {pdlcProjects.length} projects
+            </span>
+          }
+        >
+          <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground mb-3">
             <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-green-500 inline-block" /> Completed</span>
             <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-blue-500 ring-1 ring-blue-500/30 inline-block" /> Current</span>
             <span className="flex items-center gap-1.5"><span className="w-4 h-2 rounded-full bg-muted inline-block" /> Upcoming</span>
           </div>
-        </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mb-4">
-          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-white">All {pdlcProjects.length}</span>
-          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Live {liveCount}</span>
-          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Building {buildCount}</span>
-          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Early {earlyCount}</span>
-        </div>
-
-        {/* PDLC Phase Reference */}
-        <div className="border border-border rounded-2xl p-4 mb-3 bg-card shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground font-medium shrink-0">PDLC Lifecycle:</span>
-            <div className="flex items-center gap-0.5 flex-1 max-w-xl">
-              {PDLC_STAGES.map((s) => (
-                <div key={s} className="flex-1 text-center">
-                  <div className="h-1.5 rounded-full bg-muted" />
-                  <span className="text-[10px] text-muted-foreground font-mono">{PDLC_LABELS[s]}</span>
-                </div>
-              ))}
-            </div>
+          {/* Filter Tabs */}
+          <div className="flex gap-2 mb-4">
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-white">All {pdlcProjects.length}</span>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Live {liveCount}</span>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Building {buildCount}</span>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">Early {earlyCount}</span>
           </div>
-        </div>
 
-        {/* Stage distribution pills + categorized project cards */}
-        {(() => {
-          const stageCounts: Record<string, number> = {};
-          pdlcProjects.forEach(p => {
-            const { current } = parsePdlcStage(p.pdlcStage);
-            const label = PDLC_LABELS[current] || current;
-            stageCounts[label] = (stageCounts[label] || 0) + 1;
-          });
-
-          const foundryNames = new Set(['VERDE', 'VAULT', 'CORTEX', 'REHEARSAL', 'AXIOM', 'PHOENIX', 'CLAW', 'RADAR']);
-          const collaborateNames = new Set(['LEARNIE']);
-          const serviceNames = new Set(['WINGMAN']);
-
-          const foundry = pdlcProjects.filter(p => foundryNames.has(p.codename));
-          const collaborate = pdlcProjects.filter(p => collaborateNames.has(p.codename));
-          const service = pdlcProjects.filter(p => serviceNames.has(p.codename));
-          const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
-          const other = pdlcProjects.filter(p => !categorized.has(p.codename));
-
-          const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => {
-            if (items.length === 0) return null;
-            return (
-              <div className="mb-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-sm font-semibold ${color} uppercase tracking-wide`}>{title}</span>
-                  <span className="text-xs text-muted-foreground">-- {desc}</span>
-                  <span className="text-xs text-muted-foreground ml-auto font-mono">{items.length} project{items.length > 1 ? 's' : ''}</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {items.map((p) => <PdlcCard key={p.codename} project={p} />)}
-                </div>
-              </div>
-            );
-          };
-
-          return (
-            <>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs text-muted-foreground font-mono">{pdlcProjects.length} projects:</span>
-                {Object.entries(stageCounts).map(([label, count]) => (
-                  <SignalPill key={label} label={`${label} (${count})`} tone="neutral" />
+          {/* PDLC Phase Reference */}
+          <div className="border border-border rounded-2xl p-4 mb-3 bg-card shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-medium shrink-0">PDLC Lifecycle:</span>
+              <div className="flex items-center gap-0.5 flex-1 max-w-xl">
+                {PDLC_STAGES.map((s) => (
+                  <div key={s} className="flex-1 text-center">
+                    <div className="h-1.5 rounded-full bg-muted" />
+                    <span className="text-[10px] text-muted-foreground font-mono">{PDLC_LABELS[s]}</span>
+                  </div>
                 ))}
               </div>
-              <CategorySection title="Foundry" desc="Apps & internal products" color="text-green-600" items={foundry} />
-              <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-600" items={collaborate} />
-              <CategorySection title="Service" desc="Client & partner projects" color="text-purple-600" items={service} />
-              {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-muted-foreground" items={other} />}
-            </>
-          );
-        })()}
+            </div>
+          </div>
+
+          {/* Stage distribution pills + categorized project cards */}
+          {(() => {
+            const stageCounts: Record<string, number> = {};
+            pdlcProjects.forEach(p => {
+              const { current } = parsePdlcStage(p.pdlcStage);
+              const label = PDLC_LABELS[current] || current;
+              stageCounts[label] = (stageCounts[label] || 0) + 1;
+            });
+
+            const foundryNames = new Set(['VERDE', 'VAULT', 'CORTEX', 'REHEARSAL', 'AXIOM', 'PHOENIX', 'CLAW', 'RADAR']);
+            const collaborateNames = new Set(['LEARNIE']);
+            const serviceNames = new Set(['WINGMAN']);
+
+            const foundry = pdlcProjects.filter(p => foundryNames.has(p.codename));
+            const collaborate = pdlcProjects.filter(p => collaborateNames.has(p.codename));
+            const service = pdlcProjects.filter(p => serviceNames.has(p.codename));
+            const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
+            const other = pdlcProjects.filter(p => !categorized.has(p.codename));
+
+            const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => {
+              if (items.length === 0) return null;
+              return (
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`text-sm font-semibold ${color} uppercase tracking-wide`}>{title}</span>
+                    <span className="text-xs text-muted-foreground">-- {desc}</span>
+                    <span className="text-xs text-muted-foreground ml-auto font-mono">{items.length} project{items.length > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {items.map((p) => <PdlcCard key={p.codename} project={p} />)}
+                  </div>
+                </div>
+              );
+            };
+
+            return (
+              <>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="text-xs text-muted-foreground font-mono">{pdlcProjects.length} projects:</span>
+                  {Object.entries(stageCounts).map(([label, count]) => (
+                    <SignalPill key={label} label={`${label} (${count})`} tone="neutral" />
+                  ))}
+                </div>
+                <CategorySection title="Foundry" desc="Apps & internal products" color="text-green-600" items={foundry} />
+                <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-600" items={collaborate} />
+                <CategorySection title="Service" desc="Client & partner projects" color="text-purple-600" items={service} />
+                {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-muted-foreground" items={other} />}
+              </>
+            );
+          })()}
+        </CollapsibleSection>
       </div>
     </div>
   );
