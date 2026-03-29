@@ -150,6 +150,126 @@ export async function fetchAllTasks(): Promise<string[]> {
   return lines;
 }
 
+// --- GitHub Issues & Releases (cross-repo) ---
+
+const ALL_REPOS = [
+  'learnie-ai',
+  'bigclaw-site',
+  'radar',
+  'cortex',
+  'fatfrogmodels',
+  'plantdoc',
+  'receiptsnap',
+  'calsnap',
+  'axiom',
+];
+
+export interface GitHubIssue {
+  repo: string;
+  number: number;
+  title: string;
+  state: string;
+  labels: string[];
+  createdAt: string;
+  updatedAt: string;
+  url: string;
+}
+
+export interface GitHubRelease {
+  repo: string;
+  tag: string;
+  name: string;
+  publishedAt: string;
+  url: string;
+}
+
+export async function fetchAllIssues(): Promise<GitHubIssue[]> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  const results: GitHubIssue[] = [];
+
+  await Promise.all(
+    ALL_REPOS.map(async (repo) => {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${OWNER}/${repo}/issues?state=open&per_page=50&sort=updated`,
+          { headers, next: { revalidate: 300 } },
+        );
+        if (!res.ok) return;
+        const data = await res.json() as Array<{
+          number: number;
+          title: string;
+          state: string;
+          labels: Array<{ name: string }>;
+          created_at: string;
+          updated_at: string;
+          html_url: string;
+          pull_request?: unknown;
+        }>;
+        for (const issue of data) {
+          if (issue.pull_request) continue; // skip PRs
+          results.push({
+            repo,
+            number: issue.number,
+            title: issue.title,
+            state: issue.state,
+            labels: issue.labels.map((l) => l.name),
+            createdAt: issue.created_at,
+            updatedAt: issue.updated_at,
+            url: issue.html_url,
+          });
+        }
+      } catch { /* skip repo on error */ }
+    }),
+  );
+
+  return results.sort((a, b) => {
+    const priority = (labels: string[]) => labels.includes('P0') ? 0 : labels.includes('P1') ? 1 : labels.includes('P2') ? 2 : 3;
+    return priority(a.labels) - priority(b.labels) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+}
+
+export async function fetchAllReleases(): Promise<GitHubRelease[]> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  const results: GitHubRelease[] = [];
+
+  await Promise.all(
+    ALL_REPOS.map(async (repo) => {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${OWNER}/${repo}/releases?per_page=5`,
+          { headers, next: { revalidate: 300 } },
+        );
+        if (!res.ok) return;
+        const data = await res.json() as Array<{
+          tag_name: string;
+          name: string | null;
+          published_at: string;
+          html_url: string;
+        }>;
+        for (const rel of data) {
+          results.push({
+            repo,
+            tag: rel.tag_name,
+            name: rel.name || rel.tag_name,
+            publishedAt: rel.published_at,
+            url: rel.html_url,
+          });
+        }
+      } catch { /* skip */ }
+    }),
+  );
+
+  return results.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
 export function extractMichaelBlockers(
   learnieAgents: string | null,
   companyCheckpoint: string | null,

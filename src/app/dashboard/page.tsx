@@ -1,4 +1,5 @@
-import { fetchPatrolReport, fetchProjects } from '@/lib/github';
+import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases } from '@/lib/github';
+import type { GitHubIssue, GitHubRelease } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 import { CollapsibleSection } from '@/components/collapsible-section';
 
@@ -193,9 +194,11 @@ function buildExecSummary(
 }
 
 export default async function DashboardOverview() {
-  const [content, projectsMd] = await Promise.all([
+  const [content, projectsMd, allIssues, allReleases] = await Promise.all([
     fetchPatrolReport(),
     fetchProjects(),
+    fetchAllIssues(),
+    fetchAllReleases(),
   ]);
   const pdlcProjects = projectsMd ? parsePdlcProjects(projectsMd) : [];
 
@@ -375,6 +378,55 @@ export default async function DashboardOverview() {
             </div>
           </SectionCard>
         )}
+      </div>
+
+      {/* ── Issues & Releases (cross-repo) ───────────────────────────── */}
+      <div className="grid gap-4 md:grid-cols-2 mt-4">
+        <SectionCard title="Open Issues">
+          {allIssues.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No open issues</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {allIssues.slice(0, 20).map((issue: GitHubIssue) => (
+                <a key={`${issue.repo}-${issue.number}`} href={issue.url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 rounded-lg p-2 hover:bg-muted transition-colors no-underline">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono text-muted-foreground">{issue.repo}</span>
+                      <span className="text-xs text-muted-foreground">#{issue.number}</span>
+                    </div>
+                    <p className="text-sm text-foreground truncate">{issue.title}</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    {issue.labels.filter(l => ['P0','P1','P2'].includes(l)).map(l => (
+                      <span key={l} className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${l === 'P0' ? 'bg-red-500/20 text-red-400' : l === 'P1' ? 'bg-amber-500/20 text-amber-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{l}</span>
+                    ))}
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Recent Releases">
+          {allReleases.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No releases yet</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {allReleases.slice(0, 10).map((rel: GitHubRelease) => (
+                <a key={`${rel.repo}-${rel.tag}`} href={rel.url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 rounded-lg p-2 hover:bg-muted transition-colors no-underline">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono text-muted-foreground">{rel.repo}</span>
+                      <span className="text-xs font-mono font-bold text-primary">{rel.tag}</span>
+                    </div>
+                    <p className="text-sm text-foreground truncate">{rel.name}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(rel.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </SectionCard>
       </div>
 
       {/* ── ZONE 3: PDLC Pipeline (collapsible) ──────────────────────── */}
