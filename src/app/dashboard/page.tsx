@@ -382,7 +382,7 @@ export default async function DashboardOverview() {
 
       {/* ── Issues & Releases (cross-repo) ───────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 mt-4">
-        <SectionCard title="Open Issues">
+        <SectionCard title="Open Issues" action={<a href="https://github.com/users/ahfeiathome/projects/1" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline no-underline">Board &rarr;</a>}>
           {allIssues.length === 0 ? (
             <p className="text-sm text-muted-foreground">No open issues</p>
           ) : (
