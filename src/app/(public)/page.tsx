@@ -6,7 +6,7 @@ const products = [
     description: 'AI-powered worksheet generator for K-5 families. Print, complete by hand, scan to grade.',
     status: 'LIVE',
     statusColor: 'bg-green-500/10 text-green-500',
-    pricing: '$19.99/mo',
+    pricing: 'Free beta',
   },
   {
     name: 'VERDE (PlantDoc)',
@@ -129,8 +129,8 @@ export default function Home() {
         <h2 className="text-2xl font-bold mb-4">Get in Touch</h2>
         <p className="text-muted-foreground">
           Questions, partnerships, or investor inquiries:{' '}
-          <a href="mailto:michael@bigclaw.com" className="text-accent">
-            michael@bigclaw.com
+          <a href="mailto:bigclawai@gmail.com" className="text-accent">
+            bigclawai@gmail.com
           </a>
         </p>
       </section>

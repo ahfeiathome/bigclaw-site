@@ -252,21 +252,28 @@ export default async function FinancePage() {
         </SectionCard>
       )}
 
-      {/* Cost Breakdown as HealthRows */}
-      {costItems.length > 0 && (
-        <SectionCard title="Cost Breakdown" className="mb-6">
-          <div className="space-y-3">
-            {costItems.map((item, i) => (
-              <HealthRow
-                key={i}
-                label={item.category}
-                value={item.amount}
-                status={item.status === 'red' ? 'bad' : item.status === 'green' ? 'good' : 'good'}
-              />
-            ))}
-          </div>
-        </SectionCard>
-      )}
+      {/* Cost Breakdown as HealthRows — filter out agent model assignments (shown on Infra page) */}
+      {costItems.length > 0 && (() => {
+        const agentKeywords = ['mika', 'koda', 'rex', 'sage', 'byte', 'lumina', 'haiku', 'sonnet', 'orchestrat'];
+        const projectCosts = costItems.filter(item =>
+          !agentKeywords.some(kw => item.category.toLowerCase().includes(kw))
+        );
+        if (projectCosts.length === 0) return null;
+        return (
+          <SectionCard title="Cost Breakdown" className="mb-6">
+            <div className="space-y-3">
+              {projectCosts.map((item, i) => (
+                <HealthRow
+                  key={i}
+                  label={item.category}
+                  value={item.amount.replace(/\*\*/g, '')}
+                  status={item.status === 'red' ? 'bad' : item.status === 'green' ? 'good' : 'good'}
+                />
+              ))}
+            </div>
+          </SectionCard>
+        );
+      })()}
 
       {/* Free Tier Usage with animated gradient bars */}
       {freeTierItems.length > 0 && (
@@ -285,47 +292,65 @@ export default async function FinancePage() {
         </SectionCard>
       )}
 
-      {/* Remaining structured data as tables */}
-      {allSections.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allSections.map((sec, i) => {
-            const sectionText = extractSection(finance, sec.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-            const headerLine = sectionText.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| \u2014/));
-            const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
+      {/* Remaining operational tables (filter out infra-only sections) */}
+      {allSections.length > 0 && (() => {
+        const infraSections = new Set([
+          'Active Subscriptions & Services',
+          "Michael's Personal AI Subscriptions (Firm Infrastructure)",
+          "Michael's Personal AI Subscriptions",
+          'Pricing (current rates)',
+          'Pi5 Agent Token Usage (lifetime, from session data)',
+          'Pi5 Agent Token Usage',
+          'Pi5 Cost Breakdown by Tier',
+          'Subscription Cost Decisions Log',
+        ]);
+        const opsSections = allSections.filter(sec =>
+          !infraSections.has(sec.title) &&
+          !sec.title.toLowerCase().includes('subscription') &&
+          !sec.title.toLowerCase().includes('pricing')
+        );
+        if (opsSections.length === 0) return null;
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {opsSections.map((sec, i) => {
+              const sectionText = extractSection(finance, sec.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+              const headerLine = sectionText.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| \u2014/));
+              const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
 
-            return (
-              <SectionCard key={i} title={sec.title}>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    {headers.length > 1 && (
-                      <thead>
-                        <tr className="border-b border-border bg-muted">
-                          {headers.map((h, hi) => (
-                            <th key={hi} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
-                              {h.replace(/\*\*/g, '')}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                    )}
-                    <tbody>
-                      {sec.rows.map((row, j) => (
-                        <tr key={j} className={`border-b border-gray-50 last:border-0 ${j % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
-                          {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground font-mono'}`}>
-                              {cell.replace(/\*\*/g, '').replace(/~~([^~]+)~~/g, '$1')}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </SectionCard>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <SectionCard key={i} title={sec.title}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      {headers.length > 1 && (
+                        <thead>
+                          <tr className="border-b border-border bg-muted">
+                            {headers.map((h, hi) => (
+                              <th key={hi} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${hi === 0 ? 'pl-3' : ''}`}>
+                                {h.replace(/\*\*/g, '')}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                      )}
+                      <tbody>
+                        {sec.rows.map((row, j) => (
+                          <tr key={j} className={`border-b border-gray-50 last:border-0 ${j % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
+                            {row.cells.map((cell, ci) => (
+                              <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground font-mono'}`}>
+                                {cell.replace(/\*\*/g, '').replace(/~~([^~]+)~~/g, '$1')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </SectionCard>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }

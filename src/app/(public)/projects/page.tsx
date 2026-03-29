@@ -67,7 +67,7 @@ const products: Project[] = [
       'Privacy-first — no bank account connection needed',
     ],
     pricing: '$4.99/mo',
-    phase: 'v0.1 — Queued after VERDE ships',
+    phase: 'v0.1 — Built, TestFlight-ready. App Store pending Apple Developer enrollment.',
   },
   {
     name: 'RADAR',

@@ -10,27 +10,50 @@ const activeTeam = [
     role: 'CEO + all C-suite',
     name: 'Code CLI (Felix)',
     model: 'Claude Opus on Mac',
-    description: 'Makes ALL decisions and executes them. CEO + CTO + CIO + COO + CMO + CFO — unified executor. Active 24/7 via 6-hour cron patrol.',
+    description: 'Makes ALL decisions and executes them. CEO + CTO + CIO + COO + CMO + CFO — unified executor. Active 24/7 via 6-hour launchd patrol.',
+  },
+  {
+    role: 'Consultant',
+    name: 'Claude Chat',
+    model: 'Claude Opus',
+    description: 'Strategic advisor — risk analysis, architectural recommendations, quality audits. No decision authority. Writes recommendations; Felix decides whether to act.',
   },
   {
     role: 'Telegram Dispatcher',
     name: 'Mika',
-    model: 'Haiku on Pi5',
-    description: 'Routes messages, compiles morning brief, alerts on system health. 5-minute heartbeat. Runs 24/7 on Raspberry Pi 5.',
+    model: 'Gemini Flash on Pi5',
+    description: 'Routes messages, compiles morning brief, dispatches tasks to agents, alerts on system health. 5-minute heartbeat.',
   },
   {
     role: 'Dev Inbox',
     name: 'Koda',
-    model: 'Sonnet on Pi5',
+    model: 'Gemini Flash on Pi5',
     description: 'Receives dev requests from Michael via Telegram. Serves as Code CLI activity feed. 30-minute heartbeat.',
   },
-];
-
-const frozenAgents = [
-  { name: 'Rex', role: 'CFO' },
-  { name: 'Sage', role: 'BDM' },
-  { name: 'Byte', role: 'CIO' },
-  { name: 'Lumina', role: 'CMO' },
+  {
+    role: 'CFO',
+    name: 'Rex',
+    model: 'Claude Sonnet via OpenRouter',
+    description: 'Tracks API costs, burn rate, free-tier headroom. RADAR trading alerts. Daily finance reports. Privacy Tier 1.',
+  },
+  {
+    role: 'BDM',
+    name: 'Sage',
+    model: 'DeepSeek V3 via OpenRouter',
+    description: 'Weekly market scans, competitive intelligence, opportunity scoring. Proactive exploration of adjacent markets.',
+  },
+  {
+    role: 'CIO',
+    name: 'Byte',
+    model: 'DeepSeek R1 via OpenRouter',
+    description: 'Infrastructure health, security scans, CVE checks, git sync monitoring. Twice-daily comprehensive scans.',
+  },
+  {
+    role: 'CMO',
+    name: 'Lumina',
+    model: 'Llama 3.3 70B via OpenRouter',
+    description: 'SEO strategy, content planning, user acquisition for Learnie AI. Targeting K-5 parent segment.',
+  },
 ];
 
 export default function AboutPage() {
@@ -49,10 +72,10 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-3 gap-6">
           <div className="border border-border rounded-lg p-6 bg-card/50">
             <div className="text-accent text-2xl mb-3">01</div>
-            <h3 className="font-semibold mb-2">Code CLI reads the queue</h3>
+            <h3 className="font-semibold mb-2">Code CLI reads the board</h3>
             <p className="text-sm text-muted-foreground">
-              Code CLI (Felix) reads CHECKPOINT.md, decides the approach, and executes
-              autonomously — product decisions, architecture, deployment, everything.
+              Code CLI (Felix) reads GitHub Issues, inbox messages, and agent reports — then
+              decides the approach and executes autonomously. Product, architecture, deployment, everything.
             </p>
           </div>
           <div className="border border-border rounded-lg p-6 bg-card/50">
@@ -65,10 +88,10 @@ export default function AboutPage() {
           </div>
           <div className="border border-border rounded-lg p-6 bg-card/50">
             <div className="text-accent text-2xl mb-3">03</div>
-            <h3 className="font-semibold mb-2">Agents monitor 24/7</h3>
+            <h3 className="font-semibold mb-2">8 agents operate 24/7</h3>
             <p className="text-sm text-muted-foreground">
-              Mika dispatches tasks, monitors system health, and compiles morning briefs.
-              All agents write reports that feed into the live dashboard.
+              Mika dispatches, Rex tracks finance, Byte guards security, Sage scouts markets,
+              Lumina drives growth. All agents report to the live dashboard.
             </p>
           </div>
         </div>
@@ -107,20 +130,14 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Frozen agents */}
+        {/* Architecture note */}
         <div className="mt-6 border border-border rounded-lg p-4 bg-card/30">
           <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2">
-            Frozen agents (configs preserved)
+            M3 Architecture — Phoenix Phase 2
           </p>
-          <div className="flex flex-wrap gap-3">
-            {frozenAgents.map((a) => (
-              <span key={a.name} className="text-xs text-muted-foreground">
-                {a.name} ({a.role})
-              </span>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Code CLI absorbs all their roles in M2 architecture.
+          <p className="text-xs text-muted-foreground">
+            All 8 agents are active. Felix (Code CLI) makes decisions on Mac via Claude Max.
+            6 specialist agents run on Raspberry Pi 5 via OpenRouter. One human provides credit cards and legal signatures.
           </p>
         </div>
       </section>
