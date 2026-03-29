@@ -7,6 +7,7 @@ import {
   ProjectsIcon,
   RadarIcon,
   FinanceIcon,
+  InfraIcon,
   GrowthIcon,
   StatusDot,
 } from '@/components/dashboard';
@@ -16,6 +17,7 @@ const navItems = [
   { href: '/dashboard/projects', label: 'Projects', icon: <ProjectsIcon /> },
   { href: '/dashboard/radar', label: 'RADAR', icon: <RadarIcon /> },
   { href: '/dashboard/finance', label: 'Finance', icon: <FinanceIcon /> },
+  { href: '/dashboard/infra', label: 'Infra', icon: <InfraIcon /> },
   { href: '/dashboard/bizdev', label: 'Growth', icon: <GrowthIcon /> },
 ];
 

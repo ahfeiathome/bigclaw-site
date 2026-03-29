@@ -1,6 +1,6 @@
 import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases } from '@/lib/github';
 import type { GitHubIssue, GitHubRelease } from '@/lib/github';
-import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
+import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, AgentStatusPanel } from '@/components/dashboard';
 import { CollapsibleSection } from '@/components/collapsible-section';
 
 interface TableRow {
@@ -221,9 +221,16 @@ export default async function DashboardOverview() {
   const actions = parseMarkdownTable(extractSection(content, 'Actions'));
   const blocked = parseMarkdownTable(extractSection(content, 'Blocked on Sponsor'));
 
-  const execLines = buildExecSummary(meta, alerts, velocity, blocked, pdlcProjects);
+  // Filter out personal finance alerts that shouldn't appear on company dashboard
+  const personalKeywords = ['margin call', 'personal', 'j.p. morgan', 'chase', 'schwab'];
+  const filteredAlerts = alerts.filter(row => {
+    const text = row.cells.join(' ').toLowerCase();
+    return !personalKeywords.some(kw => text.includes(kw));
+  });
 
-  const hasAlerts = alerts.length > 0 && !(alerts.length === 1 && alerts[0].cells[0] === '\u2014');
+  const execLines = buildExecSummary(meta, filteredAlerts, velocity, blocked, pdlcProjects);
+
+  const hasAlerts = filteredAlerts.length > 0 && !(filteredAlerts.length === 1 && filteredAlerts[0].cells[0] === '\u2014');
 
   const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn') || r.cells[0]?.toLowerCase().includes('cost'));
   const freeRow = financial.find(r => r.cells[0]?.toLowerCase().includes('free'));
@@ -268,6 +275,9 @@ export default async function DashboardOverview() {
         {execLines.join(' ')}
       </div>
 
+      {/* Quick Actions */}
+      <QuickActionsBar />
+
       {/* Alerts + Blocked on Sponsor — top of page, actionable */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <SectionCard title="Alerts">
@@ -278,7 +288,7 @@ export default async function DashboardOverview() {
             </div>
           ) : (
             <div className="space-y-2.5">
-              {alerts.map((row, i) => (
+              {filteredAlerts.map((row, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-sm border-l-2 border-red-200 pl-3 py-1">
                   <div>
                     <span className="text-foreground/80">{row.cells[1]}</span>
@@ -313,45 +323,57 @@ export default async function DashboardOverview() {
 
       {/* ── ZONE 2: Metric strip + Health panels ──────────────────────── */}
 
-      {/* Hero MetricCards */}
+      {/* Hero MetricCards — color-coded borders */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
         <MetricCard label="Projects" value={pdlcProjects.length} subtitle={`${liveCount} live`} trend="up" />
-        <MetricCard label="Status" value={meta['Status'] || '?'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} />
-        {burnRow && <MetricCard label={burnRow.cells[0]} value={burnRow.cells[1]} trend="flat" />}
-        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} trend="up" />}
-        <MetricCard label="Alerts" value={hasAlerts ? alerts.length : 0} subtitle={hasAlerts ? 'Review above' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} />
+        <MetricCard label="Status" value={meta['Status'] || '?'} trend={meta['Status'] === 'HEALTHY' ? 'up' : 'flat'} semantic={meta['Status'] === 'HEALTHY' ? 'success' : meta['Status']?.includes('CRITICAL') ? 'danger' : 'warning'} />
+        {burnRow && <MetricCard label="Monthly Burn" value={burnRow.cells[1]?.replace('(free tiers)', '').trim() || burnRow.cells[1]} trend="flat" />}
+        {freeRow && <MetricCard label={freeRow.cells[0]} value={freeRow.cells[1]} trend="up" semantic="success" />}
+        <MetricCard label="Alerts" value={hasAlerts ? filteredAlerts.length : 0} subtitle={hasAlerts ? 'Review above' : 'All clear'} trend={hasAlerts ? 'down' : 'up'} semantic={hasAlerts ? 'warning' : 'success'} />
       </div>
 
-      {/* Infrastructure + Financial health panels */}
+      {/* Agent Status + Financial health panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <SectionCard title="Infrastructure">
-          <div className="space-y-3">
-            {[...infra, ...tooling].map((row, i) => (
-              <HealthRow
-                key={i}
-                label={row.cells[0]}
-                value={row.cells[1] || ''}
-                status={getHealthStatus(row.cells[1] || '')}
-                bar={parseBarPercent(row.cells[1] || '')}
-              />
-            ))}
-            {infra.length === 0 && tooling.length === 0 && <div className="text-sm text-muted-foreground">No data</div>}
-          </div>
-        </SectionCard>
+        <AgentStatusPanel />
         <SectionCard title="Financial">
           <div className="space-y-3">
-            {financial.map((row, i) => (
-              <HealthRow
-                key={i}
-                label={row.cells[0]}
-                value={row.cells[1] || ''}
-                status={getHealthStatus(row.cells[1] || '')}
-              />
-            ))}
+            {financial.map((row, i) => {
+              const label = row.cells[0] || '';
+              const value = row.cells[1] || '';
+              const isRadar = label.toLowerCase().includes('radar');
+              const displayValue = isRadar && !value.includes('PAPER') ? `${value} (PAPER)` : value;
+              return (
+                <HealthRow
+                  key={i}
+                  label={label}
+                  value={displayValue}
+                  status={getHealthStatus(value)}
+                />
+              );
+            })}
             {financial.length === 0 && <div className="text-sm text-muted-foreground">No data</div>}
           </div>
         </SectionCard>
       </div>
+
+      {/* Infrastructure + Tooling health panel */}
+      {(infra.length > 0 || tooling.length > 0) && (
+        <div className="mb-6">
+          <SectionCard title="Infrastructure">
+            <div className="space-y-3">
+              {[...infra, ...tooling].map((row, i) => (
+                <HealthRow
+                  key={i}
+                  label={row.cells[0]}
+                  value={row.cells[1] || ''}
+                  status={getHealthStatus(row.cells[1] || '')}
+                  bar={parseBarPercent(row.cells[1] || '')}
+                />
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      )}
 
       {/* Velocity + Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -407,9 +429,9 @@ export default async function DashboardOverview() {
           )}
         </SectionCard>
 
-        <SectionCard title="Recent Releases">
+        <SectionCard title={allReleases.length > 0 ? 'Recent Releases' : ''}>
           {allReleases.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No releases yet</p>
+            <p className="text-xs text-muted-foreground italic">No releases yet — will appear after first tagged release</p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {allReleases.slice(0, 10).map((rel: GitHubRelease) => (
