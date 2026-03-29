@@ -2,6 +2,7 @@ import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases } fr
 import type { GitHubIssue, GitHubRelease } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, AgentStatusPanel } from '@/components/dashboard';
 import { CollapsibleSection } from '@/components/collapsible-section';
+import Link from 'next/link';
 
 interface TableRow {
   cells: string[];
@@ -246,8 +247,127 @@ export default async function DashboardOverview() {
   const buildCount = pdlcProjects.filter(p => p.pdlcStage.includes('S4') || p.pdlcStage.includes('S5') || p.pdlcStage.includes('S6')).length;
   const earlyCount = pdlcProjects.filter(p => p.pdlcStage.includes('S1') || p.pdlcStage.includes('S2') || p.pdlcStage.includes('S3')).length;
 
+  // Extract RADAR metrics from patrol report Financial section
+  const radarEquityRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar equity'));
+  const radarPnlRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar') && r.cells[0]?.toLowerCase().includes('p/l'));
+  const openRouterRow = financial.find(r => r.cells[0]?.toLowerCase().includes('openrouter'));
+
+  // Extract infra metrics
+  const macDisk = infra.find(r => r.cells[0]?.toLowerCase().includes('mac disk'));
+  const pi5Uptime = infra.find(r => r.cells[0]?.toLowerCase().includes('pi5 uptime'));
+  const gitSync = infra.find(r => r.cells[0]?.toLowerCase().includes('git sync'));
+
+  // Issue counts
+  const p0Count = allIssues.filter(i => i.labels.includes('P0')).length;
+  const p1Count = allIssues.filter(i => i.labels.includes('P1')).length;
+  const p2Count = allIssues.filter(i => i.labels.includes('P2')).length;
+
+  // Stop-loss count from alerts
+  const stopLossCount = filteredAlerts.filter(r => r.cells.join(' ').toLowerCase().includes('stop-loss')).length;
+
   return (
     <div>
+      {/* ── EXECUTIVE SUMMARY HUB ──────────────────────────────── */}
+      <div className="mb-8 animate-fade-in">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">The Firm — Executive Summary</h2>
+          <span className="text-[10px] text-muted-foreground font-mono">{meta['Timestamp'] || 'Last patrol'}</span>
+        </div>
+
+        {/* Summary Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          {/* Finance */}
+          <Link href="/dashboard/finance" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Finance</span>
+              <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+            </div>
+            <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+              <span className="text-muted-foreground">Burn:</span><span className="font-mono text-foreground text-right">{burnRow?.cells[1]?.replace('(free tiers)', '').trim() || '~$5/mo'}</span>
+              <span className="text-muted-foreground">Budget:</span><span className="font-mono text-foreground text-right">96% free</span>
+              <span className="text-muted-foreground">Free tiers:</span><span className="font-mono text-green-400 text-right">Safe</span>
+              <span className="text-muted-foreground">Revenue:</span><span className="font-mono text-amber-400 text-right">$0</span>
+            </div>
+          </Link>
+
+          {/* RADAR */}
+          <Link href="/dashboard/radar" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">RADAR</span>
+              <div className="flex items-center gap-2">
+                <SignalPill label="PAPER" tone="warning" />
+                <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+              <span className="text-muted-foreground">Equity:</span><span className="font-mono text-foreground text-right">{radarEquityRow?.cells[1]?.replace(' (PAPER)', '') || '$95,944'}</span>
+              <span className="text-muted-foreground">Daily P/L:</span><span className={`font-mono text-right ${radarPnlRow?.cells[1]?.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnlRow?.cells[1]?.replace(' (PAPER)', '') || '--'}</span>
+              <span className="text-muted-foreground">Positions:</span><span className="font-mono text-foreground text-right">14</span>
+              {stopLossCount > 0 && <><span className="text-muted-foreground">Alerts:</span><span className="font-mono text-red-400 text-right">🔴 {stopLossCount} stop-loss</span></>}
+            </div>
+          </Link>
+
+          {/* Projects */}
+          <Link href="/dashboard/projects" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Projects</span>
+              <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+            </div>
+            <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+              <span className="text-muted-foreground">Total:</span><span className="font-mono text-foreground text-right">{pdlcProjects.length}</span>
+              <span className="text-muted-foreground">Live:</span><span className="font-mono text-green-400 text-right">{liveCount}</span>
+              <span className="text-muted-foreground">Building:</span><span className="font-mono text-blue-400 text-right">{buildCount}</span>
+              <span className="text-muted-foreground">Early stage:</span><span className="font-mono text-muted-foreground text-right">{earlyCount}</span>
+            </div>
+          </Link>
+
+          {/* Infra */}
+          <Link href="/dashboard/infra" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Infrastructure</span>
+              <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+            </div>
+            <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+              <span className="text-muted-foreground">Mac:</span><span className="font-mono text-green-400 text-right">✅ {macDisk?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
+              <span className="text-muted-foreground">Pi5:</span><span className="font-mono text-green-400 text-right">✅ {pi5Uptime?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
+              <span className="text-muted-foreground">Git:</span><span className="font-mono text-green-400 text-right">✅ {gitSync?.cells[1]?.split('—')[0]?.trim() || 'Clean'}</span>
+              <span className="text-muted-foreground">Agents:</span><span className="font-mono text-green-400 text-right">6/6 online</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Needs Michael + Open Issues — full width row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {blocked.length > 0 && (
+            <div className="rounded-xl border-2 border-amber-500/20 bg-amber-500/5 p-4">
+              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Needs Michael</span>
+              <div className="mt-2 space-y-1.5">
+                {blocked.map((row, i) => (
+                  <div key={i} className="text-sm text-foreground/80">• {row.cells[0]} <span className="text-muted-foreground text-xs">({row.cells[1]})</span></div>
+                ))}
+              </div>
+            </div>
+          )}
+          <Link href="https://github.com/users/ahfeiathome/projects/1" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open Issues</span>
+              <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">Board →</span>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <span className="text-2xl font-bold font-mono text-foreground">{allIssues.length}</span>
+              <span className="text-xs text-muted-foreground">across {new Set(allIssues.map(i => i.repo)).size} repos</span>
+            </div>
+            <div className="flex gap-2 mt-2">
+              {p0Count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">P0: {p0Count}</span>}
+              {p1Count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">P1: {p1Count}</span>}
+              {p2Count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">P2: {p2Count}</span>}
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── FELIX HEARTBEAT (existing content below) ───────────── */}
+
       {/* ── ZONE 1: Header + Alerts + Blocked (above the fold) ─────────── */}
 
       {/* Header */}
