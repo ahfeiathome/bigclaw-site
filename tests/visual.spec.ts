@@ -28,7 +28,7 @@ test.describe('Visual verification — dashboard', () => {
     await expect(page.getByText('Learnie Live', { exact: true })).toBeVisible()
 
     // Verify Infrastructure section
-    await expect(page.getByText('Infrastructure')).toBeVisible()
+    await expect(page.getByText('Infrastructure').first()).toBeVisible()
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('dashboard-overview.png', {

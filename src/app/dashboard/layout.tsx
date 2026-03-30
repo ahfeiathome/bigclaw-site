@@ -8,7 +8,6 @@ import {
   RadarIcon,
   FinanceIcon,
   InfraIcon,
-  GrowthIcon,
   StatusDot,
 } from '@/components/dashboard';
 
@@ -18,74 +17,41 @@ const navItems = [
   { href: '/dashboard/radar', label: 'RADAR', icon: <RadarIcon /> },
   { href: '/dashboard/finance', label: 'Finance', icon: <FinanceIcon /> },
   { href: '/dashboard/infra', label: 'Infra', icon: <InfraIcon /> },
-  { href: '/dashboard/bizdev', label: 'Growth', icon: <GrowthIcon /> },
 ];
 
-function SidebarNav() {
+function TopNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-52 shrink-0 border-r border-border bg-card min-h-[calc(100vh-3.5rem)] py-4 px-3">
-      <div className="mb-6 px-2">
-        <span className="text-xs font-mono font-semibold uppercase tracking-widest text-muted-foreground">Big Claw</span>
-      </div>
-      <nav className="flex flex-col gap-0.5 flex-1">
+    <div className="border-b border-border bg-card">
+      <div className="max-w-6xl mx-auto px-6 flex items-center gap-1 overflow-x-auto">
         {navItems.map((item) => {
-          const isActive = item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(item.href);
+          const isActive =
+            item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname.startsWith(item.href);
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 no-underline hover:no-underline ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors no-underline hover:no-underline ${
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
-              <span className="w-5 h-5 shrink-0">{item.icon}</span>
+              <span className="w-4 h-4 shrink-0">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
           );
         })}
-      </nav>
-      <div className="mt-auto px-3 flex items-center gap-2">
-        <StatusDot status="good" size="sm" />
-        <span className="text-xs text-muted-foreground font-mono">Online</span>
+
+        <div className="ml-auto flex items-center gap-1.5 py-3 pl-4 shrink-0">
+          <StatusDot status="good" size="sm" />
+          <span className="text-xs text-muted-foreground font-mono">Online</span>
+        </div>
       </div>
-    </aside>
-  );
-}
-
-function MobileNav() {
-  const pathname = usePathname();
-
-  return (
-    <div className="md:hidden border-b border-border bg-card">
-      <nav className="flex gap-1 px-4 py-2 overflow-x-auto">
-        {navItems.map((item) => {
-          const isActive = item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors no-underline hover:no-underline ${
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <span className="w-4 h-4">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
@@ -107,13 +73,10 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
-      <SidebarNav />
-      <div className="flex-1 min-w-0 bg-background">
-        <MobileNav />
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          {children}
-        </div>
+    <div className="min-h-[calc(100vh-3.5rem)] bg-background flex flex-col">
+      <TopNav />
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto px-6 py-6">{children}</div>
       </div>
     </div>
   );
