@@ -62,11 +62,12 @@ const PROJECTS: ProjectData[] = [
   },
   {
     name: 'WINGMAN',
-    status: 'QUEUE',
-    phase: 'fatfrogmodels.com rebuild (CP-072\u2192076)',
-    blocker: 'Blocked on Apple Dev ($99)',
-    description: 'E-commerce site for Fat Frog Models. Full rebuild: foundation, catalog, admin panel, friend validation, DNS cutover.',
+    status: 'LIVE',
+    phase: 'Maintenance \u00B7 fatfrogmodels.com',
+    blocker: 'DNS cutover pending',
+    description: 'E-commerce site for Fat Frog Models (client). Catalog, admin panel, bulk import, image handling live on Vercel. Pending DNS cutover to fatfrogmodels.com.',
     cpKeywords: ['WINGMAN', 'fatfrog', 'CP-072', 'CP-073', 'CP-074', 'CP-075', 'CP-076'],
+    links: [{ label: 'Live Site', url: 'https://fatfrogmodels.vercel.app' }],
   },
   {
     name: 'RADAR',
