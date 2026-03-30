@@ -72,8 +72,8 @@ test.describe('Dashboard pages load with data', () => {
     await expect(page.getByText('RADAR Trading System')).toBeVisible()
   })
 
-  test('growth page loads', async ({ page }) => {
+  test('/bizdev redirects to projects page', async ({ page }) => {
     await page.goto('/dashboard/bizdev')
-    await expect(page.locator('div.text-lg').filter({ hasText: 'Growth' })).toBeVisible()
+    await expect(page).toHaveURL('/dashboard/projects')
   })
 })
