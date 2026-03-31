@@ -232,6 +232,57 @@ export async function fetchAllIssues(): Promise<GitHubIssue[]> {
   });
 }
 
+export async function fetchRecentClosedIssues(days = 7): Promise<GitHubIssue[]> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const results: GitHubIssue[] = [];
+
+  await Promise.all(
+    ALL_REPOS.map(async (repo) => {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${OWNER}/${repo}/issues?state=closed&since=${since}&per_page=50&sort=updated`,
+          { headers, next: { revalidate: 300 } },
+        );
+        if (!res.ok) return;
+        const data = await res.json() as Array<{
+          number: number;
+          title: string;
+          state: string;
+          labels: Array<{ name: string }>;
+          created_at: string;
+          updated_at: string;
+          closed_at: string;
+          html_url: string;
+          pull_request?: unknown;
+        }>;
+        for (const issue of data) {
+          if (issue.pull_request) continue;
+          if (!issue.closed_at) continue;
+          const closedAt = new Date(issue.closed_at).getTime();
+          if (closedAt < Date.now() - days * 24 * 60 * 60 * 1000) continue;
+          results.push({
+            repo,
+            number: issue.number,
+            title: issue.title,
+            state: issue.state,
+            labels: issue.labels.map((l) => l.name),
+            createdAt: issue.created_at,
+            updatedAt: issue.updated_at,
+            url: issue.html_url,
+          });
+        }
+      } catch { /* skip repo on error */ }
+    }),
+  );
+
+  return results.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+}
+
 export async function fetchAllReleases(): Promise<GitHubRelease[]> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',

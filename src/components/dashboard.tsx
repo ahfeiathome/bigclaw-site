@@ -242,6 +242,189 @@ export function SectionCard({ title, children, className, action }: {
   );
 }
 
+// ─── TaskFlowWidget ────────────────────────────────────────────────────────
+
+interface TaskFlowColumn {
+  label: string;
+  count: number;
+  items: { repo: string; number: number; title: string; labels: string[]; url: string }[];
+}
+
+export function TaskFlowWidget({ columns }: { columns: TaskFlowColumn[] }) {
+  const priorityColor = (labels: string[]) => {
+    if (labels.includes('P0')) return 'border-l-red-500';
+    if (labels.includes('P1')) return 'border-l-amber-500';
+    if (labels.includes('P2')) return 'border-l-yellow-500';
+    return 'border-l-zinc-500';
+  };
+
+  const columnHeaderColor: Record<string, string> = {
+    'Todo': 'text-blue-400',
+    'In Progress': 'text-amber-400',
+    'Done': 'text-green-400',
+    'Backlog': 'text-zinc-400',
+  };
+
+  return (
+    <SectionCard title="Task Flow">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {columns.map((col) => (
+          <div key={col.label}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-semibold uppercase tracking-wide ${columnHeaderColor[col.label] || 'text-muted-foreground'}`}>
+                {col.label}
+              </span>
+              <span className="text-xs font-mono font-bold text-foreground">{col.count}</span>
+            </div>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {col.items.slice(0, 8).map((item) => (
+                <a
+                  key={`${item.repo}-${item.number}`}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`block rounded-lg border-l-2 ${priorityColor(item.labels)} bg-muted/30 px-2 py-1.5 hover:bg-muted transition-colors no-underline`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] font-mono text-muted-foreground">{item.repo}</span>
+                    <span className="text-[10px] text-muted-foreground">#{item.number}</span>
+                  </div>
+                  <p className="text-xs text-foreground truncate">{item.title}</p>
+                </a>
+              ))}
+              {col.items.length === 0 && (
+                <span className="text-[10px] text-muted-foreground italic">None</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ─── EventStreamWidget ─────────────────────────────────────────────────────
+
+interface EventEntry {
+  repo: string;
+  number: number;
+  title: string;
+  action: 'opened' | 'closed' | 'updated';
+  timestamp: string;
+  url: string;
+}
+
+function relativeTime(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+export function EventStreamWidget({ events }: { events: EventEntry[] }) {
+  const actionColor: Record<string, string> = {
+    opened: 'text-green-400',
+    closed: 'text-blue-400',
+    updated: 'text-zinc-400',
+  };
+
+  const actionIcon: Record<string, string> = {
+    opened: '+',
+    closed: '\u2713',
+    updated: '\u2022',
+  };
+
+  return (
+    <SectionCard title="Event Stream">
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No recent activity</p>
+      ) : (
+        <div className="space-y-1.5 max-h-80 overflow-y-auto">
+          {events.map((ev, i) => (
+            <a
+              key={`${ev.repo}-${ev.number}-${ev.action}-${i}`}
+              href={ev.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors no-underline"
+            >
+              <span className={`text-sm font-mono font-bold shrink-0 w-4 text-center ${actionColor[ev.action]}`}>
+                {actionIcon[ev.action]}
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground shrink-0 w-16 truncate">{ev.repo}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">#{ev.number}</span>
+              <span className="text-xs text-foreground truncate flex-1">{ev.title}</span>
+              <span className={`text-[10px] font-mono shrink-0 ${actionColor[ev.action]}`}>{ev.action}</span>
+              <span className="text-[10px] font-mono text-muted-foreground shrink-0">{relativeTime(ev.timestamp)}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+// ─── SecurityPostureBadge ──────────────────────────────────────────────────
+
+interface SecurityMetric {
+  label: string;
+  value: string;
+  status: 'good' | 'warn' | 'bad';
+  bar?: number;
+}
+
+export function SecurityPostureBadge({ posture, metrics }: {
+  posture: 'SECURE' | 'WARNING' | 'CRITICAL';
+  metrics: SecurityMetric[];
+}) {
+  const postureConfig = {
+    SECURE: {
+      bg: 'bg-green-500/10',
+      border: 'border-green-500/30',
+      text: 'text-green-400',
+      glow: 'shadow-[0_0_20px_rgba(34,197,94,0.15)]',
+      dot: 'good' as const,
+    },
+    WARNING: {
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/30',
+      text: 'text-amber-400',
+      glow: 'shadow-[0_0_20px_rgba(245,158,11,0.15)]',
+      dot: 'warn' as const,
+    },
+    CRITICAL: {
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/30',
+      text: 'text-red-400',
+      glow: 'shadow-[0_0_20px_rgba(239,68,68,0.15)]',
+      dot: 'bad' as const,
+    },
+  };
+
+  const config = postureConfig[posture];
+
+  return (
+    <SectionCard title="Security Posture">
+      <div className={`rounded-xl ${config.bg} border ${config.border} ${config.glow} p-4 mb-3 flex items-center gap-3`}>
+        <StatusDot status={config.dot} size="lg" />
+        <span className={`text-xl font-bold font-mono ${config.text}`}>{posture}</span>
+      </div>
+      <div className="space-y-3">
+        {metrics.map((m, i) => (
+          <HealthRow key={i} label={m.label} value={m.value} status={m.status} bar={m.bar} />
+        ))}
+        {metrics.length === 0 && (
+          <span className="text-xs text-muted-foreground italic">No health data available</span>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
 // ─── Nav Icons (SVG) ────────────────────────────────────────────────────────
 
 export function OverviewIcon() {
