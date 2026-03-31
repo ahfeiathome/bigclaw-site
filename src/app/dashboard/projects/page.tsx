@@ -97,10 +97,10 @@ const PROJECTS: ProjectData[] = [
   },
   {
     name: 'PHOENIX',
-    status: 'DESIGN',
-    phase: 'OpenRouter built, pending API key',
-    blocker: 'Michael creates OpenRouter account',
-    description: 'Multi-model routing via OpenRouter. Per-agent model selection (Anthropic, Google, etc.) with privacy tiers. Phase I code ready.',
+    status: 'LIVE',
+    phase: 'Phase 2 active \u00B7 6 agents on OpenRouter \u00B7 Gate PASSED 2026-03-31',
+    blocker: '',
+    description: 'Multi-model routing via OpenRouter. All 6 agents live: Mika (Haiku), Rex (Sonnet), Byte (Sonnet), Koda (Haiku), Sage (DeepSeek V3), Lumina (Llama 3.3 70B). ~$5/mo vs $15 budget. Phase II: cost observability next.',
     cpKeywords: ['PHOENIX', 'OpenRouter'],
   },
 ];
