@@ -1,6 +1,6 @@
-import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases } from '@/lib/github';
+import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchRecentClosedIssues, fetchHealth } from '@/lib/github';
 import type { GitHubIssue, GitHubRelease } from '@/lib/github';
-import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, AgentStatusPanel } from '@/components/dashboard';
+import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, AgentStatusPanel, TaskFlowWidget, EventStreamWidget, SecurityPostureBadge } from '@/components/dashboard';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import Link from 'next/link';
 
@@ -195,11 +195,13 @@ function buildExecSummary(
 }
 
 export default async function DashboardOverview() {
-  const [content, projectsMd, allIssues, allReleases] = await Promise.all([
+  const [content, projectsMd, allIssues, allReleases, closedIssues, healthMd] = await Promise.all([
     fetchPatrolReport(),
     fetchProjects(),
     fetchAllIssues(),
     fetchAllReleases(),
+    fetchRecentClosedIssues(7),
+    fetchHealth(),
   ]);
   const pdlcProjects = projectsMd ? parsePdlcProjects(projectsMd) : [];
 
@@ -264,6 +266,78 @@ export default async function DashboardOverview() {
 
   // Stop-loss count from alerts
   const stopLossCount = filteredAlerts.filter(r => r.cells.join(' ').toLowerCase().includes('stop-loss')).length;
+
+  // ── Task Flow: group issues into columns ──
+  const inProgressLabels = ['in progress', 'in-progress', 'wip'];
+  const backlogLabels = ['backlog', 'later', 'icebox'];
+
+  const todoIssues = allIssues.filter(i =>
+    !i.labels.some(l => inProgressLabels.includes(l.toLowerCase())) &&
+    !i.labels.some(l => backlogLabels.includes(l.toLowerCase()))
+  );
+  const inProgressIssues = allIssues.filter(i =>
+    i.labels.some(l => inProgressLabels.includes(l.toLowerCase()))
+  );
+  const backlogIssues = allIssues.filter(i =>
+    i.labels.some(l => backlogLabels.includes(l.toLowerCase()))
+  );
+
+  const taskFlowColumns = [
+    { label: 'Todo', count: todoIssues.length, items: todoIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+    { label: 'In Progress', count: inProgressIssues.length, items: inProgressIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+    { label: 'Done', count: closedIssues.length, items: closedIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+    { label: 'Backlog', count: backlogIssues.length, items: backlogIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+  ];
+
+  // ── Event Stream: combine open + closed, sorted by time ──
+  type EventAction = 'opened' | 'closed' | 'updated';
+  const eventStream: { repo: string; number: number; title: string; action: EventAction; timestamp: string; url: string }[] = [];
+
+  for (const issue of closedIssues) {
+    eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'closed', timestamp: issue.updatedAt, url: issue.url });
+  }
+  for (const issue of allIssues) {
+    const created = new Date(issue.createdAt).getTime();
+    const updated = new Date(issue.updatedAt).getTime();
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    if (created > sevenDaysAgo) {
+      eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'opened', timestamp: issue.createdAt, url: issue.url });
+    } else if (updated > sevenDaysAgo) {
+      eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'updated', timestamp: issue.updatedAt, url: issue.url });
+    }
+  }
+  eventStream.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  // ── Security Posture: parse HEALTH.md ──
+  const securityMetrics: { label: string; value: string; status: 'good' | 'warn' | 'bad'; bar?: number }[] = [];
+  let securityPosture: 'SECURE' | 'WARNING' | 'CRITICAL' = 'SECURE';
+
+  if (healthMd) {
+    const healthLines = healthMd.split('\n');
+    let hasCritical = false;
+    let hasWarn = false;
+
+    for (const line of healthLines) {
+      if (!line.startsWith('|') || line.match(/^\|[\s-|]+\|$/) || line.includes('Metric')) continue;
+      const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cols.length < 2) continue;
+      const label = cols[0];
+      const value = cols[1];
+      const isBad = /DOWN|FAIL|CRITICAL|ERROR/i.test(value);
+      const isWarn = /STALE|WARN|HIGH|ALERT/i.test(value);
+      const status = isBad ? 'bad' as const : isWarn ? 'warn' as const : 'good' as const;
+      if (isBad) hasCritical = true;
+      if (isWarn) hasWarn = true;
+
+      const barMatch = value.match(/([\d.]+)\s*%/);
+      const bar = barMatch ? parseFloat(barMatch[1]) : undefined;
+
+      securityMetrics.push({ label, value, status, bar });
+    }
+
+    if (hasCritical) securityPosture = 'CRITICAL';
+    else if (hasWarn) securityPosture = 'WARNING';
+  }
 
   return (
     <div>
@@ -569,6 +643,15 @@ export default async function DashboardOverview() {
             </div>
           )}
         </SectionCard>
+      </div>
+
+      {/* ── Task Flow + Event Stream + Security ────────────────────── */}
+      <div className="grid gap-4 md:grid-cols-2 mt-6 mb-6">
+        <TaskFlowWidget columns={taskFlowColumns} />
+        <EventStreamWidget events={eventStream.slice(0, 30)} />
+      </div>
+      <div className="mb-6">
+        <SecurityPostureBadge posture={securityPosture} metrics={securityMetrics.slice(0, 8)} />
       </div>
 
       {/* ── ZONE 3: PDLC Pipeline (collapsible) ──────────────────────── */}
