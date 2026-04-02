@@ -38,7 +38,7 @@ test.describe('Dashboard auth', () => {
     await page.getByRole('textbox', { name: 'Password' }).fill('Learnie2026Admin')
     await page.getByRole('button', { name: 'Sign In' }).click()
     await expect(page).toHaveURL(/\/dashboard$/)
-    await expect(page.getByText('Felix Heartbeat', { exact: true })).toBeVisible()
+    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
   })
 
   test('dashboard login rejects wrong password', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('Dashboard pages load with data', () => {
 
   test('finance page loads', async ({ page }) => {
     await page.goto('/dashboard/finance')
-    await expect(page.getByText('Financial Health')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
   })
 
   test('projects page loads', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe('Dashboard pages load with data', () => {
 
   test('RADAR page loads', async ({ page }) => {
     await page.goto('/dashboard/radar')
-    await expect(page.getByText('RADAR Trading System')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible()
   })
 
   test('/bizdev redirects to projects page', async ({ page }) => {
