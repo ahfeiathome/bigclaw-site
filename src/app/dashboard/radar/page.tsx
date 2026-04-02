@@ -73,7 +73,7 @@ function parseMarketContext(content: string): { regime: string; vix: string; out
   const section = extractSection(content, 'Exec Summary');
   const regimeMatch = section.match(/Market Regime:\s*(\w+)/);
   const vixMatch = section.match(/VIX\s+([\d.]+)/);
-  const outlookMatch = section.match(/Macro Outlook:\s*(\w+)/);
+  const outlookMatch = section.match(/Macro Outlook:\*{0,2}\s*(\w+)/);
   const cycleMatch = section.match(/Economic Cycle:\s*(\w+)/);
   const confMatch = section.match(/confidence:\s*(\d+%)/);
 
@@ -220,15 +220,18 @@ export default async function RadarPage() {
           <div className="space-y-3">
             {strategyRows.map((row, i) => {
               const status = row.cells[1] || '';
-              const isDormant = status.toLowerCase().includes('dormant') || status.toLowerCase().includes('suspended') || status.toLowerCase().includes('skipped');
-              const isActive = status.toLowerCase().includes('active') || status.toLowerCase().includes('signal') || status.toLowerCase().includes('scanning');
+              const isDormant = (status.toLowerCase().includes('dormant') && !status.toLowerCase().includes('active')) || status.toLowerCase().includes('suspended') || status.toLowerCase().includes('skipped');
+              const isActive = status.toLowerCase().includes('active') || status.toLowerCase().includes('signal') || status.toLowerCase().includes('scanning') || status.toLowerCase().includes('primary') || status.toLowerCase().includes('executed');
+              const isError = status.toLowerCase().includes('error');
+              const pillLabel = isError ? 'Error' : isDormant ? 'Dormant' : isActive ? 'Active' : status.slice(0, 20);
+              const pillTone = isError ? 'error' as const : isDormant ? 'neutral' as const : isActive ? 'success' as const : 'warning' as const;
               return (
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-sm text-foreground font-medium">{row.cells[0]}</span>
                   <div className="flex items-center gap-2">
                     <SignalPill
-                      label={isDormant ? 'Suspended' : isActive ? 'Active' : status.slice(0, 20)}
-                      tone={isDormant ? 'neutral' : isActive ? 'success' : 'warning'}
+                      label={pillLabel}
+                      tone={pillTone}
                     />
                   </div>
                 </div>
