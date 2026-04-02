@@ -106,6 +106,10 @@ export async function fetchRadarDashboard(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/RADAR_DASHBOARD.md');
 }
 
+export async function fetchPositionMatrix(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/projects/radar/POSITION_MATRIX.md');
+}
+
 export async function fetchAgentsMd(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'AGENTS.md');
 }
