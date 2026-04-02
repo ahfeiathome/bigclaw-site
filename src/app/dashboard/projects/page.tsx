@@ -247,17 +247,18 @@ export default async function ProjectsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Projects</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Portfolio view \u00B7 CHECKPOINT.md + PATROL_REPORT.md + PROJECTS.md
-          </p>
+      <div className="mb-6 animate-fade-in">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Projects</h1>
+            <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {new Date().toISOString().slice(0, 10)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <StatusDot status="good" size="sm" />
+            <span className="text-xs text-muted-foreground font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <StatusDot status="good" size="sm" />
-          <span className="text-xs text-muted-foreground font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
-        </div>
+        <div className="text-lg font-semibold text-foreground font-mono">{PROJECTS.length} ventures &middot; {PROJECTS.filter(p => p.status === 'LIVE').length} live &middot; {PROJECTS.filter(p => p.status === 'BUILDING').length} building</div>
       </div>
 
       {/* Portfolio snapshot metrics */}

@@ -123,15 +123,15 @@ export default async function InfraPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <StatusDot status="good" size="lg" />
-          <div>
-            <div className="text-lg font-semibold text-foreground">Infrastructure & Stack</div>
-            <div className="text-xs text-muted-foreground">Services, subscriptions, pricing, and agent models</div>
+      <div className="mb-6 animate-fade-in">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Infrastructure</h1>
+            <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {new Date().toISOString().slice(0, 10)}</span>
           </div>
+          <SignalPill label={`${activeCount} services`} tone="success" />
         </div>
-        <SignalPill label={`${activeCount} services`} tone="success" />
+        <div className="text-lg font-semibold text-foreground font-mono">{activeCount} services &middot; ${totalMonthlyCost}/mo &middot; 6 agents online</div>
       </div>
 
       {/* Hero cards */}

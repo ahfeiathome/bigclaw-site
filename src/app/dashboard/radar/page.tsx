@@ -136,20 +136,22 @@ export default async function RadarPage() {
     <div>
       {/* ── ZONE 1: Header + Market Condition ──────────────────────── */}
 
-      <div className="flex items-center justify-between mb-4 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <StatusDot status={market.regime === 'FEAR' ? 'warn' : 'good'} size="lg" />
-          <div>
-            <div className="text-lg font-semibold text-foreground">RADAR Trading System</div>
-            <div className="text-xs text-muted-foreground font-mono">
-              Last loop: {meta['Last Loop'] || 'unknown'} | Gate review: {meta['Gate Review'] || 'TBD'}
-            </div>
+      <div className="mb-4 animate-fade-in">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">RADAR</h1>
+            <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {meta['Last Loop'] || new Date().toISOString().slice(0, 10)}</span>
           </div>
+          <SignalPill
+            label={meta['Phase'] === 'Paper' ? 'PAPER TRADING' : 'LIVE'}
+            tone={meta['Phase'] === 'Paper' ? 'warning' : 'success'}
+          />
         </div>
-        <SignalPill
-          label={meta['Phase'] === 'Paper' ? 'PAPER TRADING' : 'LIVE'}
-          tone={meta['Phase'] === 'Paper' ? 'warning' : 'success'}
-        />
+        <div className="flex items-center gap-4">
+          <span className={`text-lg font-bold font-mono ${isNegative ? 'text-red-400' : isPositive ? 'text-green-400' : 'text-foreground'}`}>P/L: {pnlValue}</span>
+          <span className="text-lg font-bold font-mono text-foreground">Equity: {meta['Equity'] || '--'}</span>
+          <span className="text-sm text-muted-foreground font-mono">Gate review: {meta['Gate Review'] || 'May 2'}</span>
+        </div>
       </div>
 
       {/* Market Condition bar */}

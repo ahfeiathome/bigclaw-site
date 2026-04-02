@@ -205,18 +205,19 @@ export default async function FinancePage() {
   return (
     <div>
       {/* ── SCORECARD HEADER ──────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-4 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <StatusDot status={alerts.length > 0 ? 'warn' : 'good'} size="lg" />
-          <div>
-            <div className="text-lg font-semibold text-foreground">Financial Health Scorecard</div>
-            <div className="text-xs text-muted-foreground font-mono">Source: FINANCE.md</div>
+      <div className="mb-4 animate-fade-in">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Finance</h1>
+            <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {new Date().toISOString().slice(0, 10)}</span>
           </div>
+          <SignalPill
+            label={alerts.length > 0 ? `${alerts.length} alert${alerts.length > 1 ? 's' : ''}` : 'HEALTHY'}
+            tone={alerts.length > 0 ? 'warning' : 'success'}
+          />
         </div>
-        <SignalPill
-          label={alerts.length > 0 ? `${alerts.length} alert${alerts.length > 1 ? 's' : ''}` : 'HEALTHY'}
-          tone={alerts.length > 0 ? 'warning' : 'success'}
-        />
+        {alerts.length > 0 && <div className="text-lg font-bold text-amber-400 font-mono">{alerts.length} alert{alerts.length > 1 ? 's' : ''} — review below</div>}
+        {alerts.length === 0 && <div className="text-lg font-semibold text-green-400 font-mono">All clear — burn low, free tiers safe</div>}
       </div>
 
       {/* ── HERO METRICS (4 cards, one glance) ────────────────── */}
