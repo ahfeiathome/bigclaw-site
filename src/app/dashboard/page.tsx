@@ -343,9 +343,21 @@ export default async function DashboardOverview() {
     <div>
       {/* ── EXECUTIVE SUMMARY HUB ──────────────────────────────── */}
       <div className="mb-8 animate-fade-in">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">The Firm — Executive Summary</h2>
-          <span className="text-[10px] text-muted-foreground font-mono">{meta['Timestamp'] || 'Last patrol'}</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">BigClaw AI</h1>
+            <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {meta['Timestamp'] || new Date().toISOString().slice(0, 10)}</span>
+          </div>
+          <SignalPill
+            label={meta['Status'] === 'HEALTHY' ? 'ALL SYSTEMS GO' : meta['Status'] || 'UNKNOWN'}
+            tone={meta['Status'] === 'HEALTHY' ? 'success' : meta['Status']?.includes('CRITICAL') ? 'error' : 'warning'}
+          />
+        </div>
+        <div className="flex items-center gap-4 mb-4">
+          {p0Count > 0 && <span className="text-lg font-bold text-red-400 font-mono">P0: {p0Count} blocking</span>}
+          {stopLossCount > 0 && <span className="text-lg font-bold text-red-400 font-mono">RADAR: {stopLossCount} alert{stopLossCount > 1 ? 's' : ''}</span>}
+          {p0Count === 0 && stopLossCount === 0 && <span className="text-lg font-semibold text-green-400 font-mono">No blockers</span>}
+          <span className="text-sm text-muted-foreground font-mono">{allIssues.length} open issues across {new Set(allIssues.map(i => i.repo)).size} repos</span>
         </div>
 
         {/* Summary Cards Grid */}
@@ -452,16 +464,12 @@ export default async function DashboardOverview() {
             size="lg"
           />
           <div>
-            <div className="text-lg font-semibold text-foreground">Felix Heartbeat</div>
+            <div className="text-lg font-semibold text-foreground">Felix Patrol</div>
             <div className="text-xs text-muted-foreground font-mono">
-              {meta['Timestamp'] || 'unknown'} | {meta['Type'] || `Market: ${meta['Market Phase'] || '?'} | Mode: ${meta['Mode'] || '?'}`} | Duration: {meta['Duration'] || '?'}
+              Last updated: {meta['Timestamp'] || 'unknown'} | Mode: {meta['Mode'] || 'M3'} | {meta['Type'] || 'Daily Patrol'}
             </div>
           </div>
         </div>
-        <SignalPill
-          label={meta['Status'] || 'UNKNOWN'}
-          tone={meta['Status'] === 'HEALTHY' ? 'success' : meta['Status']?.includes('WARN') ? 'warning' : meta['Status']?.includes('CRITICAL') ? 'error' : 'neutral'}
-        />
       </div>
 
       {/* Brief exec summary — condensed inline, not a full card */}
