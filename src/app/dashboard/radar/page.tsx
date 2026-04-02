@@ -2,6 +2,7 @@ import {
   fetchRadarStatus,
   fetchRadarScorecard,
   fetchRadarDashboard,
+  fetchPositionMatrix,
 } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 import { RechartsEquityChart } from '@/components/radar-charts';
@@ -94,10 +95,11 @@ function parseMarketContext(content: string): { regime: string; vix: string; out
 }
 
 export default async function RadarPage() {
-  const [tradeLog, scorecard, dashboard] = await Promise.all([
+  const [tradeLog, scorecard, dashboard, positionMatrix] = await Promise.all([
     fetchRadarStatus(),
     fetchRadarScorecard(),
     fetchRadarDashboard(),
+    fetchPositionMatrix(),
   ]);
 
   if (!dashboard) {
@@ -117,7 +119,10 @@ export default async function RadarPage() {
   const strategyRows = parseMarkdownTable(extractSection(dashboard, 'Strategy Status'));
   const constitutionRows = parseMarkdownTable(extractSection(dashboard, 'Constitution Status'));
   const gateRows = parseMarkdownTable(extractSection(dashboard, 'Gate Progress'));
-  const positionRows = parseMarkdownTable(extractSection(dashboard, 'Positions'));
+  const positionRows = positionMatrix
+    ? parseMarkdownTable(positionMatrix.split('## Auto-Exit')[0])
+    : parseMarkdownTable(extractSection(dashboard, 'Positions'));
+  const hasMatrixColumns = positionRows[0]?.cells.length >= 8;
   const tradeRows = tradeLog ? parseMarkdownTable(tradeLog) : [];
   const strategies = scorecard ? parseMarkdownTable(extractSection(scorecard, 'Master Scorecard')) : [];
 
@@ -312,27 +317,38 @@ export default async function RadarPage() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-muted-foreground border-b border-border bg-muted">
-                    <th className="text-left py-2.5 pr-4 pl-3">Symbol</th>
+                    <th className="text-left py-2.5 pr-3 pl-3">Symbol</th>
+                    {hasMatrixColumns && <th className="text-left py-2.5 px-2">Strategy</th>}
+                    {hasMatrixColumns && <th className="text-left py-2.5 px-2">Entry Date</th>}
                     <th className="text-right py-2.5 px-2">Qty</th>
                     <th className="text-right py-2.5 px-2">Entry</th>
                     <th className="text-right py-2.5 px-2">Current</th>
                     <th className="text-right py-2.5 px-2">P/L %</th>
+                    {hasMatrixColumns && <th className="text-right py-2.5 px-2">Stop</th>}
+                    {hasMatrixColumns && <th className="text-right py-2.5 pr-3">Target</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {positionRows.map((row, i) => {
-                    const pnl = row.cells[4] || '';
+                    // Matrix columns: Symbol | Strategy | Entry Date | Qty | Entry $ | Current $ | P/L% | Stop $ | Target $ | Thesis
+                    const pnlIdx = hasMatrixColumns ? 6 : 4;
+                    const pnl = row.cells[pnlIdx] || '';
                     const isNeg = pnl.includes('-');
                     const isPos = !isNeg && pnl !== '0%' && pnl !== '$0.1%';
+                    const strategyTone = row.cells[1] === 'MOMENTUM' ? 'text-blue-400' : row.cells[1] === 'BTD' ? 'text-amber-400' : row.cells[1] === 'PEAD' ? 'text-purple-400' : 'text-muted-foreground';
                     return (
                       <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
-                        <td className="py-2 pr-4 pl-3 font-mono font-semibold text-foreground">{row.cells[0]}</td>
-                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[1]}</td>
-                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[2]}</td>
-                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[3]}</td>
+                        <td className="py-2 pr-3 pl-3 font-mono font-semibold text-foreground">{row.cells[0]}</td>
+                        {hasMatrixColumns && <td className={`py-2 px-2 font-mono text-[10px] font-semibold ${strategyTone}`}>{row.cells[1]}</td>}
+                        {hasMatrixColumns && <td className="py-2 px-2 font-mono text-muted-foreground">{row.cells[2]}</td>}
+                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[hasMatrixColumns ? 3 : 1]}</td>
+                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[hasMatrixColumns ? 4 : 2]}</td>
+                        <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[hasMatrixColumns ? 5 : 3]}</td>
                         <td className={`py-2 px-2 text-right font-mono font-semibold ${isPos ? 'text-green-500' : isNeg ? 'text-red-500' : 'text-muted-foreground'}`}>
                           {pnl}
                         </td>
+                        {hasMatrixColumns && <td className="py-2 px-2 text-right font-mono text-red-400/70">{row.cells[7]}</td>}
+                        {hasMatrixColumns && <td className="py-2 px-2 text-right font-mono text-green-400/70 pr-3">{row.cells[8]}</td>}
                       </tr>
                     );
                   })}
