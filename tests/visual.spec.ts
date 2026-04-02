@@ -15,10 +15,10 @@ test.describe('Visual verification — dashboard', () => {
     await page.waitForLoadState('networkidle')
 
     // Verify Felix Heartbeat header
-    await expect(page.getByText('Felix Heartbeat', { exact: true })).toBeVisible()
+    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
 
     // Verify Felix Heartbeat section renders with a status indicator
-    await expect(page.getByText('Felix Heartbeat', { exact: true })).toBeVisible()
+    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
 
     // Verify executive summary sections exist (use first() — overview has duplicate section labels)
     await expect(page.getByText('Infrastructure').first()).toBeVisible()
@@ -34,7 +34,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/finance')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByText('Financial Health')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('dashboard-finance.png', {
@@ -47,7 +47,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/infra')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByText('Infrastructure & Stack')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Infrastructure' })).toBeVisible()
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('dashboard-infra.png', {
@@ -60,7 +60,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/radar')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByText('RADAR Trading System')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible()
 
     // Screenshot comparison — allow higher diff for dynamic trading data
     await expect(page).toHaveScreenshot('dashboard-radar.png', {
