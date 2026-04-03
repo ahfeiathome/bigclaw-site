@@ -56,9 +56,10 @@ const PROJECTS: ProjectData[] = [
     description: 'Executive dashboard for BigClaw AI. Felix Patrol, RADAR dashboard, project reporting, finance tracking.',
     links: [{ label: 'Dashboard', url: 'https://bigclaw-site.vercel.app/dashboard' }],
   },
+  // ── Axiom (CODE_ONLY architecture) ──
   {
     name: 'RADAR',
-    company: 'Forge',
+    company: 'Axiom',
     status: 'PAPER',
     phase: '3 signal feeds active',
     blocker: 'Alpaca TOS review needed',
@@ -67,13 +68,21 @@ const PROJECTS: ProjectData[] = [
   },
   {
     name: 'iris-studio',
-    company: 'Forge',
+    company: 'Axiom',
     status: 'SPEC',
     phase: 'Pre-build — spec complete',
     blocker: '',
     description: 'AI art generation and sales platform. Stripe revenue model.',
   },
-  // ── Axiom (CODE_ONLY architecture) ──
+  {
+    name: 'fatfrogmodels',
+    company: 'Axiom',
+    status: 'LIVE',
+    phase: 'Maintenance',
+    blocker: '',
+    description: 'E-commerce site for Fat Frog Models. Catalog, admin panel, bulk import.',
+    links: [{ label: 'Live Site', url: 'https://fatfrogmodels.vercel.app' }],
+  },
   {
     name: 'FairConnect',
     company: 'Axiom',
