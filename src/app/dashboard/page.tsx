@@ -1,7 +1,6 @@
 import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchRecentClosedIssues, fetchHealth } from '@/lib/github';
 import type { GitHubIssue, GitHubRelease } from '@/lib/github';
-import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, TaskFlowWidget, EventStreamWidget, SecurityPostureBadge } from '@/components/dashboard';
-import { AgentOrCodePanel } from '@/components/mode-panels';
+import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, QuickActionsBar, AgentStatusPanel, TaskFlowWidget, EventStreamWidget, SecurityPostureBadge } from '@/components/dashboard';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import Link from 'next/link';
 
@@ -537,7 +536,7 @@ export default async function DashboardOverview() {
 
       {/* Agent Status + Financial health panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <AgentOrCodePanel />
+        <AgentStatusPanel />
         <SectionCard title="Financial">
           <div className="space-y-3">
             {financial.map((row, i) => {

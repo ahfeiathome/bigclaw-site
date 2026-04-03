@@ -10,7 +10,6 @@ import {
   InfraIcon,
   StatusDot,
 } from '@/components/dashboard';
-import { ModeToggle, ArchModeProvider } from '@/components/architecture-mode';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: <OverviewIcon /> },
@@ -48,12 +47,9 @@ function TopNav() {
           );
         })}
 
-        <div className="ml-auto flex items-center gap-3 py-3 pl-4 shrink-0">
-          <ModeToggle />
-          <div className="flex items-center gap-1.5">
-            <StatusDot status="good" size="sm" />
-            <span className="text-xs text-muted-foreground font-mono">Online</span>
-          </div>
+        <div className="ml-auto flex items-center gap-1.5 py-3 pl-4 shrink-0">
+          <StatusDot status="good" size="sm" />
+          <span className="text-xs text-muted-foreground font-mono">Online</span>
         </div>
       </div>
     </div>
@@ -77,13 +73,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <ArchModeProvider defaultMode="AGENTS">
-      <div className="min-h-[calc(100vh-3.5rem)] bg-background flex flex-col">
-        <TopNav />
-        <div className="flex-1">
-          <div className="max-w-6xl mx-auto px-6 py-6">{children}</div>
-        </div>
+    <div className="min-h-[calc(100vh-3.5rem)] bg-background flex flex-col">
+      <TopNav />
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto px-6 py-6">{children}</div>
       </div>
-    </ArchModeProvider>
+    </div>
   );
 }

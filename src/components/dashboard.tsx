@@ -425,39 +425,6 @@ export function SecurityPostureBadge({ posture, metrics }: {
   );
 }
 
-// ─── CodeStatusPanel ──────────────────────────────────────────────────────
-
-export function CodeStatusPanel() {
-  const tasks = [
-    { name: 'finance-check', schedule: 'Daily 6am' },
-    { name: 'health-scan', schedule: 'Every 4h' },
-    { name: 'competitor-scan', schedule: 'Weekly Mon' },
-    { name: 'marketing-draft', schedule: 'Weekly Wed' },
-    { name: 'morning-brief', schedule: 'Daily 7am' },
-  ];
-
-  return (
-    <SectionCard title="Code CLI — Standing Orders">
-      <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 px-3 py-2 mb-3">
-        <span className="text-xs text-blue-400 font-medium">Not yet configured — /schedule tasks will appear here once active</span>
-      </div>
-      <div className="space-y-3 opacity-60">
-        {tasks.map((task) => (
-          <div key={task.name} className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <StatusDot status="neutral" size="sm" />
-              <div>
-                <span className="text-sm font-medium text-foreground font-mono">{task.name}</span>
-                <span className="text-xs text-muted-foreground ml-1.5">{task.schedule}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
-
 // ─── Nav Icons (SVG) ────────────────────────────────────────────────────────
 
 export function OverviewIcon() {
