@@ -65,7 +65,7 @@ export function QuickActionsBar() {
         <rect x="2" y="1" width="12" height="14" rx="1.5" /><path d="M5 5h6M5 8h6M5 11h3" />
       </svg>
     )},
-    { label: 'Learnie Live', href: 'https://learnie-ai-ten.vercel.app', icon: (
+    { label: 'GrovaKid Live', href: 'https://learnie-ai-ten.vercel.app', icon: (
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4">
         <circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2 2-2 10 0 12M8 2c2 2 2 10 0 12" />
       </svg>
