@@ -81,7 +81,7 @@ interface PdlcProject {
 function parsePdlcProjects(content: string): PdlcProject[] {
   const projects: PdlcProject[] = [];
   const seen = new Set<string>();
-  const sections = ['Active', 'FOUNDRY \u2014 App Factory', 'Autonomous', 'Pipeline'];
+  const sections = ['Active', 'Forge', 'Axiom', 'Autonomous', 'Pipeline'];
   for (const section of sections) {
     const regex = new RegExp(`## ${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n`, 'm');
     const match = content.search(regex);
@@ -252,7 +252,7 @@ export default async function DashboardOverview() {
   // Extract RADAR metrics from patrol report Financial section
   const radarEquityRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar equity'));
   const radarPnlRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar') && r.cells[0]?.toLowerCase().includes('p/l'));
-  const openRouterRow = financial.find(r => r.cells[0]?.toLowerCase().includes('openrouter'));
+  const radarPositionsRow = financial.find(r => r.cells[0]?.toLowerCase().includes('position'));
 
   // Extract infra metrics
   const macDisk = infra.find(r => r.cells[0]?.toLowerCase().includes('mac disk'));
@@ -388,7 +388,7 @@ export default async function DashboardOverview() {
             <div className="grid grid-cols-2 gap-y-1.5 text-sm">
               <span className="text-muted-foreground">Equity:</span><span className="font-mono text-foreground text-right">{radarEquityRow?.cells[1]?.replace(' (PAPER)', '') || '$95,944'}</span>
               <span className="text-muted-foreground">Daily P/L:</span><span className={`font-mono text-right ${radarPnlRow?.cells[1]?.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnlRow?.cells[1]?.replace(' (PAPER)', '') || '--'}</span>
-              <span className="text-muted-foreground">Positions:</span><span className="font-mono text-foreground text-right">14</span>
+              <span className="text-muted-foreground">Positions:</span><span className="font-mono text-foreground text-right">{radarPositionsRow?.cells[1]?.trim() || '--'}</span>
               {stopLossCount > 0 && <><span className="text-muted-foreground">Alerts:</span><span className="font-mono text-red-400 text-right">🔴 {stopLossCount} stop-loss</span></>}
             </div>
           </Link>
@@ -712,15 +712,13 @@ export default async function DashboardOverview() {
               stageCounts[label] = (stageCounts[label] || 0) + 1;
             });
 
-            const foundryNames = new Set(['VERDE', 'VAULT', 'CORTEX', 'REHEARSAL', 'AXIOM', 'PHOENIX', 'CLAW', 'RADAR']);
-            const collaborateNames = new Set(['LEARNIE']);
-            const serviceNames = new Set(['WINGMAN']);
+            const forgeNames = new Set(['GROVAKID', 'LEARNIE', 'CLAW', 'RADAR', 'IRIS-STUDIO']);
+            const axiomNames = new Set(['FAIRCONNECT', 'KEEPTRACK', 'SUBCHECK']);
 
-            const foundry = pdlcProjects.filter(p => foundryNames.has(p.codename));
-            const collaborate = pdlcProjects.filter(p => collaborateNames.has(p.codename));
-            const service = pdlcProjects.filter(p => serviceNames.has(p.codename));
-            const categorized = new Set([...foundryNames, ...collaborateNames, ...serviceNames]);
-            const other = pdlcProjects.filter(p => !categorized.has(p.codename));
+            const forge = pdlcProjects.filter(p => forgeNames.has(p.codename.toUpperCase()));
+            const axiom = pdlcProjects.filter(p => axiomNames.has(p.codename.toUpperCase()));
+            const categorized = new Set([...forgeNames, ...axiomNames]);
+            const other = pdlcProjects.filter(p => !categorized.has(p.codename.toUpperCase()));
 
             const CategorySection = ({ title, desc, color, items }: { title: string; desc: string; color: string; items: PdlcProject[] }) => {
               if (items.length === 0) return null;
@@ -746,9 +744,8 @@ export default async function DashboardOverview() {
                     <SignalPill key={label} label={`${label} (${count})`} tone="neutral" />
                   ))}
                 </div>
-                <CategorySection title="Foundry" desc="Apps & internal products" color="text-green-600" items={foundry} />
-                <CategorySection title="Collaborate" desc="Co-founded ventures" color="text-blue-600" items={collaborate} />
-                <CategorySection title="Service" desc="Client & partner projects" color="text-purple-600" items={service} />
+                <CategorySection title="Forge" desc="AGENTS architecture — GrovaKid, BigClaw, RADAR, iris-studio" color="text-green-600" items={forge} />
+                <CategorySection title="Axiom" desc="CODE_ONLY architecture — FairConnect, KeepTrack, SubCheck" color="text-blue-600" items={axiom} />
                 {other.length > 0 && <CategorySection title="Other" desc="Uncategorized" color="text-muted-foreground" items={other} />}
               </>
             );

@@ -1,4 +1,4 @@
-import { fetchPatrolReport, fetchCompanyCheckpoint, fetchCeoInbox, fetchAgentsMd, fetchProjects, fetchBandwidth } from '@/lib/github';
+import { fetchPatrolReport, fetchAgentsMd, fetchProjects, fetchBandwidth, fetchIssuesSnapshot } from '@/lib/github';
 import { MetricCard, SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────
@@ -25,108 +25,101 @@ function extractBulletItems(content: string): string[] {
 
 // ─── Projects tab helpers ────────────────────────────────────────────────────
 
-function extractCPsForProject(checkpoint: string, keywords: string[]): { todo: string[]; done: string[] } {
-  const todo: string[] = [];
-  const done: string[] = [];
-  for (const line of checkpoint.split('\n')) {
-    if (!line.includes('|') || !line.includes('CP-')) continue;
-    const lower = line.toLowerCase();
-    if (!keywords.some(k => lower.includes(k.toLowerCase()))) continue;
-    const cols = line.split('|').map(c => c.trim()).filter(Boolean);
-    const label = cols[0] || '';
-    if (line.includes('\u2705 DONE')) done.push(label);
-    else if (line.includes('\u23F3')) todo.push(label);
-  }
-  return { todo, done };
-}
-
 interface ProjectData {
   name: string;
+  company: 'Forge' | 'Axiom';
   status: string;
   phase: string;
   blocker: string;
   description: string;
-  cpKeywords: string[];
   links?: { label: string; url: string }[];
 }
 
 const PROJECTS: ProjectData[] = [
+  // ── Forge (AGENTS architecture) ──
   {
-    name: 'Learnie AI',
+    name: 'GrovaKid',
+    company: 'Forge',
     status: 'LIVE',
-    phase: 'Pre-revenue \u00B7 233/233 tests passing',
-    blocker: 'Stripe blocked on credit card',
+    phase: 'Pre-revenue',
+    blocker: 'Co-founder agreement gates Stripe',
     description: 'AI-powered K-5 tutoring platform. Print worksheets, scan answers, get personalized feedback and adaptive learning paths.',
-    cpKeywords: ['learnie', 'TASK-'],
     links: [{ label: 'Live App', url: 'https://learnie-ai-ten.vercel.app' }],
   },
   {
-    name: 'WINGMAN',
+    name: 'BigClaw Dashboard',
+    company: 'Forge',
     status: 'LIVE',
-    phase: 'Maintenance \u00B7 fatfrogmodels.com',
-    blocker: 'DNS cutover pending',
-    description: 'E-commerce site for Fat Frog Models (client). Catalog, admin panel, bulk import, image handling live on Vercel. Pending DNS cutover to fatfrogmodels.com.',
-    cpKeywords: ['WINGMAN', 'fatfrog', 'CP-072', 'CP-073', 'CP-074', 'CP-075', 'CP-076'],
-    links: [{ label: 'Live Site', url: 'https://fatfrogmodels.vercel.app' }],
+    phase: 'Active development',
+    blocker: '',
+    description: 'Executive dashboard for BigClaw AI. Felix Patrol, RADAR dashboard, project reporting, finance tracking.',
+    links: [{ label: 'Dashboard', url: 'https://bigclaw-site.vercel.app/dashboard' }],
   },
   {
     name: 'RADAR',
+    company: 'Forge',
     status: 'PAPER',
-    phase: '3 signal feeds active \u00B7 Gate review ~May 2',
+    phase: '3 signal feeds active',
     blocker: 'Alpaca TOS review needed',
     description: 'Systematic trading engine with constitution-enforced risk management. PEAD + Momentum + BTD signal feeds. $100K paper capital.',
-    cpKeywords: ['RADAR', 'CP-038', 'CP-090'],
     links: [{ label: 'RADAR Dashboard', url: '/dashboard/radar' }],
   },
   {
-    name: 'FOUNDRY',
-    status: 'QUEUE',
-    phase: 'UI polish + market research (P2)',
+    name: 'iris-studio',
+    company: 'Forge',
+    status: 'SPEC',
+    phase: 'Pre-build — spec complete',
     blocker: '',
-    description: 'App factory \u2014 VAULT (receipt scan), VERDE (plant ID), TEMPO (calorie scan). Awaiting App Store category research before publish.',
-    cpKeywords: ['FOUNDRY', 'CP-041', 'CP-077', 'VAULT', 'VERDE', 'TEMPO'],
+    description: 'AI art generation and sales platform. Stripe revenue model.',
+  },
+  // ── Axiom (CODE_ONLY architecture) ──
+  {
+    name: 'FairConnect',
+    company: 'Axiom',
+    status: 'SETUP',
+    phase: 'Initial setup',
+    blocker: '',
+    description: 'Fair pricing and connection platform. Apple IAP revenue model.',
   },
   {
-    name: 'CLAW',
-    status: 'LIVE',
-    phase: 'bigclaw.com deployed on Vercel',
-    blocker: 'DNS cutover pending',
-    description: 'BigClaw AI company site + executive dashboard. Next.js on Vercel. Houses Felix Patrol, RADAR dashboard, and all project reporting.',
-    cpKeywords: ['CLAW', 'bigclaw', 'CP-040'],
-    links: [{ label: 'Live Site', url: 'https://bigclaw-site.vercel.app' }],
+    name: 'KeepTrack',
+    company: 'Axiom',
+    status: 'SETUP',
+    phase: 'Initial setup',
+    blocker: '',
+    description: 'Personal tracking and accountability app. Apple IAP revenue model.',
   },
   {
-    name: 'PHOENIX',
-    status: 'LIVE',
-    phase: 'Phase 2 active \u00B7 6 agents on OpenRouter \u00B7 Gate PASSED 2026-03-31',
+    name: 'SubCheck',
+    company: 'Axiom',
+    status: 'SETUP',
+    phase: 'Initial setup',
     blocker: '',
-    description: 'Multi-model routing via OpenRouter. All 6 agents live: Mika (Haiku), Rex (Sonnet), Byte (Sonnet), Koda (Haiku), Sage (DeepSeek V3), Lumina (Llama 3.3 70B). ~$5/mo vs $15 budget. Phase II: cost observability next.',
-    cpKeywords: ['PHOENIX', 'OpenRouter'],
+    description: 'Subscription management and audit tool. Apple IAP revenue model.',
   },
 ];
 
-function buildProjectsSummary(projects: ProjectData[], checkpoint: string | null): string[] {
+function buildProjectsSummary(projects: ProjectData[]): string[] {
   const lines: string[] = [];
+  const forgeProjects = projects.filter(p => p.company === 'Forge');
+  const axiomProjects = projects.filter(p => p.company === 'Axiom');
   const live = projects.filter(p => p.status === 'LIVE');
-  const building = projects.filter(p => p.status === 'BUILD' || p.status === 'PAPER' || p.status === 'DESIGN');
-  const queued = projects.filter(p => p.status === 'QUEUE');
-  if (live.length > 0) lines.push(`${live.length} project(s) live in production: ${live.map(p => p.name).join(', ')}.`);
-  if (building.length > 0) lines.push(`${building.length} actively in development: ${building.map(p => `${p.name} (${p.status})`).join(', ')}.`);
-  if (queued.length > 0) lines.push(`${queued.length} queued for build: ${queued.map(p => p.name).join(', ')}.`);
+  const building = projects.filter(p => p.status === 'BUILD' || p.status === 'PAPER' || p.status === 'SPEC');
+  const setup = projects.filter(p => p.status === 'SETUP');
+  lines.push(`Forge: ${forgeProjects.length} products (AGENTS architecture). Axiom: ${axiomProjects.length} products (CODE_ONLY).`);
+  if (live.length > 0) lines.push(`${live.length} live in production: ${live.map(p => p.name).join(', ')}.`);
+  if (building.length > 0) lines.push(`${building.length} in development: ${building.map(p => `${p.name} (${p.status})`).join(', ')}.`);
+  if (setup.length > 0) lines.push(`${setup.length} in setup: ${setup.map(p => p.name).join(', ')}.`);
   const blocked = projects.filter(p => p.blocker);
   if (blocked.length > 0) lines.push(`Blockers: ${blocked.map(p => `${p.name} \u2014 ${p.blocker}`).join('; ')}.`);
   else lines.push('No blockers across the portfolio. Clear to execute.');
-  if (checkpoint) {
-    const todoCount = (checkpoint.match(/\u23F3/g) || []).length;
-    const doneCount = (checkpoint.match(/\u2705 DONE/g) || []).length;
-    if (todoCount > 0 || doneCount > 0) lines.push(`Checkpoint: ${doneCount} CPs completed, ${todoCount} pending across all ventures.`);
-  }
   return lines;
 }
 
 function getProjectDotStatus(status: string): 'good' | 'warn' | 'bad' | 'neutral' {
   if (status === 'LIVE') return 'good';
-  if (status === 'PAPER' || status === 'DESIGN') return 'warn';
+  if (status === 'PAPER' || status === 'SPEC') return 'warn';
+  if (status === 'SETUP') return 'neutral';
   return 'neutral';
 }
 
@@ -143,7 +136,7 @@ function extractPipelineProjects(projectsMd: string | null): PipelineProject[] {
   if (!projectsMd) return [];
   const projects: PipelineProject[] = [];
   const seen = new Set<string>();
-  for (const section of ['Active', 'FOUNDRY', 'Pipeline', 'Autonomous']) {
+  for (const section of ['Active', 'Forge', 'Axiom', 'Pipeline', 'Autonomous']) {
     const regex = new RegExp(`## ${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
     const match = projectsMd.search(regex);
     if (match === -1) continue;
@@ -206,17 +199,15 @@ function agentDot(s: string): 'good' | 'warn' | 'bad' | 'neutral' {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function ProjectsPage() {
-  const [, checkpoint, , inbox, agentsMd, projectsMd, bandwidth] = await Promise.all([
+  const [, agentsMd, projectsMd, bandwidth, forgeSnapshot] = await Promise.all([
     fetchPatrolReport(),
-    fetchCompanyCheckpoint(),
-    Promise.resolve(null), // learnieHealth slot — unused here
-    fetchCeoInbox(),
     fetchAgentsMd(),
     fetchProjects(),
     fetchBandwidth(),
+    fetchIssuesSnapshot('the-firm'),
   ]);
 
-  const execLines = buildProjectsSummary(PROJECTS, checkpoint);
+  const execLines = buildProjectsSummary(PROJECTS);
   const pipeline = extractPipelineProjects(projectsMd);
   const agents = extractAgents(agentsMd);
 
@@ -228,9 +219,9 @@ export default async function ProjectsPage() {
   const activeAgents = agents.filter(a => a.status.toLowerCase().includes('active')).length;
 
   const velocityItems: { label: string; value: string }[] = [];
-  if (inbox) {
-    const n = (inbox.match(/^[-*]\s/gm) || []).length;
-    if (n > 0) velocityItems.push({ label: 'Inbox Items', value: `${n}` });
+  if (forgeSnapshot) {
+    const issueLines = forgeSnapshot.split('\n').filter(l => l.startsWith('- ['));
+    if (issueLines.length > 0) velocityItems.push({ label: 'Tracked Issues', value: `${issueLines.length}` });
   }
   if (bandwidth) {
     const m = bandwidth.match(/commits?[:\s]+(\d+)/i);
@@ -258,7 +249,7 @@ export default async function ProjectsPage() {
             <span className="text-xs text-muted-foreground font-mono">{PROJECTS.filter(p => p.status === 'LIVE').length} live</span>
           </div>
         </div>
-        <div className="text-lg font-semibold text-foreground font-mono">{PROJECTS.length} ventures &middot; {PROJECTS.filter(p => p.status === 'LIVE').length} live &middot; {PROJECTS.filter(p => p.status === 'BUILDING').length} building</div>
+        <div className="text-lg font-semibold text-foreground font-mono">{PROJECTS.length} products &middot; {PROJECTS.filter(p => p.company === 'Forge').length} Forge &middot; {PROJECTS.filter(p => p.company === 'Axiom').length} Axiom</div>
       </div>
 
       {/* Portfolio snapshot metrics */}
@@ -286,66 +277,57 @@ export default async function ProjectsPage() {
         </div>
       </SectionCard>
 
-      {/* Project Cards */}
-      <div className="space-y-4 mb-6">
-        {PROJECTS.map((project) => {
-          const cps = checkpoint ? extractCPsForProject(checkpoint, project.cpKeywords) : { todo: [], done: [] };
-          return (
-            <div key={project.name} className="animate-fade-in border border-border rounded-2xl bg-card shadow-sm p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <StatusDot status={getProjectDotStatus(project.status)} size="md" />
-                <h3 className="font-semibold text-foreground">{project.name}</h3>
-                <SignalPill
-                  label={project.status}
-                  tone={project.status === 'LIVE' ? 'success' : project.status === 'PAPER' ? 'warning' : project.status === 'DESIGN' ? 'info' : 'neutral'}
-                />
-                {project.links?.map((link) => (
-                  <a key={link.url} href={link.url}
-                    target={link.url.startsWith('/') ? undefined : '_blank'}
-                    rel={link.url.startsWith('/') ? undefined : 'noopener noreferrer'}
-                    className="text-xs text-blue-600 ml-auto no-underline hover:underline font-medium">
-                    {link.label} →
-                  </a>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{project.description}</p>
-              <div className="flex flex-wrap gap-4 mb-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-muted-foreground uppercase tracking-wide">Phase:</span>
-                  <span className="font-mono text-foreground/80">{project.phase}</span>
-                </div>
-                {project.blocker && (
-                  <div className="flex items-center gap-1.5 border-l-2 border-amber-200 pl-3">
-                    <span className="text-muted-foreground uppercase tracking-wide">Blocker:</span>
-                    <span className="text-amber-600 font-medium">{project.blocker}</span>
-                  </div>
-                )}
-              </div>
-              {(cps.todo.length > 0 || cps.done.length > 0) && (
-                <div className="border-t border-border pt-3 mt-3">
-                  <div className="flex gap-6 text-xs">
-                    {cps.todo.length > 0 && (
-                      <div>
-                        <span className="text-blue-600 font-semibold">{cps.todo.length} TODO</span>
-                        <div className="text-muted-foreground mt-1 space-y-0.5">
-                          {cps.todo.slice(0, 3).map((cp, i) => <div key={i} className="truncate max-w-[300px] font-mono">{cp}</div>)}
-                          {cps.todo.length > 3 && <div className="font-mono">+{cps.todo.length - 3} more</div>}
-                        </div>
-                      </div>
-                    )}
-                    {cps.done.length > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-green-600 font-semibold">{cps.done.length} DONE</span>
-                        <span className="text-green-600">✓</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+      {/* Project Cards — grouped by company */}
+      {(['Forge', 'Axiom'] as const).map((company) => {
+        const companyProjects = PROJECTS.filter(p => p.company === company);
+        return (
+          <div key={company} className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`text-sm font-semibold uppercase tracking-wide ${company === 'Forge' ? 'text-green-600' : 'text-blue-600'}`}>
+                {company}
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {company === 'Forge' ? 'AGENTS' : 'CODE_ONLY'} &middot; {companyProjects.length} products
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <div className="space-y-4">
+              {companyProjects.map((project) => (
+                <div key={project.name} className="animate-fade-in border border-border rounded-2xl bg-card shadow-sm p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <StatusDot status={getProjectDotStatus(project.status)} size="md" />
+                    <h3 className="font-semibold text-foreground">{project.name}</h3>
+                    <SignalPill
+                      label={project.status}
+                      tone={project.status === 'LIVE' ? 'success' : project.status === 'PAPER' || project.status === 'SPEC' ? 'warning' : 'neutral'}
+                    />
+                    {project.links?.map((link) => (
+                      <a key={link.url} href={link.url}
+                        target={link.url.startsWith('/') ? undefined : '_blank'}
+                        rel={link.url.startsWith('/') ? undefined : 'noopener noreferrer'}
+                        className="text-xs text-blue-600 ml-auto no-underline hover:underline font-medium">
+                        {link.label} →
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{project.description}</p>
+                  <div className="flex flex-wrap gap-4 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground uppercase tracking-wide">Phase:</span>
+                      <span className="font-mono text-foreground/80">{project.phase}</span>
+                    </div>
+                    {project.blocker && (
+                      <div className="flex items-center gap-1.5 border-l-2 border-amber-200 pl-3">
+                        <span className="text-muted-foreground uppercase tracking-wide">Blocker:</span>
+                        <span className="text-amber-600 font-medium">{project.blocker}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Pipeline — from PROJECTS.md (live data) */}
       {pipeline.length > 0 && (() => {
@@ -401,65 +383,20 @@ export default async function ProjectsPage() {
         </SectionCard>
       )}
 
-      {/* COO Inbox */}
-      {inbox && (
-        <SectionCard title="COO Inbox (Recent)" className="mb-6">
-          {(() => {
-            const rows = parseMarkdownTable(inbox);
-            if (rows.length > 0) {
-              const headerLine = inbox.split('\n').find(l => l.includes('|') && !l.match(/^\|[\s-|]+\|$/) && !l.match(/^\| \u2014/));
-              const headers = headerLine ? headerLine.split('|').map(c => c.trim()).filter(Boolean) : [];
+      {/* Issues Snapshot */}
+      {forgeSnapshot && (
+        <SectionCard title="Issues Snapshot (Forge)" className="mb-6">
+          <div className="space-y-2">
+            {forgeSnapshot.split('\n').filter(l => l.startsWith('- [')).slice(0, 15).map((line, i) => {
+              const isOpen = line.includes('[open]');
               return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    {headers.length > 1 && (
-                      <thead>
-                        <tr className="border-b border-border bg-muted">
-                          {headers.map((h, i) => (
-                            <th key={i} className={`text-left text-xs text-muted-foreground font-medium pb-2.5 pt-2 pr-3 ${i === 0 ? 'pl-3' : ''}`}>
-                              {h.replace(/\*\*/g, '')}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                    )}
-                    <tbody>
-                      {rows.slice(0, 10).map((row, i) => (
-                        <tr key={i} className={`border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-muted/50' : ''} hover:bg-blue-50/50 transition-colors`}>
-                          {row.cells.map((cell, ci) => (
-                            <td key={ci} className={`py-2 pr-3 text-sm ${ci === 0 ? 'font-medium text-foreground/80 pl-3' : 'text-muted-foreground'}`}>
-                              {cell.replace(/\*\*/g, '').slice(0, 60)}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {rows.length > 10 && <div className="text-xs text-muted-foreground mt-2 font-mono">+{rows.length - 10} more items</div>}
+                <div key={i} className="flex items-start gap-2.5 text-sm">
+                  <StatusDot status={isOpen ? 'warn' : 'good'} size="sm" />
+                  <span className="text-muted-foreground font-mono text-xs">{line.replace(/^- /, '')}</span>
                 </div>
               );
-            }
-            const bullets = extractBulletItems(inbox);
-            if (bullets.length > 0) {
-              return (
-                <div className="space-y-2">
-                  {bullets.slice(0, 10).map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-sm">
-                      <StatusDot status="neutral" size="sm" />
-                      <span className="text-muted-foreground">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            }
-            return (
-              <div className="space-y-1.5">
-                {inbox.split('\n').filter(l => l.trim() && !l.startsWith('#')).slice(0, 10).map((line, i) => (
-                  <p key={i} className="text-sm text-muted-foreground">{line}</p>
-                ))}
-              </div>
-            );
-          })()}
+            })}
+          </div>
         </SectionCard>
       )}
     </div>
