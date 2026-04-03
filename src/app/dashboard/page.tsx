@@ -162,8 +162,6 @@ export default async function DashboardOverview() {
             {[
               { name: 'GrovaKid', status: 'LIVE', url: 'https://learnie-ai-ten.vercel.app' },
               { name: 'BigClaw', status: 'LIVE', url: 'https://bigclaw-site.vercel.app' },
-              { name: 'RADAR', status: 'PAPER', url: '/dashboard/radar' },
-              { name: 'iris-studio', status: 'SPEC' },
             ].map(p => (
               <div key={p.name} className="flex items-center gap-2 text-xs">
                 <StatusDot status={p.status === 'LIVE' ? 'good' : p.status === 'PAPER' ? 'warn' : 'neutral'} size="sm" />
@@ -194,6 +192,9 @@ export default async function DashboardOverview() {
               { name: 'FairConnect', status: 'SETUP' },
               { name: 'KeepTrack', status: 'SETUP' },
               { name: 'SubCheck', status: 'SETUP' },
+              { name: 'RADAR', status: 'PAPER', url: '/dashboard/radar' },
+              { name: 'iris-studio', status: 'SPEC' },
+              { name: 'fatfrogmodels', status: 'LIVE', url: 'https://fatfrogmodels.vercel.app' },
             ].map(p => (
               <div key={p.name} className="flex items-center gap-2 text-xs">
                 <StatusDot status="neutral" size="sm" />
