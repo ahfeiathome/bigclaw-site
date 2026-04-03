@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   OverviewIcon,
   ProjectsIcon,
+  GrovakidIcon,
   RadarIcon,
   FinanceIcon,
   InfraIcon,
@@ -14,6 +15,7 @@ import {
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: <OverviewIcon /> },
   { href: '/dashboard/projects', label: 'Projects', icon: <ProjectsIcon /> },
+  { href: '/dashboard/grovakid', label: 'GrovaKid', icon: <GrovakidIcon /> },
   { href: '/dashboard/radar', label: 'RADAR', icon: <RadarIcon /> },
   { href: '/dashboard/finance', label: 'Finance', icon: <FinanceIcon /> },
   { href: '/dashboard/infra', label: 'Infra', icon: <InfraIcon /> },
