@@ -1,5 +1,6 @@
-import { fetchPatrolReport, fetchAgentsMd, fetchProjects, fetchBandwidth, fetchIssuesSnapshot } from '@/lib/github';
-import { MetricCard, SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
+import { fetchAgentsMd, fetchProjects, fetchBandwidth, fetchIssuesSnapshot, fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
+import type { GitHubIssue } from '@/lib/github';
+import { MetricCard, SectionCard, SignalPill, StatusDot, TaskFlowWidget, EventStreamWidget } from '@/components/dashboard';
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -199,12 +200,13 @@ function agentDot(s: string): 'good' | 'warn' | 'bad' | 'neutral' {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function ProjectsPage() {
-  const [, agentsMd, projectsMd, bandwidth, forgeSnapshot] = await Promise.all([
-    fetchPatrolReport(),
+  const [agentsMd, projectsMd, bandwidth, forgeSnapshot, allIssues, closedIssues] = await Promise.all([
     fetchAgentsMd(),
     fetchProjects(),
     fetchBandwidth(),
     fetchIssuesSnapshot('the-firm'),
+    fetchAllIssues(),
+    fetchRecentClosedIssues(7),
   ]);
 
   const execLines = buildProjectsSummary(PROJECTS);
@@ -383,22 +385,65 @@ export default async function ProjectsPage() {
         </SectionCard>
       )}
 
-      {/* Issues Snapshot */}
-      {forgeSnapshot && (
-        <SectionCard title="Issues Snapshot (Forge)" className="mb-6">
-          <div className="space-y-2">
-            {forgeSnapshot.split('\n').filter(l => l.startsWith('- [')).slice(0, 15).map((line, i) => {
-              const isOpen = line.includes('[open]');
-              return (
-                <div key={i} className="flex items-start gap-2.5 text-sm">
-                  <StatusDot status={isOpen ? 'warn' : 'good'} size="sm" />
-                  <span className="text-muted-foreground font-mono text-xs">{line.replace(/^- /, '')}</span>
+      {/* Open Issues (full list, grouped by company) */}
+      {allIssues.length > 0 && (
+        <SectionCard title="Open Issues" className="mb-6" action={<a href="https://github.com/users/ahfeiathome/projects/1" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline no-underline">Board &rarr;</a>}>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {allIssues.slice(0, 25).map((issue: GitHubIssue) => (
+              <a key={`${issue.repo}-${issue.number}`} href={issue.url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 rounded-lg p-2 hover:bg-muted transition-colors no-underline">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono text-muted-foreground">{issue.repo}</span>
+                    <span className="text-xs text-muted-foreground">#{issue.number}</span>
+                  </div>
+                  <p className="text-sm text-foreground truncate">{issue.title}</p>
                 </div>
-              );
-            })}
+                <div className="flex gap-1 shrink-0">
+                  {issue.labels.filter(l => ['P0','P1','P2'].includes(l)).map(l => (
+                    <span key={l} className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${l === 'P0' ? 'bg-red-500/20 text-red-400' : l === 'P1' ? 'bg-amber-500/20 text-amber-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{l}</span>
+                  ))}
+                </div>
+              </a>
+            ))}
           </div>
         </SectionCard>
       )}
+
+      {/* Task Flow + Event Stream */}
+      {(() => {
+        const inProgressLabels = ['in progress', 'in-progress', 'wip'];
+        const backlogLabels = ['backlog', 'later', 'icebox'];
+        const todoIssues = allIssues.filter((i: GitHubIssue) => !i.labels.some(l => inProgressLabels.includes(l.toLowerCase())) && !i.labels.some(l => backlogLabels.includes(l.toLowerCase())));
+        const inProgressIssues = allIssues.filter((i: GitHubIssue) => i.labels.some(l => inProgressLabels.includes(l.toLowerCase())));
+        const backlogIssues = allIssues.filter((i: GitHubIssue) => i.labels.some(l => backlogLabels.includes(l.toLowerCase())));
+        const taskFlowColumns = [
+          { label: 'Todo', count: todoIssues.length, items: todoIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+          { label: 'In Progress', count: inProgressIssues.length, items: inProgressIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+          { label: 'Done', count: closedIssues.length, items: closedIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+          { label: 'Backlog', count: backlogIssues.length, items: backlogIssues.map(i => ({ repo: i.repo, number: i.number, title: i.title, labels: i.labels, url: i.url })) },
+        ];
+
+        type EventAction = 'opened' | 'closed' | 'updated';
+        const eventStream: { repo: string; number: number; title: string; action: EventAction; timestamp: string; url: string }[] = [];
+        for (const issue of closedIssues) {
+          eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'closed', timestamp: issue.updatedAt, url: issue.url });
+        }
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        for (const issue of allIssues) {
+          const created = new Date(issue.createdAt).getTime();
+          const updated = new Date(issue.updatedAt).getTime();
+          if (created > sevenDaysAgo) eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'opened', timestamp: issue.createdAt, url: issue.url });
+          else if (updated > sevenDaysAgo) eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'updated', timestamp: issue.updatedAt, url: issue.url });
+        }
+        eventStream.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        return (
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <TaskFlowWidget columns={taskFlowColumns} />
+            <EventStreamWidget events={eventStream.slice(0, 30)} />
+          </div>
+        );
+      })()}
     </div>
   );
 }

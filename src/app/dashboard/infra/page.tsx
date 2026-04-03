@@ -1,5 +1,5 @@
-import { fetchFinanceData } from '@/lib/github';
-import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
+import { fetchFinanceData, fetchHealth, fetchPatrolReport, fetchBandwidth } from '@/lib/github';
+import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot, AgentStatusPanel, SecurityPostureBadge } from '@/components/dashboard';
 
 interface TableRow {
   cells: string[];
@@ -76,39 +76,59 @@ function extractTableHeaders(section: string): string[] {
 }
 
 export default async function InfraPage() {
-  const finance = await fetchFinanceData();
+  const [finance, healthMd, patrolContent] = await Promise.all([
+    fetchFinanceData(),
+    fetchHealth(),
+    fetchPatrolReport(),
+  ]);
 
-  if (!finance) {
-    return (
-      <div className="text-center py-20 text-muted-foreground animate-fade-in">
-        <div className="text-3xl font-mono mb-2">--</div>
-        <div>Unable to fetch infrastructure data.</div>
-      </div>
-    );
+  // Parse health metrics for security posture
+  const securityMetrics: { label: string; value: string; status: 'good' | 'warn' | 'bad'; bar?: number }[] = [];
+  let securityPosture: 'SECURE' | 'WARNING' | 'CRITICAL' = 'SECURE';
+
+  if (healthMd) {
+    for (const line of healthMd.split('\n')) {
+      if (!line.startsWith('|') || line.match(/^\|[\s-|]+\|$/) || line.includes('Metric')) continue;
+      const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cols.length < 2) continue;
+      const label = cols[0];
+      const value = cols[1];
+      const isBad = /DOWN|FAIL|CRITICAL|ERROR/i.test(value);
+      const isWarn = /STALE|WARN|HIGH|ALERT/i.test(value);
+      const status = isBad ? 'bad' as const : isWarn ? 'warn' as const : 'good' as const;
+      if (isBad) securityPosture = 'CRITICAL';
+      if (isWarn && securityPosture !== 'CRITICAL') securityPosture = 'WARNING';
+      const barMatch = value.match(/([\d.]+)\s*%/);
+      securityMetrics.push({ label, value, status, bar: barMatch ? parseFloat(barMatch[1]) : undefined });
+    }
   }
 
-  // Extract infrastructure-related sections
-  const subscriptionsSection = extractSection(finance, 'Active Subscriptions');
+  // Parse infrastructure from patrol report
+  const patrolInfra = patrolContent ? parseMarkdownTable(extractSection(patrolContent, 'Infrastructure')) : [];
+  const patrolTooling = patrolContent ? parseMarkdownTable(extractSection(patrolContent, 'Tooling')) : [];
+
+  // Extract infrastructure-related sections (finance may be null)
+  const subscriptionsSection = finance ? extractSection(finance, 'Active Subscriptions') : '';
   const subscriptionRows = parseMarkdownTable(subscriptionsSection);
   const subscriptionHeaders = extractTableHeaders(subscriptionsSection);
 
-  const personalSection = extractSection(finance, "Michael's Personal AI Subscriptions");
+  const personalSection = finance ? extractSection(finance, "Michael's Personal AI Subscriptions") : '';
   const personalRows = parseMarkdownTable(personalSection);
   const personalHeaders = extractTableHeaders(personalSection);
 
-  const pricingSection = extractSection(finance, 'Pricing \\(current rates\\)') || extractSection(finance, 'Pricing');
+  const pricingSection = finance ? (extractSection(finance, 'Pricing \\(current rates\\)') || extractSection(finance, 'Pricing')) : '';
   const pricingRows = parseMarkdownTable(pricingSection);
   const pricingHeaders = extractTableHeaders(pricingSection);
 
-  const agentSection = extractSection(finance, 'Pi5 Agent Token Usage');
+  const agentSection = finance ? extractSection(finance, 'Pi5 Agent Token Usage') : '';
   const agentRows = parseMarkdownTable(agentSection);
   const agentHeaders = extractTableHeaders(agentSection);
 
-  const costTierSection = extractSection(finance, 'Pi5 Cost Breakdown by Tier');
+  const costTierSection = finance ? extractSection(finance, 'Pi5 Cost Breakdown by Tier') : '';
   const costTierRows = parseMarkdownTable(costTierSection);
   const costTierHeaders = extractTableHeaders(costTierSection);
 
-  const decisionSection = extractSection(finance, 'Subscription Cost Decisions Log');
+  const decisionSection = finance ? extractSection(finance, 'Subscription Cost Decisions Log') : '';
   const decisionRows = parseMarkdownTable(decisionSection);
   const decisionHeaders = extractTableHeaders(decisionSection);
 
@@ -141,6 +161,37 @@ export default async function InfraPage() {
         <MetricCard label="Pi5 Agents" value="6" subtitle="All active" trend="up" />
         <MetricCard label="Free Tiers" value={subscriptionRows.filter(r => r.cells.some(c => c.includes('$0'))).length} subtitle="services" trend="up" />
       </div>
+
+      {/* Agent Status + Security Posture */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <AgentStatusPanel />
+        <SecurityPostureBadge posture={securityPosture} metrics={securityMetrics.slice(0, 8)} />
+      </div>
+
+      {/* Infrastructure Health (from patrol report) */}
+      {(patrolInfra.length > 0 || patrolTooling.length > 0) && (
+        <div className="mb-6">
+          <SectionCard title="System Health (Felix Patrol)">
+            <div className="space-y-3">
+              {[...patrolInfra, ...patrolTooling].map((row, i) => {
+                const value = row.cells[1] || '';
+                const isBad = /DOWN|FAIL|CRITICAL/i.test(value);
+                const isWarn = /STALE|WARN|HIGH/i.test(value);
+                const barMatch = value.match(/([\d.]+)\s*%/);
+                return (
+                  <HealthRow
+                    key={i}
+                    label={row.cells[0]}
+                    value={value}
+                    status={isBad ? 'bad' : isWarn ? 'warn' : 'good'}
+                    bar={barMatch ? parseFloat(barMatch[1]) : undefined}
+                  />
+                );
+              })}
+            </div>
+          </SectionCard>
+        </div>
+      )}
 
       {/* Active Subscriptions & Services */}
       <div className="mb-6">

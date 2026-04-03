@@ -65,6 +65,10 @@ export async function fetchTooling(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/operations/TOOLING.md');
 }
 
+export async function fetchMichaelTodo(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'sponsor/MICHAEL_TODO.md');
+}
+
 export async function fetchRadarStatus(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
 }
@@ -112,9 +116,9 @@ export async function fetchLearnieHealth(): Promise<{
 // --- GitHub Issues & Releases (cross-repo) ---
 
 // Forge repos
-const FORGE_REPOS = ['learnie-ai', 'bigclaw-site', 'the-firm'];
+export const FORGE_REPOS = new Set(['learnie-ai', 'bigclaw-site', 'the-firm']);
 // Axiom repos
-const AXIOM_REPOS = ['axiom', 'fairconnect', 'keeptrack', 'subcheck'];
+export const AXIOM_REPOS = new Set(['axiom', 'fairconnect', 'keeptrack', 'subcheck']);
 // All repos for cross-repo queries
 const ALL_REPOS = [...FORGE_REPOS, ...AXIOM_REPOS, 'bigclaw-ai'];
 
