@@ -1,13 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 type ArchMode = 'AGENTS' | 'CODE_ONLY';
 
 const ArchModeContext = createContext<{
   mode: ArchMode;
+  hydrated: boolean;
   toggle: () => void;
-}>({ mode: 'AGENTS', toggle: () => {} });
+}>({ mode: 'AGENTS', hydrated: false, toggle: () => {} });
 
 export function useArchMode() {
   return useContext(ArchModeContext);
@@ -20,13 +21,14 @@ export function ArchModeProvider({
   defaultMode: ArchMode;
   children: ReactNode;
 }) {
-  const [mode, setMode] = useState<ArchMode>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('bigclaw-arch-mode');
-      if (stored === 'AGENTS' || stored === 'CODE_ONLY') return stored;
-    }
-    return defaultMode;
-  });
+  const [mode, setMode] = useState<ArchMode>(defaultMode);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('bigclaw-arch-mode');
+    if (stored === 'AGENTS' || stored === 'CODE_ONLY') setMode(stored);
+    setHydrated(true);
+  }, []);
 
   const toggle = useCallback(() => {
     setMode((prev) => {
@@ -37,18 +39,23 @@ export function ArchModeProvider({
   }, []);
 
   return (
-    <ArchModeContext.Provider value={{ mode, toggle }}>
+    <ArchModeContext.Provider value={{ mode, hydrated, toggle }}>
       {children}
     </ArchModeContext.Provider>
   );
 }
 
 export function ModeToggle() {
-  const { mode, toggle } = useArchMode();
+  const { mode, hydrated, toggle } = useArchMode();
+
+  if (!hydrated) return null;
 
   return (
     <button
       onClick={toggle}
+      role="switch"
+      aria-checked={mode === 'AGENTS'}
+      aria-label={`Architecture view: ${mode === 'AGENTS' ? 'Agent View' : 'Code-Only View'}`}
       className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-all hover:border-primary/30 hover:bg-primary/5"
       title={`Current: ${mode === 'AGENTS' ? 'Agent View' : 'Code-Only View'}. Click to switch.`}
     >
@@ -61,13 +68,13 @@ export function ModeToggle() {
 }
 
 export function AgentOnly({ children }: { children: ReactNode }) {
-  const { mode } = useArchMode();
-  if (mode !== 'AGENTS') return null;
+  const { mode, hydrated } = useArchMode();
+  if (!hydrated || mode !== 'AGENTS') return null;
   return <>{children}</>;
 }
 
 export function CodeOnly({ children }: { children: ReactNode }) {
-  const { mode } = useArchMode();
-  if (mode !== 'CODE_ONLY') return null;
+  const { mode, hydrated } = useArchMode();
+  if (!hydrated || mode !== 'CODE_ONLY') return null;
   return <>{children}</>;
 }
