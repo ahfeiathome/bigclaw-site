@@ -425,6 +425,40 @@ export function SecurityPostureBadge({ posture, metrics }: {
   );
 }
 
+// ─── CodeStatusPanel ──────────────────────────────────────────────────────
+
+export function CodeStatusPanel() {
+  const tasks = [
+    { name: 'finance-check', schedule: 'Daily 6am', lastRun: 'Pending setup' },
+    { name: 'health-scan', schedule: 'Every 4h', lastRun: 'Pending setup' },
+    { name: 'competitor-scan', schedule: 'Weekly Mon', lastRun: 'Pending setup' },
+    { name: 'marketing-draft', schedule: 'Weekly Wed', lastRun: 'Pending setup' },
+    { name: 'morning-brief', schedule: 'Daily 7am', lastRun: 'Pending setup' },
+  ];
+
+  return (
+    <SectionCard title="Code CLI — Standing Orders">
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <div key={task.name} className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <StatusDot
+                status={task.lastRun === 'Pending setup' ? 'neutral' : 'good'}
+                size="sm"
+              />
+              <div>
+                <span className="text-sm font-medium text-foreground font-mono">{task.name}</span>
+                <span className="text-xs text-muted-foreground ml-1.5">{task.schedule}</span>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground font-mono">{task.lastRun}</span>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
 // ─── Nav Icons (SVG) ────────────────────────────────────────────────────────
 
 export function OverviewIcon() {

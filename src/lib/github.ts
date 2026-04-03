@@ -325,6 +325,13 @@ export async function fetchAllReleases(): Promise<GitHubRelease[]> {
   return results.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
+export async function fetchArchitectureMode(): Promise<'AGENTS' | 'CODE_ONLY'> {
+  const content = await fetchRepoFile('the-firm', 'COMPANY.md');
+  if (!content) return 'AGENTS';
+  const match = content.match(/ARCHITECTURE:\s*(AGENTS|CODE_ONLY)/);
+  return (match?.[1] as 'AGENTS' | 'CODE_ONLY') || 'AGENTS';
+}
+
 export function extractMichaelBlockers(
   learnieAgents: string | null,
   companyCheckpoint: string | null,
