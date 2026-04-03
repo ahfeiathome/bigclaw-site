@@ -478,6 +478,15 @@ export function InfraIcon() {
   );
 }
 
+export function GrovakidIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <path d="M10 2L3 7v6l7 5 7-5V7z" />
+      <path d="M10 12V8M8 10h4" />
+    </svg>
+  );
+}
+
 export function GrowthIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
