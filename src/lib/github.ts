@@ -35,31 +35,13 @@ export async function fetchRepoFile(
   }
 }
 
-export async function fetchAgentsTasks(): Promise<string[]> {
-  const content = await fetchRepoFile('learnie-ai', 'AGENTS.md');
-  if (!content) return [];
-
-  const lines = content.split('\n');
-  return lines.filter(
-    (line) =>
-      line.includes('TASK-') &&
-      (line.includes('✅ DONE') ||
-        line.includes('⏳ TODO') ||
-        line.includes('BLOCKED') ||
-        line.includes('LATER')),
-  );
-}
 
 export async function fetchFinanceData(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'FINANCE.md');
 }
 
-export async function fetchCheckpoint(): Promise<string | null> {
-  return fetchRepoFile('learnie-ai', 'CHECKPOINT.md');
-}
-
-export async function fetchCeoInbox(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'CEO_INBOX.md');
+export async function fetchIssuesSnapshot(repo: string = 'the-firm'): Promise<string | null> {
+  return fetchRepoFile(repo, 'docs/status/issues-snapshot.md');
 }
 
 export async function fetchBandwidth(): Promise<string | null> {
@@ -78,9 +60,6 @@ export async function fetchProjects(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'ceo/PROJECTS.md');
 }
 
-export async function fetchCompanyCheckpoint(): Promise<string | null> {
-  return fetchRepoFile('the-firm', 'CHECKPOINT.md');
-}
 
 export async function fetchTooling(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/operations/TOOLING.md');
@@ -129,44 +108,15 @@ export async function fetchLearnieHealth(): Promise<{
   }
 }
 
-export async function fetchAllTasks(): Promise<string[]> {
-  const [learnieContent, companyContent] = await Promise.all([
-    fetchRepoFile('learnie-ai', 'AGENTS.md'),
-    fetchRepoFile('the-firm', 'CHECKPOINT.md'),
-  ]);
-
-  const lines: string[] = [];
-
-  if (learnieContent) {
-    lines.push(
-      ...learnieContent
-        .split('\n')
-        .filter(
-          (l) =>
-            (l.includes('TASK-') || l.includes('CP-')) &&
-            (l.includes('⏳ TODO') ||
-              l.includes('🕐 LATER') ||
-              l.includes('BLOCKED')),
-        ),
-    );
-  }
-
-  return lines;
-}
 
 // --- GitHub Issues & Releases (cross-repo) ---
 
-const ALL_REPOS = [
-  'learnie-ai',
-  'bigclaw-site',
-  'radar',
-  'cortex',
-  'fatfrogmodels',
-  'plantdoc',
-  'receiptsnap',
-  'calsnap',
-  'axiom',
-];
+// Forge repos
+const FORGE_REPOS = ['learnie-ai', 'bigclaw-site', 'the-firm'];
+// Axiom repos
+const AXIOM_REPOS = ['axiom', 'fairconnect', 'keeptrack', 'subcheck'];
+// All repos for cross-repo queries
+const ALL_REPOS = [...FORGE_REPOS, ...AXIOM_REPOS, 'bigclaw-ai'];
 
 export interface GitHubIssue {
   repo: string;
@@ -326,8 +276,7 @@ export async function fetchAllReleases(): Promise<GitHubRelease[]> {
 }
 
 export function extractMichaelBlockers(
-  learnieAgents: string | null,
-  companyCheckpoint: string | null,
+  ...sources: (string | null)[]
 ): string[] {
   const blockers: string[] = [];
   const patterns = [
@@ -343,7 +292,7 @@ export function extractMichaelBlockers(
     /\bDNS\b/i,
   ];
 
-  for (const content of [learnieAgents, companyCheckpoint]) {
+  for (const content of sources) {
     if (!content) continue;
     for (const line of content.split('\n')) {
       if (patterns.some((p) => p.test(line))) {
