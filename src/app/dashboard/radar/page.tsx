@@ -7,6 +7,8 @@ import {
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 import { RechartsEquityChart } from '@/components/radar-charts';
 import { CollapsibleSection } from '@/components/collapsible-section';
+import { RadarControlPanel } from '@/components/radar-control-panel';
+import { RadarKillSwitch } from '@/components/radar-kill-switch';
 
 interface TableRow {
   cells: string[];
@@ -59,6 +61,19 @@ function parseEquityData(content: string): Array<{ date: string; equity: number;
     const pnl = parseFloat(row.cells[2]?.replace(/[$,+]/g, '') || '0');
     return { date: row.cells[0] || '', equity, pnl };
   });
+}
+
+function parseComparison(content: string): { metric: string; paper: string; live: string; delta: string }[] | null {
+  const section = extractSection(content, 'Performance Comparison');
+  if (!section) return null;
+  const rows = parseMarkdownTable(section);
+  if (rows.length === 0) return null;
+  return rows.map((row) => ({
+    metric: row.cells[0] || '',
+    paper: row.cells[1] || '',
+    live: row.cells[2] || '',
+    delta: row.cells[3] || '',
+  }));
 }
 
 function parseAlerts(content: string): string[] {
@@ -116,6 +131,8 @@ export default async function RadarPage() {
   const market = parseMarketContext(dashboard);
   const equityData = parseEquityData(dashboard);
   const alerts = parseAlerts(dashboard);
+  const comparison = parseComparison(dashboard);
+  const hasLive = meta['Phase']?.includes('Live') || comparison !== null;
   const strategyRows = parseMarkdownTable(extractSection(dashboard, 'Strategy Status'));
   const constitutionRows = parseMarkdownTable(extractSection(dashboard, 'Constitution Status'));
   const gateRows = parseMarkdownTable(extractSection(dashboard, 'Gate Progress'));
@@ -142,10 +159,10 @@ export default async function RadarPage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">RADAR</h1>
             <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {meta['Last Loop'] || new Date().toISOString().slice(0, 10)}</span>
           </div>
-          <SignalPill
-            label={meta['Phase'] === 'Paper' ? 'PAPER TRADING' : 'LIVE'}
-            tone={meta['Phase'] === 'Paper' ? 'warning' : 'success'}
-          />
+          <div className="flex items-center gap-2">
+            <SignalPill label="PAPER" tone="warning" />
+            {hasLive && <SignalPill label="LIVE" tone="success" />}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <span className={`text-lg font-bold font-mono ${isNegative ? 'text-red-400' : isPositive ? 'text-green-400' : 'text-foreground'}`}>P/L: {pnlValue}</span>
@@ -190,6 +207,50 @@ export default async function RadarPage() {
         <MetricCard label="Positions" value={meta['Positions'] || '0'} />
         <MetricCard label="Deployed" value={meta['Deployed'] || '0%'} subtitle={`Reserve: ${meta['Reserve'] || '100%'}`} />
       </div>
+
+      {/* ── ZONE 2.5: Performance Comparison (paper vs live) ──────── */}
+
+      {comparison && (
+        <SectionCard title="Performance Comparison — Paper vs Live" className="mb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2.5 pl-3 pr-2">Metric</th>
+                  <th className="text-right py-2.5 px-2">Paper</th>
+                  <th className="text-right py-2.5 px-2">Live</th>
+                  <th className="text-right py-2.5 pl-2 pr-3">Delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((row, i) => {
+                  const deltaHasGreen = row.delta.includes('🟢');
+                  const deltaHasRed = row.delta.includes('🔴');
+                  const isSync = row.delta.includes('SYNC');
+                  return (
+                    <tr key={i} className={`border-b border-gray-50 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2 font-medium text-foreground">{row.metric}</td>
+                      <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.paper}</td>
+                      <td className="py-2 px-2 text-right font-mono text-foreground">{row.live}</td>
+                      <td className={`py-2 pl-2 pr-3 text-right font-mono font-semibold ${
+                        deltaHasGreen ? 'text-green-500' : deltaHasRed ? 'text-red-500' : isSync ? 'text-blue-400' : 'text-muted-foreground'
+                      }`}>
+                        {row.delta.replace('🟢 ', '').replace('🔴 ', '')}
+                        {isSync && <span className="ml-1 text-[10px]">●</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 flex items-center gap-4 text-[10px] text-muted-foreground">
+            <span><span className="text-green-500">●</span> Live outperforms</span>
+            <span><span className="text-red-500">●</span> Paper better</span>
+            <span><span className="text-blue-400">●</span> SYNC = same mode</span>
+          </div>
+        </SectionCard>
+      )}
 
       {/* ── ZONE 3: Risk Alerts (red box if any) ──────────────────── */}
 
@@ -275,6 +336,20 @@ export default async function RadarPage() {
         </SectionCard>
       </div>
 
+      {/* ── ZONE 4.5: Control Panel (Mode Grid) ──────────────────── */}
+
+      <SectionCard title="Control Panel — Trading Mode" className="mb-6">
+        <RadarControlPanel hasLive={hasLive} />
+      </SectionCard>
+
+      {/* ── ZONE 4.6: Live Safeguards + Kill Switch ────────────────── */}
+
+      {hasLive && (
+        <SectionCard title="Live Account Safeguards" className="mb-6">
+          <RadarKillSwitch hasLive={hasLive} />
+        </SectionCard>
+      )}
+
       {/* ── ZONE 5: Equity Curve ───────────────────────────────────── */}
 
       <SectionCard title="Equity Curve" className="mb-6">
@@ -283,7 +358,7 @@ export default async function RadarPage() {
 
       {/* ── ZONE 6: Gate Progress ──────────────────────────────────── */}
 
-      <SectionCard title="Paper → Live Gate Progress" className="mb-6">
+      <SectionCard title={hasLive ? "Scaling Milestones" : "Paper → Live Gate Progress"} className="mb-6">
         <div className="space-y-3">
           {gateRows.map((row, i) => {
             const [criterion, target, current, status] = row.cells;
