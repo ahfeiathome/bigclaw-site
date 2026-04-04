@@ -1,0 +1,23 @@
+{
+  "roles": {
+    "admin": {
+      "pages": ["*"],
+      "controls": true,
+      "internal": true
+    },
+    "product-viewer": {
+      "pages": ["products/{product}"],
+      "controls": false,
+      "internal": false
+    },
+    "investor": {
+      "pages": ["overview", "finance"],
+      "controls": false,
+      "internal": false
+    }
+  },
+  "users": {
+    "michaelmkliu@gmail.com": { "role": "admin" },
+    "binlam@outlook.com": { "role": "product-viewer", "products": ["grovakid"] }
+  }
+}
