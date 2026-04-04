@@ -38,7 +38,7 @@ test.describe('Dashboard auth', () => {
     await page.getByRole('textbox', { name: 'Password' }).fill('Learnie2026Admin')
     await page.getByRole('button', { name: 'Sign In' }).click()
     await expect(page).toHaveURL(/\/dashboard$/)
-    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
+    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
   })
 
   test('dashboard login rejects wrong password', async ({ page }) => {

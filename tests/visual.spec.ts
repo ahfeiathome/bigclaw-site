@@ -14,11 +14,8 @@ test.describe('Visual verification — dashboard', () => {
   test('overview page renders all key sections', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
-    // Verify Felix Heartbeat header
-    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
-
-    // Verify Felix Heartbeat section renders with a status indicator
-    await expect(page.getByText('BigClaw AI', { exact: true })).toBeVisible()
+    // Verify page header renders
+    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
 
     // Verify executive summary sections exist (use first() — overview has duplicate section labels)
     await expect(page.getByText('Infrastructure').first()).toBeVisible()

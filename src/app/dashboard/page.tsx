@@ -1,5 +1,5 @@
-import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchHealth, fetchMichaelTodo, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
-import type { GitHubRelease } from '@/lib/github';
+import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRecentCommits, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import type { GitHubRelease, GitHubCommit } from '@/lib/github';
 import { MetricCard, SignalPill, SectionCard, StatusDot, QuickActionsBar } from '@/components/dashboard';
 import Link from 'next/link';
 
@@ -60,13 +60,15 @@ function parseMichaelTodo(content: string | null): SponsorItem[] {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function DashboardOverview() {
-  const [content, projectsMd, allIssues, allReleases, healthMd, todoMd] = await Promise.all([
+  const [content, projectsMd, allIssues, allReleases, healthMd, todoMd, bandwidthMd, recentCommits] = await Promise.all([
     fetchPatrolReport(),
     fetchProjects(),
     fetchAllIssues(),
     fetchAllReleases(),
     fetchHealth(),
     fetchMichaelTodo(),
+    fetchBandwidth(),
+    fetchRecentCommits(24),
   ]);
 
   // Parse patrol report
@@ -115,9 +117,11 @@ export default async function DashboardOverview() {
     : patrolStatus === 'UNKNOWN' ? 'neutral' as const
     : 'warning' as const;
 
-  // Agent count from BANDWIDTH.md (parse from health if available)
-  const agentRows = healthMd ? parseMarkdownTable(healthMd) : [];
-  const agentRow = agentRows.find(r => r.cells[0]?.toLowerCase().includes('agent'));
+  // Agent status from BANDWIDTH.md
+  const agentTableRows = bandwidthMd ? parseMarkdownTable(extractSection(bandwidthMd, 'Current Agent Load')) : [];
+  const activeAgents = agentTableRows.filter(r => r.cells[3]?.toLowerCase() === 'busy').length;
+  const totalAgents = agentTableRows.length;
+  const idleAgents = totalAgents - activeAgents;
 
   return (
     <div>
@@ -211,7 +215,7 @@ export default async function DashboardOverview() {
       </div>
 
       {/* ── SUMMARY CARDS GRID ──────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {/* Finance */}
         <Link href="/dashboard/finance" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
           <div className="flex items-center justify-between mb-2">
@@ -252,14 +256,14 @@ export default async function DashboardOverview() {
             <span className="text-muted-foreground">Mac:</span><span className="font-mono text-green-400 text-right">{macDisk?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
             <span className="text-muted-foreground">Pi5:</span><span className="font-mono text-green-400 text-right">{pi5Uptime?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
             <span className="text-muted-foreground">Git:</span><span className="font-mono text-green-400 text-right">{gitSync?.cells[1]?.split('—')[0]?.trim() || 'Clean'}</span>
-            <span className="text-muted-foreground">Agents:</span><span className="font-mono text-green-400 text-right">{agentRow?.cells[1]?.trim() || '6/6 online'}</span>
+            <span className="text-muted-foreground">Agents:</span><span className="font-mono text-green-400 text-right">{totalAgents > 0 ? `${activeAgents}/${totalAgents} active` : '6/6 online'}</span>
           </div>
         </Link>
 
-        {/* Open Issues */}
+        {/* Open Issues / Blockers */}
         <Link href="https://github.com/users/ahfeiathome/projects/1" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open Issues</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Blockers &amp; Issues</span>
             <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">Board →</span>
           </div>
           <div className="flex items-baseline gap-3">
@@ -271,6 +275,58 @@ export default async function DashboardOverview() {
             {p1Count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">P1: {p1Count}</span>}
             {p2Count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">P2: {p2Count}</span>}
           </div>
+        </Link>
+
+        {/* Agent Status */}
+        <Link href="/dashboard/departments/operations" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Agent Status</span>
+            <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+          </div>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="text-2xl font-bold font-mono text-foreground">{totalAgents}</span>
+            <span className="text-xs text-muted-foreground">agents</span>
+          </div>
+          <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+            <span className="text-muted-foreground">Active:</span><span className="font-mono text-green-400 text-right">{activeAgents}</span>
+            <span className="text-muted-foreground">Idle:</span><span className="font-mono text-foreground text-right">{idleAgents}</span>
+          </div>
+          {agentTableRows.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {agentTableRows.slice(0, 4).map((row, i) => (
+                <div key={i} className="flex items-center gap-2 text-[10px]">
+                  <StatusDot status={row.cells[3]?.toLowerCase() === 'busy' ? 'good' : 'neutral'} size="sm" />
+                  <span className="text-foreground">{row.cells[0]}</span>
+                  <span className="text-muted-foreground ml-auto">{row.cells[1]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Link>
+
+        {/* Recent Changes */}
+        <Link href="/dashboard/forge" className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all no-underline group">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent Changes (24h)</span>
+            <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
+          </div>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="text-2xl font-bold font-mono text-foreground">{recentCommits.length}</span>
+            <span className="text-xs text-muted-foreground">commits</span>
+          </div>
+          {recentCommits.length > 0 ? (
+            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+              {recentCommits.slice(0, 5).map((c: GitHubCommit) => (
+                <div key={c.sha} className="text-[10px] border-l-2 border-border pl-2">
+                  <span className="font-mono text-primary">{c.sha}</span>
+                  <span className="text-muted-foreground ml-1">{c.repo}</span>
+                  <p className="text-foreground/80 truncate">{c.message.slice(0, 60)}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">No commits in the last 24h</span>
+          )}
         </Link>
       </div>
 

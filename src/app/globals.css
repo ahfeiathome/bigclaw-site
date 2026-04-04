@@ -102,3 +102,138 @@ a:hover {
 .recharts-tooltip-wrapper {
   outline: none;
 }
+
+/* ─── Markdown prose styles ─────────────────────────────────────── */
+
+.prose {
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+.prose h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.prose h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.prose p {
+  margin-bottom: 0.75rem;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose li::marker {
+  color: var(--muted-foreground);
+}
+
+.prose code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85em;
+  background: var(--muted);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: #e879f9;
+}
+
+.prose pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--foreground);
+  font-size: 0.85rem;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.prose th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.prose td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.prose tr:hover td {
+  background: var(--muted);
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+.prose a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.prose img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
