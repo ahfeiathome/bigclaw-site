@@ -5,6 +5,7 @@ import {
   fetchPositionMatrix,
 } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
+import { ViewSource } from '@/components/view-source';
 import { RechartsEquityChart } from '@/components/radar-charts';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { RadarControlPanel } from '@/components/radar-control-panel';
@@ -159,7 +160,8 @@ export default async function RadarPage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">RADAR</h1>
             <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {meta['Last Loop'] || new Date().toISOString().slice(0, 10)}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <ViewSource repo="the-firm" path="docs/projects/radar/RADAR_DASHBOARD.md" />
             <SignalPill label="PAPER" tone="warning" />
             {hasLive && <SignalPill label="LIVE" tone="success" />}
           </div>
