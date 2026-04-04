@@ -1,5 +1,6 @@
 import { fetchFinanceData } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard, HealthRow } from '@/components/dashboard';
+import { ViewSource } from '@/components/view-source';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { ExpandableRows } from './expandable-rows';
 
@@ -211,10 +212,13 @@ export default async function FinancePage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Finance</h1>
             <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {new Date().toISOString().slice(0, 10)}</span>
           </div>
-          <SignalPill
-            label={alerts.length > 0 ? `${alerts.length} alert${alerts.length > 1 ? 's' : ''}` : 'HEALTHY'}
-            tone={alerts.length > 0 ? 'warning' : 'success'}
-          />
+          <div className="flex items-center gap-3">
+            <ViewSource repo="the-firm" path="FINANCE.md" />
+            <SignalPill
+              label={alerts.length > 0 ? `${alerts.length} alert${alerts.length > 1 ? 's' : ''}` : 'HEALTHY'}
+              tone={alerts.length > 0 ? 'warning' : 'success'}
+            />
+          </div>
         </div>
         {alerts.length > 0 && <div className="text-lg font-bold text-amber-400 font-mono">{alerts.length} alert{alerts.length > 1 ? 's' : ''} — review below</div>}
         {alerts.length === 0 && <div className="text-lg font-semibold text-green-400 font-mono">All clear — burn low, free tiers safe</div>}

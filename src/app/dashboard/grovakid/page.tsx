@@ -1,6 +1,7 @@
 import { fetchPrdChecklist, fetchTestMatrix, fetchGrovakidTracker, fetchRecentClosedIssues, fetchAllReleases, fetchLearnieHealth } from '@/lib/github';
 import type { GitHubIssue } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
+import { ViewSource } from '@/components/view-source';
 import { CollapsibleSection } from '@/components/collapsible-section';
 
 // ── Parsers ─────────────────────────────────────────────────────────────────
@@ -140,7 +141,8 @@ export default async function GrovakidPage() {
             <SignalPill label="S4 BUILD" tone="info" />
             <span className="text-xs text-muted-foreground font-mono mt-1">Forge flagship</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <ViewSource repo="learnie-ai" path="docs/product/GROVAKID_TRACKER.md" />
             <StatusDot status={health.ok ? 'good' : 'bad'} size="sm" />
             <span className="text-xs text-muted-foreground font-mono">{health.ok ? 'Live' : 'Down'} ({health.status})</span>
           </div>

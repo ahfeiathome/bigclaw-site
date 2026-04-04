@@ -1,5 +1,6 @@
 import { fetchPatrolReport, fetchBandwidth } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot, HealthRow } from '@/components/dashboard';
+import { ViewSource } from '@/components/view-source';
 
 interface TableRow { cells: string[] }
 
@@ -60,7 +61,10 @@ export default async function OperationsPage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Operations</h1>
             <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">Mika (COO)</span>
           </div>
-          <SignalPill label={patrolStatus} tone={statusTone} />
+          <div className="flex items-center gap-3">
+            <ViewSource repo="the-firm" path="PATROL_REPORT.md" />
+            <SignalPill label={patrolStatus} tone={statusTone} />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           Daily briefs, agent dispatch, patrol reports · Last patrol: {metaMap['Timestamp'] || 'unknown'}

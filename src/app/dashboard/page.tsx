@@ -1,6 +1,7 @@
 import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRecentCommits, fetchRadarDashboard, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import type { GitHubRelease, GitHubCommit } from '@/lib/github';
 import { MetricCard, SignalPill, SectionCard, StatusDot, QuickActionsBar } from '@/components/dashboard';
+import { ViewSource } from '@/components/view-source';
 import Link from 'next/link';
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
@@ -134,10 +135,13 @@ export default async function DashboardOverview() {
               {patrolTimestamp ? `Last patrol: ${patrolTimestamp}` : `${new Date().toISOString().slice(0, 10)}`}
             </span>
           </div>
-          <SignalPill
-            label={patrolStatus === 'HEALTHY' ? 'HEALTHY' : patrolStatus}
-            tone={statusTone}
-          />
+          <div className="flex items-center gap-3">
+            <ViewSource repo="the-firm" path="PATROL_REPORT.md" />
+            <SignalPill
+              label={patrolStatus === 'HEALTHY' ? 'HEALTHY' : patrolStatus}
+              tone={statusTone}
+            />
+          </div>
         </div>
 
         {/* Alert bar */}
