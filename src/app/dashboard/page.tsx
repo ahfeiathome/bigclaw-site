@@ -2,6 +2,7 @@ import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fet
 import type { GitHubRelease, GitHubCommit } from '@/lib/github';
 import { MetricCard, SignalPill, SectionCard, StatusDot, QuickActionsBar } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
+import { PageActions } from '@/components/page-actions';
 import Link from 'next/link';
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
@@ -136,6 +137,7 @@ export default async function DashboardOverview() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <PageActions sourcePath="PATROL_REPORT.md" />
             <ViewSource repo="the-firm" path="PATROL_REPORT.md" />
             <SignalPill
               label={patrolStatus === 'HEALTHY' ? 'HEALTHY' : patrolStatus}

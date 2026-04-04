@@ -225,6 +225,7 @@ export const NAV_TREE: NavItem[] = [
     ],
   },
   { label: 'Sponsor TODO', href: '/dashboard/sponsor/todo' },
+  { label: 'Settings', href: '/dashboard/settings' },
   {
     label: 'Legacy Views',
     href: '/dashboard/forge',
