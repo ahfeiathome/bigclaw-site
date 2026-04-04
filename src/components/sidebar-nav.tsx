@@ -59,7 +59,7 @@ function NavLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
 
 export function SidebarNav() {
   return (
-    <nav className="w-56 shrink-0 border-r border-border bg-card/50 overflow-y-auto py-4 px-2 space-y-0.5">
+    <nav className="w-56 h-full shrink-0 border-r border-border bg-card overflow-y-auto py-4 px-2 space-y-0.5">
       {NAV_TREE.map((item) => (
         <NavLink key={item.href} item={item} />
       ))}

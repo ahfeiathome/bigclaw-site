@@ -1,4 +1,4 @@
-import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRecentCommits, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchProjects, fetchAllIssues, fetchAllReleases, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRecentCommits, fetchRadarDashboard, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import type { GitHubRelease, GitHubCommit } from '@/lib/github';
 import { MetricCard, SignalPill, SectionCard, StatusDot, QuickActionsBar } from '@/components/dashboard';
 import Link from 'next/link';
@@ -30,15 +30,6 @@ function extractSection(content: string, heading: string): string {
   return lines.slice(0, end).join('\n');
 }
 
-function extractMeta(content: string): Record<string, string> {
-  const rows = parseMarkdownTable(extractSection(content, 'Meta'));
-  const meta: Record<string, string> = {};
-  for (const row of rows) {
-    if (row.cells.length >= 2) meta[row.cells[0]] = row.cells[1];
-  }
-  return meta;
-}
-
 // ── Sponsor blockers from MICHAEL_TODO.md ───────────────────────────────────
 
 interface SponsorItem { company: string; item: string; type: string; status: string }
@@ -60,7 +51,7 @@ function parseMichaelTodo(content: string | null): SponsorItem[] {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function DashboardOverview() {
-  const [content, projectsMd, allIssues, allReleases, healthMd, todoMd, bandwidthMd, recentCommits] = await Promise.all([
+  const [content, projectsMd, allIssues, allReleases, healthMd, todoMd, bandwidthMd, recentCommits, radarMd] = await Promise.all([
     fetchPatrolReport(),
     fetchProjects(),
     fetchAllIssues(),
@@ -69,33 +60,40 @@ export default async function DashboardOverview() {
     fetchMichaelTodo(),
     fetchBandwidth(),
     fetchRecentCommits(24),
+    fetchRadarDashboard(),
   ]);
 
-  // Parse patrol report
-  const meta = content ? extractMeta(content) : {};
-  const financial = content ? parseMarkdownTable(extractSection(content, 'Financial')) : [];
-  const alerts = content ? parseMarkdownTable(extractSection(content, 'Alerts')) : [];
+  // Parse patrol report — section names match actual PATROL_REPORT.md format
+  const financial = content ? parseMarkdownTable(extractSection(content, 'Financial Summary')) : [];
   const blocked = parseMichaelTodo(todoMd);
 
-  // Filter personal finance alerts
+  // Derive patrol status from System Health table
+  const healthRows = content ? parseMarkdownTable(extractSection(content, 'System Health')) : [];
+  const hasCritical = healthRows.some(r => /CRITICAL|DOWN|FAIL/i.test(r.cells[1] || ''));
+  const hasWarning = healthRows.some(r => /WARN|RECOVERING|DEGRADED/i.test(r.cells[1] || ''));
+
+  // Alerts section (may not exist in current format — graceful fallback)
+  const alertsRaw = content ? parseMarkdownTable(extractSection(content, 'Alerts')) : [];
   const personalKeywords = ['margin call', 'personal', 'j.p. morgan', 'chase', 'schwab'];
-  const filteredAlerts = alerts.filter(row => {
+  const filteredAlerts = alertsRaw.filter(row => {
     const text = row.cells.join(' ').toLowerCase();
     return !personalKeywords.some(kw => text.includes(kw));
   });
   const hasAlerts = filteredAlerts.length > 0 && !(filteredAlerts.length === 1 && filteredAlerts[0].cells[0] === '\u2014');
 
-  // Finance summary
-  const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn') || r.cells[0]?.toLowerCase().includes('cost'));
-  const radarEquityRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar equity'));
-  const radarPnlRow = financial.find(r => r.cells[0]?.toLowerCase().includes('radar') && r.cells[0]?.toLowerCase().includes('p/l'));
-  const radarPositionsRow = financial.find(r => r.cells[0]?.toLowerCase().includes('position'));
+  // Finance summary from patrol Financial Summary table
+  const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn'));
 
-  // Infra summary
-  const infra = content ? parseMarkdownTable(extractSection(content, 'Infrastructure')) : [];
-  const macDisk = infra.find(r => r.cells[0]?.toLowerCase().includes('mac disk'));
-  const pi5Uptime = infra.find(r => r.cells[0]?.toLowerCase().includes('pi5 uptime'));
-  const gitSync = infra.find(r => r.cells[0]?.toLowerCase().includes('git sync'));
+  // RADAR data from RADAR_DASHBOARD.md Performance Comparison table
+  const radarPerf = radarMd ? parseMarkdownTable(extractSection(radarMd, 'Performance Comparison')) : [];
+  const radarEquity = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('current equity'));
+  const radarPnl = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('daily p/l'));
+  const radarPositions = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('positions'));
+
+  // Infra summary — from System Health table (new format: Component | Status | Details)
+  const macRow = healthRows.find(r => r.cells[0]?.toLowerCase().includes('mac'));
+  const pi5Row = healthRows.find(r => r.cells[0]?.toLowerCase().includes('pi5') && !r.cells[0]?.toLowerCase().includes('disk') && !r.cells[0]?.toLowerCase().includes('cost'));
+  const gitSyncRow = healthRows.find(r => r.cells[0]?.toLowerCase().includes('git sync'));
 
   // Issue counts — separated by company
   const forgeIssues = allIssues.filter(i => FORGE_REPOS.has(i.repo));
@@ -109,9 +107,11 @@ export default async function DashboardOverview() {
   // Stop-loss alerts
   const stopLossCount = filteredAlerts.filter(r => r.cells.join(' ').toLowerCase().includes('stop-loss')).length;
 
-  // Patrol status
-  const patrolStatus = meta['Status'] || 'UNKNOWN';
-  const patrolTimestamp = meta['Timestamp'] || meta['Date'] || null;
+  // Patrol status — derived from System Health rows
+  const patrolStatus = hasCritical ? 'CRITICAL' : hasWarning ? 'WARNING' : healthRows.length > 0 ? 'HEALTHY' : 'UNKNOWN';
+  // Extract date from first heading: "# Patrol Report — 2026-04-04"
+  const patrolDateMatch = content?.match(/# Patrol Report.*?(\d{4}-\d{2}-\d{2})/);
+  const patrolTimestamp = patrolDateMatch ? patrolDateMatch[1] : null;
   const statusTone = patrolStatus === 'HEALTHY' ? 'success' as const
     : patrolStatus.includes('CRITICAL') ? 'error' as const
     : patrolStatus === 'UNKNOWN' ? 'neutral' as const
@@ -240,9 +240,9 @@ export default async function DashboardOverview() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-y-1.5 text-sm">
-            <span className="text-muted-foreground">Equity:</span><span className="font-mono text-foreground text-right">{radarEquityRow?.cells[1]?.replace(' (PAPER)', '') || '--'}</span>
-            <span className="text-muted-foreground">Daily P/L:</span><span className={`font-mono text-right ${radarPnlRow?.cells[1]?.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnlRow?.cells[1]?.replace(' (PAPER)', '') || '--'}</span>
-            <span className="text-muted-foreground">Positions:</span><span className="font-mono text-foreground text-right">{radarPositionsRow?.cells[1]?.trim() || '--'}</span>
+            <span className="text-muted-foreground">Equity:</span><span className="font-mono text-foreground text-right">{radarEquity?.cells[1]?.trim() || '--'}</span>
+            <span className="text-muted-foreground">Daily P/L:</span><span className={`font-mono text-right ${radarPnl?.cells[1]?.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnl?.cells[1]?.trim() || '--'}</span>
+            <span className="text-muted-foreground">Positions:</span><span className="font-mono text-foreground text-right">{radarPositions?.cells[1]?.trim() || '--'}</span>
           </div>
         </Link>
 
@@ -253,9 +253,9 @@ export default async function DashboardOverview() {
             <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">→ detail</span>
           </div>
           <div className="grid grid-cols-2 gap-y-1.5 text-sm">
-            <span className="text-muted-foreground">Mac:</span><span className="font-mono text-green-400 text-right">{macDisk?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
-            <span className="text-muted-foreground">Pi5:</span><span className="font-mono text-green-400 text-right">{pi5Uptime?.cells[1]?.split('—')[0]?.trim() || 'OK'}</span>
-            <span className="text-muted-foreground">Git:</span><span className="font-mono text-green-400 text-right">{gitSync?.cells[1]?.split('—')[0]?.trim() || 'Clean'}</span>
+            <span className="text-muted-foreground">Mac:</span><span className="font-mono text-green-400 text-right">{macRow?.cells[1]?.trim() || 'OK'}</span>
+            <span className="text-muted-foreground">Pi5:</span><span className="font-mono text-green-400 text-right">{pi5Row?.cells[1]?.trim() || 'OK'}</span>
+            <span className="text-muted-foreground">Git:</span><span className="font-mono text-green-400 text-right">{gitSyncRow?.cells[1]?.trim() || 'OK'}</span>
             <span className="text-muted-foreground">Agents:</span><span className="font-mono text-green-400 text-right">{totalAgents > 0 ? `${activeAgents}/${totalAgents} active` : '6/6 online'}</span>
           </div>
         </Link>
@@ -358,7 +358,7 @@ export default async function DashboardOverview() {
             </div>
           ) : (
             <div className="space-y-2.5">
-              {blocked.map((item, i) => (
+              {blocked.slice(0, 5).map((item, i) => (
                 <div key={i} className="border-l-2 border-amber-200 pl-3 py-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-foreground/80 font-medium">{item.item.slice(0, 60)}</span>
@@ -370,6 +370,11 @@ export default async function DashboardOverview() {
                   </div>
                 </div>
               ))}
+              {blocked.length > 5 && (
+                <Link href="/dashboard/sponsor/todo" className="block text-xs text-primary no-underline hover:underline pt-1">
+                  View all {blocked.length} items →
+                </Link>
+              )}
             </div>
           )}
         </SectionCard>
@@ -384,7 +389,7 @@ export default async function DashboardOverview() {
           />
           <span className="text-sm font-semibold text-foreground">Felix Patrol</span>
           <span className="text-xs text-muted-foreground font-mono">
-            {patrolTimestamp || 'unknown'} · {meta['Mode'] || 'M3'} · {meta['Type'] || 'Daily Patrol'}
+            {patrolTimestamp || 'unknown'} · M3 · Daily Patrol
           </span>
         </div>
       )}
