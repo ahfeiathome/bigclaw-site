@@ -2,23 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  OverviewIcon,
-  ProjectsIcon,
-  GrovakidIcon,
-  RadarIcon,
-  FinanceIcon,
-  InfraIcon,
-  StatusDot,
-} from '@/components/dashboard';
+import { SidebarNav } from '@/components/sidebar-nav';
+import { StatusDot } from '@/components/dashboard';
 
-const navItems = [
-  { href: '/dashboard', label: 'Overview', icon: <OverviewIcon /> },
-  { href: '/dashboard/projects', label: 'Projects', icon: <ProjectsIcon /> },
-  { href: '/dashboard/grovakid', label: 'GrovaKid', icon: <GrovakidIcon /> },
-  { href: '/dashboard/radar', label: 'RADAR', icon: <RadarIcon /> },
-  { href: '/dashboard/finance', label: 'Finance', icon: <FinanceIcon /> },
-  { href: '/dashboard/infra', label: 'Infra', icon: <InfraIcon /> },
+const topNavItems = [
+  { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard/radar', label: 'RADAR' },
+  { href: '/dashboard/products', label: 'Products' },
+  { href: '/dashboard/departments', label: 'Departments' },
+  { href: '/dashboard/sponsor/todo', label: 'Sponsor TODO' },
 ];
 
 function TopNav() {
@@ -26,8 +18,11 @@ function TopNav() {
 
   return (
     <div className="border-b border-border bg-card">
-      <div className="max-w-6xl mx-auto px-6 flex items-center gap-1 overflow-x-auto">
-        {navItems.map((item) => {
+      <div className="flex items-center gap-1 overflow-x-auto px-4">
+        <Link href="/dashboard" className="text-sm font-bold text-primary mr-4 no-underline shrink-0">
+          BigClaw AI
+        </Link>
+        {topNavItems.map((item) => {
           const isActive =
             item.href === '/dashboard'
               ? pathname === '/dashboard'
@@ -37,14 +32,13 @@ function TopNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors no-underline hover:no-underline ${
+              className={`px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 -mb-px transition-colors no-underline ${
                 isActive
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
-              <span className="w-4 h-4 shrink-0">{item.icon}</span>
-              <span>{item.label}</span>
+              {item.label}
             </Link>
           );
         })}
@@ -65,7 +59,6 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/dashboard/login';
-
   if (isLoginPage) {
     return (
       <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center">
@@ -75,10 +68,15 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <TopNav />
-      <div className="flex-1">
-        <div className="max-w-6xl mx-auto px-6 py-6">{children}</div>
+      <div className="flex flex-1 overflow-hidden">
+        <SidebarNav />
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-5xl mx-auto px-6 py-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

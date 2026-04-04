@@ -291,6 +291,56 @@ export async function fetchAllReleases(): Promise<GitHubRelease[]> {
   return results.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
+// --- Recent Commits (cross-repo, last 24h) ---
+
+export interface GitHubCommit {
+  repo: string;
+  sha: string;
+  message: string;
+  author: string;
+  date: string;
+  url: string;
+}
+
+export async function fetchRecentCommits(hours = 24): Promise<GitHubCommit[]> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+  const results: GitHubCommit[] = [];
+
+  await Promise.all(
+    ALL_REPOS.map(async (repo) => {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${OWNER}/${repo}/commits?since=${since}&per_page=10`,
+          { headers, next: { revalidate: 300 } },
+        );
+        if (!res.ok) return;
+        const data = await res.json() as Array<{
+          sha: string;
+          commit: { message: string; author: { name: string; date: string } };
+          html_url: string;
+        }>;
+        for (const c of data) {
+          results.push({
+            repo,
+            sha: c.sha.slice(0, 7),
+            message: c.commit.message.split('\n')[0],
+            author: c.commit.author.name,
+            date: c.commit.author.date,
+            url: c.html_url,
+          });
+        }
+      } catch { /* skip */ }
+    }),
+  );
+
+  return results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
 export function extractMichaelBlockers(
   ...sources: (string | null)[]
 ): string[] {
