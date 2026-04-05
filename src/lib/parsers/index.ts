@@ -27,3 +27,6 @@ export type { LearningsData } from './parseLearnings';
 
 export { parseAgents } from './parseAgents';
 export type { AgentsData } from './parseAgents';
+
+export { parseSDLC } from './parseSDLC';
+export type { SDLCData, SDLCViolation, SDLCStage, ViolationCode } from './parseSDLC';
