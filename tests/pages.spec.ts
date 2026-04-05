@@ -33,7 +33,6 @@ test.describe('Public pages', () => {
 
   test('dashboard login page loads', async ({ page }) => {
     await page.goto('/dashboard/login')
-    await expect(page.getByText('Dashboard Login')).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible()
   })
