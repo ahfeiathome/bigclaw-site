@@ -6,20 +6,10 @@ import { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { StatusDot } from '@/components/dashboard';
 
-const topNavItems = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/dashboard/radar', label: 'RADAR' },
-  { href: '/dashboard/products', label: 'Products' },
-  { href: '/dashboard/departments', label: 'Departments' },
-  { href: '/dashboard/sponsor/todo', label: 'Sponsor TODO' },
-];
-
 function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const pathname = usePathname();
-
   return (
     <div className="border-b border-border bg-card">
-      <div className="flex items-center gap-1 overflow-x-auto px-4">
+      <div className="flex items-center px-4 py-2">
         {/* Hamburger — mobile only */}
         <button
           onClick={onToggleSidebar}
@@ -31,31 +21,11 @@ function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           </svg>
         </button>
 
-        <Link href="/dashboard" className="text-sm font-bold text-primary mr-4 no-underline shrink-0">
+        <Link href="/dashboard" className="text-sm font-bold text-primary no-underline shrink-0">
           BigClaw AI
         </Link>
-        {topNavItems.map((item) => {
-          const isActive =
-            item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`hidden sm:block px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 -mb-px transition-colors no-underline ${
-                isActive
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-
-        <div className="ml-auto flex items-center gap-1.5 py-3 pl-4 shrink-0">
+        <div className="ml-auto flex items-center gap-1.5 shrink-0">
           <StatusDot status="good" size="sm" />
           <span className="text-xs text-muted-foreground font-mono hidden sm:inline">Online</span>
         </div>

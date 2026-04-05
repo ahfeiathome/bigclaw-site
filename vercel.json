@@ -1,0 +1,8 @@
+{
+  "headers": [
+    {
+      "source": "/dashboard/(.*)",
+      "headers": [{ "key": "x-vercel-no-toolbar", "value": "1" }]
+    }
+  ]
+}
