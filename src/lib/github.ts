@@ -81,6 +81,14 @@ export async function fetchMichaelTodo(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'sponsor/MICHAEL_TODO.md');
 }
 
+export async function fetchKnowledgeHub(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/KNOWLEDGE_HUB.md');
+}
+
+export async function fetchDevKnowledgeHub(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/DEV_KNOWLEDGE_HUB.md');
+}
+
 export async function fetchRadarStatus(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
 }
