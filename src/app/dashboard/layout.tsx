@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { StatusDot } from '@/components/dashboard';
+import { StatusBar } from '@/components/status-bar';
 import { TOP_BAR_TABS } from '@/lib/content';
 
 function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
@@ -108,6 +109,7 @@ export default function DashboardLayout({
           </div>
         </main>
       </div>
+      <StatusBar />
     </div>
   );
 }
