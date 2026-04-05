@@ -49,11 +49,7 @@ export default function DashboardLayout({
   }, [pathname]);
 
   if (isLoginPage) {
-    return (
-      <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center">
-        <div className="w-full max-w-md px-6">{children}</div>
-      </div>
-    );
+    return <>{children}</>;
   }
 
   return (
