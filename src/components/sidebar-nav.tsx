@@ -76,17 +76,17 @@ export function SidebarNav() {
 
       {/* Organization */}
       <div className="mt-2">
-        <SectionLink label="Organization" href="/dashboard/departments/infrastructure" />
+        <SectionLink label="Organization" href="/dashboard/organization" />
       </div>
 
       {/* Finance */}
-      <SectionLink label="Finance" href="/dashboard/departments/finance" />
+      <SectionLink label="Finance" href="/dashboard/finance" />
 
       {/* Business */}
-      <SectionLink label="Business" href="/dashboard/departments/marketing" />
+      <SectionLink label="Business" href="/dashboard/business" />
 
       {/* Resources */}
-      <SectionLink label="Resources" href="/dashboard/departments/knowledge" />
+      <SectionLink label="Resources" href="/dashboard/resources" />
     </nav>
   );
 }

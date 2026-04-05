@@ -1,4 +1,4 @@
-import { fetchFinanceData } from '@/lib/github';
+import { fetchFinanceData, fetchRadarDashboard } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard, HealthRow } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
 import { CollapsibleSection } from '@/components/collapsible-section';
@@ -175,7 +175,10 @@ function extractPendingExpenses(content: string): TableRow[] {
 }
 
 export default async function FinancePage() {
-  const finance = await fetchFinanceData();
+  const [finance, radarMd] = await Promise.all([
+    fetchFinanceData(),
+    fetchRadarDashboard(),
+  ]);
 
   if (!finance) {
     return (
@@ -191,6 +194,15 @@ export default async function FinancePage() {
   const freeTierItems = extractFreeTierUsage(finance);
   const projections = extractProjections(finance);
   const pendingExpenses = extractPendingExpenses(finance);
+
+  // RADAR P/L
+  const radarSummary = radarMd ? parseMarkdownTable(extractSection(radarMd, 'Portfolio Summary')) : [];
+  const radarMeta: Record<string, string> = {};
+  for (const row of radarSummary) {
+    if (row.cells.length >= 2) radarMeta[row.cells[0]] = row.cells[1];
+  }
+  const radarEquity = radarMeta['Equity'] || '--';
+  const radarPnl = radarMeta['Daily P/L'] || '--';
 
   // Summary metrics
   const burnMatch = finance.match(/burn[:\s]+~?\$?([\d,.]+\s*\/?\s*(?:mo|day)?)/i);
@@ -209,7 +221,7 @@ export default async function FinancePage() {
       <div className="mb-4 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Finance</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Finance</h1>
             <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {new Date().toISOString().slice(0, 10)}</span>
           </div>
           <div className="flex items-center gap-3">
@@ -345,6 +357,29 @@ export default async function FinancePage() {
                   <span className="font-mono text-muted-foreground">{clean(row.cells[1] || '')}</span>
                 </div>
               ))}
+            </div>
+          </CollapsibleSection>
+        </div>
+      )}
+
+      {/* Section 5: RADAR P/L */}
+      {radarMd && (
+        <div className="mb-4">
+          <CollapsibleSection title="RADAR P/L" defaultOpen={false} badge={<SignalPill label={radarPnl.includes('-') ? 'Loss' : 'Gain'} tone={radarPnl.includes('-') ? 'warning' : 'success'} />}>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Equity</div>
+                  <div className="text-xl font-bold font-mono text-foreground">{radarEquity}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Daily P/L</div>
+                  <div className={`text-xl font-bold font-mono ${radarPnl.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnl}</div>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                <a href="/dashboard/fintech" className="text-primary hover:underline">View full RADAR dashboard →</a>
+              </div>
             </div>
           </CollapsibleSection>
         </div>

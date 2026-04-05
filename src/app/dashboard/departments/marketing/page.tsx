@@ -6,7 +6,7 @@ export default function MarketingPage() {
       <div className="mb-6 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Marketing</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Business</h1>
             <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">Lumina (CMO)</span>
           </div>
           <SignalPill label="PRE-LAUNCH" tone="neutral" />

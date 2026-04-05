@@ -33,7 +33,7 @@ export function StatusBar() {
 
   if (!data) {
     return (
-      <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-[10px] font-mono text-muted-foreground">
+      <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono text-muted-foreground">
         <span>Loading status...</span>
       </div>
     );
@@ -43,7 +43,7 @@ export function StatusBar() {
   const marketColor = data.marketOpen ? 'text-green-400' : 'text-muted-foreground';
 
   return (
-    <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-[10px] font-mono overflow-x-auto scrollbar-hide">
+    <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono overflow-x-auto scrollbar-hide">
       <span className={marketColor}>
         Market: {data.marketOpen ? 'OPEN' : 'CLOSED'}
       </span>
