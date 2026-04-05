@@ -104,7 +104,7 @@ function parsePrdItems(content: string): PrdItem[] {
     // Try to extract status — look for common patterns
     let status: PrdItem['status'] = 'Not Started';
     let priority = 'P2';
-    let owner = 'Code CLI';
+    const owner = 'Code CLI';
     let github = '—';
 
     for (const col of cols) {

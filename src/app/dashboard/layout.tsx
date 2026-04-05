@@ -45,7 +45,7 @@ export default function DashboardLayout({
 
   // Close sidebar on navigation
   useEffect(() => {
-    setSidebarOpen(false);
+    setSidebarOpen(false); // eslint-disable-line react-hooks/set-state-in-effect
   }, [pathname]);
 
   if (isLoginPage) {

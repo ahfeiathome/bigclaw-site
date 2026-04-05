@@ -437,7 +437,7 @@ export default async function ProjectsPage() {
         for (const issue of closedIssues) {
           eventStream.push({ repo: issue.repo, number: issue.number, title: issue.title, action: 'closed', timestamp: issue.updatedAt, url: issue.url });
         }
-        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000; // eslint-disable-line react-hooks/purity
         for (const issue of allIssues) {
           const created = new Date(issue.createdAt).getTime();
           const updated = new Date(issue.updatedAt).getTime();
