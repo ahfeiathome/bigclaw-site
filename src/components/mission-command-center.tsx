@@ -56,10 +56,11 @@ function Toggle({ enabled, onToggle, label, danger }: { enabled: boolean; onTogg
   );
 }
 
-export function MissionCommandCenter({ radarReserve, hasLive }: { radarReserve?: number; hasLive?: boolean }) {
+export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }: { radarReserve?: number; hasLive?: boolean; defaultCollapsed?: boolean }) {
   const [controls, setControls] = useState<Controls | null>(null);
   const [accessConfig, setAccessConfig] = useState<AccessConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(!defaultCollapsed);
   const [userMgmtOpen, setUserMgmtOpen] = useState(false);
 
   useEffect(() => {
@@ -95,12 +96,32 @@ export function MissionCommandCenter({ radarReserve, hasLive }: { radarReserve?:
 
   const reserveWarning = radarReserve !== undefined && radarReserve < 30;
 
+  // Build summary line for collapsed view
+  const deployAllowed = Object.values(controls.deploy_gates).filter(Boolean).length;
+  const deployTotal = Object.keys(controls.deploy_gates).length;
+  const agentOn = Object.values(controls.agents).filter(a => a.enabled).length;
+  const agentTotal = Object.keys(controls.agents).length;
+  const userCount = accessConfig ? Object.keys(accessConfig.users).length : 0;
+  const radarSummary = `RADAR ${controls.radar.frozen ? 'FROZEN' : `${controls.radar.strategy || 'Auto'}`}`;
+
   return (
-    <div className="rounded-xl border border-primary/30 bg-card p-5 mb-6">
-      <div className="flex items-center gap-2 mb-5">
+    <div className="rounded-xl border border-primary/30 bg-card mb-4">
+      {/* Collapsed summary / toggle header */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 transition-colors rounded-xl"
+      >
+        <span className="text-xs text-primary">{expanded ? '▼' : '▶'}</span>
         <span className="text-xs font-bold text-primary uppercase tracking-wide">Command Center</span>
-        <span className="text-[10px] text-muted-foreground font-mono">All controls</span>
-      </div>
+        {!expanded && (
+          <span className="text-[10px] font-mono text-muted-foreground truncate">
+            {radarSummary} | {deployAllowed}/{deployTotal} deploys | {agentOn}/{agentTotal} agents | {userCount} users
+          </span>
+        )}
+      </button>
+
+      {!expanded ? null : (
+      <div className="px-4 pb-4 pt-1">
 
       {/* ── RADAR Controls (full panel) ──────────────────────────── */}
       <div className="border border-border rounded-lg p-4 mb-4">
@@ -239,6 +260,8 @@ export function MissionCommandCenter({ radarReserve, hasLive }: { radarReserve?:
           </div>
         )}
       </div>
+      </div>
+      )}
     </div>
   );
 }

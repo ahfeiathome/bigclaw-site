@@ -201,7 +201,6 @@ export async function listKnowledgeEntries(): Promise<string[]> {
 export const TOP_BAR_TABS: NavItem[] = [
   { label: 'Mission Control', href: '/dashboard/mission-control' },
   { label: 'Finance', href: '/dashboard/departments/finance' },
-  { label: 'Operations', href: '/dashboard/departments/operations' },
   { label: 'Organization', href: '/dashboard/departments/infrastructure' },
   { label: 'Resources', href: '/dashboard/departments/knowledge' },
   { label: 'Marketing', href: '/dashboard/departments/marketing' },
