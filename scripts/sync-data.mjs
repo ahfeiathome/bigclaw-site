@@ -34,10 +34,13 @@ for (const [key, source] of Object.entries(manifest.sources)) {
   // Flatten into data/ using the key as filename
   const destPath = path.join(DATA_DIR, `${key}.md`);
 
-  if (fs.existsSync(srcPath)) {
+  if (fs.existsSync(srcPath) && fs.statSync(srcPath).isFile()) {
     fs.copyFileSync(srcPath, destPath);
     report.synced.push(key);
     console.log(`SYNC: ${key} ← ${source.path}`);
+  } else if (fs.existsSync(srcPath) && fs.statSync(srcPath).isDirectory()) {
+    // Skip directory entries (e.g. sessionLogs/) — handled separately
+    console.log(`SKIP (directory): ${key} — ${source.path}`);
   } else {
     report.missing.push({ key, path: source.path, required: source.required });
     if (source.required) {
