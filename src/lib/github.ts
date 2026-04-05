@@ -92,6 +92,14 @@ export async function fetchDevKnowledgeHub(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'knowledge/DEV_KNOWLEDGE_HUB.md');
 }
 
+export async function fetchSDLCProcess(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/SDLC_PROCESS.md');
+}
+
+export async function fetchSDLCViolations(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'growth/SDLC_VIOLATIONS.md');
+}
+
 export async function fetchRadarStatus(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
 }
