@@ -1,0 +1,21 @@
+{
+  "radar": {
+    "frozen": false,
+    "mode": "auto",
+    "strategy": "options_stocks",
+    "last_changed": null
+  },
+  "deploy_gates": {
+    "grovakid": true,
+    "iris-studio": true,
+    "fatfrogmodels": true
+  },
+  "agents": {
+    "mika": { "enabled": true },
+    "koda": { "enabled": true },
+    "rex": { "enabled": true },
+    "sage": { "enabled": true },
+    "byte": { "enabled": true },
+    "lumina": { "enabled": true }
+  }
+}

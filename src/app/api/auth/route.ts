@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserAccess } from '@/lib/access';
 
-const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || 'Learnie2026Admin';
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD;
+if (!DASHBOARD_PASSWORD) {
+  console.error('DASHBOARD_PASSWORD environment variable is not set');
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json();

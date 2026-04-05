@@ -4,6 +4,7 @@ test.describe('Visual verification — dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/login')
     await page.waitForLoadState('networkidle')
+    await page.getByText('Use operator password instead').click()
     const passwordInput = page.locator('input[type="password"]')
     await passwordInput.waitFor({ state: 'visible', timeout: 15000 })
     await passwordInput.fill('Learnie2026Admin')

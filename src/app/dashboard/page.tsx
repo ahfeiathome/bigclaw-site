@@ -3,6 +3,7 @@ import type { GitHubRelease, GitHubCommit } from '@/lib/github';
 import { MetricCard, SignalPill, SectionCard, StatusDot, QuickActionsBar } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
 import { PageActions } from '@/components/page-actions';
+import { CommandCenter } from '@/components/command-center';
 import Link from 'next/link';
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
@@ -34,18 +35,34 @@ function extractSection(content: string, heading: string): string {
 
 // ── Sponsor blockers from MICHAEL_TODO.md ───────────────────────────────────
 
-interface SponsorItem { company: string; item: string; type: string; status: string }
+interface SponsorItem { num: string; item: string; type: string; time: string; unblocks: string }
 
 function parseMichaelTodo(content: string | null): SponsorItem[] {
   if (!content) return [];
+  // Only parse tables inside "Priority Timeline" section (skip Investment Portfolio)
+  const timelineStart = content.indexOf('## Priority Timeline');
+  if (timelineStart === -1) return [];
+  // End at Impact Matrix or Dependency Chains or end
+  const timelineEnd = Math.min(
+    ...[content.indexOf('## Impact Matrix'), content.indexOf('## Dependency Chains'), content.length]
+      .filter(i => i > timelineStart)
+  );
+  const timeline = content.slice(timelineStart, timelineEnd);
+
   const items: SponsorItem[] = [];
-  for (const line of content.split('\n')) {
-    if (!line.startsWith('|') || line.includes('Company') || line.match(/^\|[\s-|]+\|$/)) continue;
+  for (const line of timeline.split('\n')) {
+    if (!line.startsWith('|') || line.match(/^\|[\s-|]+\|$/) || line.includes('| # |') || line.includes('| Item |')) continue;
     const cols = line.split('|').map(c => c.trim()).filter(Boolean);
-    if (cols.length < 5 || cols[0] === '#') continue;
-    const status = cols[4]?.toLowerCase() || '';
-    if (status.includes('completed') || status.includes('done')) continue;
-    items.push({ company: cols[1], item: cols[2], type: cols[3], status: cols[4] });
+    if (cols.length < 5) continue;
+    const num = cols[0];
+    if (!num.match(/^\d+$/)) continue; // skip non-numbered rows
+    items.push({
+      num: cols[0],
+      item: cols[1].replace(/\*\*/g, '').split('—')[0].trim(),
+      type: cols[2],
+      time: cols[3],
+      unblocks: cols[4],
+    });
   }
   return items;
 }
@@ -87,10 +104,13 @@ export default async function DashboardOverview() {
   const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn'));
 
   // RADAR data from RADAR_DASHBOARD.md Performance Comparison table
-  const radarPerf = radarMd ? parseMarkdownTable(extractSection(radarMd, 'Performance Comparison')) : [];
+  // Heading is "## Performance Comparison (Paper vs Live)" — use partial match
+  const radarPerf = radarMd ? parseMarkdownTable(extractSection(radarMd, 'Performance Comparison.*')) : [];
   const radarEquity = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('current equity'));
   const radarPnl = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('daily p/l'));
   const radarPositions = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('positions'));
+  const radarReserveRow = radarPerf.find(r => r.cells[0]?.toLowerCase().includes('reserve'));
+  const radarReserve = radarReserveRow ? parseFloat(radarReserveRow.cells[1]?.replace('%', '') || '0') : undefined;
 
   // Infra summary — from System Health table (new format: Component | Status | Details)
   const macRow = healthRows.find(r => r.cells[0]?.toLowerCase().includes('mac'));
@@ -171,7 +191,6 @@ export default async function DashboardOverview() {
           <div className="grid grid-cols-2 gap-2 mb-3">
             {[
               { name: 'GrovaKid', status: 'LIVE', url: 'https://learnie-ai-ten.vercel.app' },
-              { name: 'BigClaw', status: 'LIVE', url: 'https://bigclaw-site.vercel.app' },
             ].map(p => (
               <div key={p.name} className="flex items-center gap-2 text-xs">
                 <StatusDot status={p.status === 'LIVE' ? 'good' : p.status === 'PAPER' ? 'warn' : 'neutral'} size="sm" />
@@ -219,6 +238,9 @@ export default async function DashboardOverview() {
           </div>
         </div>
       </div>
+
+      {/* ── COMMAND CENTER ───────────────────────────────────────── */}
+      <CommandCenter radarReserve={radarReserve} />
 
       {/* ── SUMMARY CARDS GRID ──────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
@@ -356,7 +378,7 @@ export default async function DashboardOverview() {
           )}
         </SectionCard>
 
-        <SectionCard title="Needs Michael">
+        <SectionCard title={`Needs Michael (${blocked.length})`}>
           {blocked.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-green-600">
               <StatusDot status="good" size="sm" />
@@ -367,12 +389,12 @@ export default async function DashboardOverview() {
               {blocked.slice(0, 5).map((item, i) => (
                 <div key={i} className="border-l-2 border-amber-200 pl-3 py-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-foreground/80 font-medium">{item.item.slice(0, 60)}</span>
+                    <span className="text-sm text-foreground/80 font-medium">{item.item}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono ml-auto">{item.type}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                    <span>{item.company}</span>
-                    <span>· {item.status}</span>
+                    <span>{item.time}</span>
+                    <span>· {item.unblocks.slice(0, 50)}</span>
                   </div>
                 </div>
               ))}
