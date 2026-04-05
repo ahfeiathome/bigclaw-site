@@ -155,7 +155,7 @@ export default async function RadarPage() {
       <div className="mb-4 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">RADAR</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 700 }}>FinTech — RADAR</h1>
             <span className="text-xs text-muted-foreground font-mono mt-1">Last updated: {meta['Last Loop'] || new Date().toISOString().slice(0, 10)}</span>
           </div>
           <div className="flex items-center gap-3">

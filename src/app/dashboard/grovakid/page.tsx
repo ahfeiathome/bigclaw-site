@@ -198,7 +198,7 @@ export default async function GrovakidPage() {
       <div className="mb-6 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">GrovaKid</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Education — GrovaKid</h1>
             <SignalPill label="S4 BUILD" tone="info" />
             <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-green-500/10 text-green-400">Forge</span>
           </div>
