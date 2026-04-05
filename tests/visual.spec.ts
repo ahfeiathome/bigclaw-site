@@ -2,18 +2,22 @@ import { test, expect } from '@playwright/test'
 
 const TEST_EMAIL = 'michaelmkliu@gmail.com'
 
+/** Login helper — logs in via email and waits for dashboard to load */
+async function login(page: import('@playwright/test').Page) {
+  await page.goto('/dashboard/login')
+  await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
+  await page.getByRole('button', { name: 'Sign In' }).click()
+  // Wait for navigation AWAY from login page (not just /dashboard/ which matches /dashboard/login)
+  await page.waitForURL(url => url.pathname.startsWith('/dashboard') && !url.pathname.includes('/login'), { timeout: 15000 })
+  await page.waitForLoadState('networkidle')
+}
+
 test.describe('Visual verification — dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/dashboard/login')
-    await page.waitForLoadState('networkidle')
-    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
-    await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
+    await login(page)
   })
 
   test('main dashboard page renders key sections', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
     // Verify page header renders
     await expect(page.locator('h1').first()).toBeVisible()
 
@@ -28,7 +32,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/departments/finance')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible({ timeout: 10000 })
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('dashboard-finance.png', {
@@ -41,7 +45,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/infra')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByRole('heading', { name: 'Infrastructure' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Infrastructure' })).toBeVisible({ timeout: 10000 })
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('dashboard-infra.png', {
@@ -54,7 +58,7 @@ test.describe('Visual verification — dashboard', () => {
     await page.goto('/dashboard/radar')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible({ timeout: 10000 })
 
     // Screenshot comparison — allow higher diff for dynamic trading data
     await expect(page).toHaveScreenshot('dashboard-radar.png', {

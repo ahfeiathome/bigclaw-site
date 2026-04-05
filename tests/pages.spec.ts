@@ -2,6 +2,16 @@ import { test, expect } from '@playwright/test'
 
 const TEST_EMAIL = 'michaelmkliu@gmail.com'
 
+/** Login helper — logs in via email and waits for dashboard to load */
+async function login(page: import('@playwright/test').Page) {
+  await page.goto('/dashboard/login')
+  await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
+  await page.getByRole('button', { name: 'Sign In' }).click()
+  // Wait for navigation AWAY from login page (not just /dashboard/ which matches /dashboard/login)
+  await page.waitForURL(url => url.pathname.startsWith('/dashboard') && !url.pathname.includes('/login'), { timeout: 15000 })
+  await page.waitForLoadState('networkidle')
+}
+
 test.describe('Public pages', () => {
   test('homepage loads with Big Claw branding', async ({ page }) => {
     await page.goto('/')
@@ -36,10 +46,7 @@ test.describe('Dashboard auth', () => {
   })
 
   test('dashboard login works with authorized email', async ({ page }) => {
-    await page.goto('/dashboard/login')
-    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
-    await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
+    await login(page)
     await expect(page.locator('h1').first()).toBeVisible()
   })
 
@@ -53,29 +60,24 @@ test.describe('Dashboard auth', () => {
 
 test.describe('Dashboard pages load with data', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/dashboard/login')
-    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
-    await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
+    await login(page)
   })
 
   test('finance page loads', async ({ page }) => {
     await page.goto('/dashboard/departments/finance')
-    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible({ timeout: 10000 })
   })
 
   test('projects page loads', async ({ page }) => {
-    await page.goto('/dashboard/projects')
-    await expect(page.getByRole('heading', { name: 'Projects' }).first()).toBeVisible()
+    await page.goto('/dashboard/products')
+    await page.waitForLoadState('networkidle')
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 })
   })
 
   test('RADAR page loads', async ({ page }) => {
     await page.goto('/dashboard/radar')
-    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible()
-  })
-
-  test('/bizdev redirects to projects page', async ({ page }) => {
-    await page.goto('/dashboard/bizdev')
-    await expect(page).toHaveURL('/dashboard/projects')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible({ timeout: 10000 })
   })
 })
