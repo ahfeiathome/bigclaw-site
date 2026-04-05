@@ -78,6 +78,9 @@ export async function fetchGrovakidTracker(): Promise<string | null> {
 }
 
 export async function fetchMichaelTodo(): Promise<string | null> {
+  // Try new path first, fall back to old for backwards compat
+  const result = await fetchRepoFile('bigclaw-ai', 'founder/FOUNDER_TODO.md');
+  if (result) return result;
   return fetchRepoFile('bigclaw-ai', 'sponsor/MICHAEL_TODO.md');
 }
 

@@ -125,11 +125,11 @@ function resolveContentSource(contentPath: string): ContentMapping | null {
     };
   }
 
-  // sponsor/todo
-  if (parts[0] === 'sponsor' && parts[1] === 'todo') {
+  // founder/todo (legacy: sponsor/todo)
+  if ((parts[0] === 'founder' || parts[0] === 'sponsor') && parts[1] === 'todo') {
     return {
-      source: { repo: REPO_MAP.parent, path: 'sponsor/MICHAEL_TODO.md' },
-      title: 'Michael TODO',
+      source: { repo: REPO_MAP.parent, path: 'founder/FOUNDER_TODO.md' },
+      title: 'Founder TODO',
     };
   }
 

@@ -122,7 +122,7 @@ export default async function SponsorTodoPage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Sponsor TODO</h1>
             <SignalPill label={`${totalItems} items`} tone="warning" />
           </div>
-          <ViewSource repo="bigclaw-ai" path="sponsor/MICHAEL_TODO.md" />
+          <ViewSource repo="bigclaw-ai" path="founder/FOUNDER_TODO.md" />
         </div>
         <div className="flex gap-4 text-xs text-muted-foreground font-mono">
           <span>💳 {moneyItems} money</span>
