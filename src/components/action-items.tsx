@@ -118,38 +118,6 @@ export function ActionItems({ todoMd }: { todoMd: string | null }) {
         </div>
       )}
 
-      {/* Investment Portfolio — collapsed */}
-      {portfolio.length > 0 && (
-        <div className="mb-4">
-          <CollapsibleSection title={`Investment Portfolio (${portfolio.length})`} defaultOpen={false}>
-            <div className="rounded-xl border border-border bg-card p-4 overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b border-border">
-                    <th className="text-left py-2 pr-3">Account</th>
-                    <th className="text-right py-2 px-2">Balance</th>
-                    <th className="text-left py-2 px-2">Current</th>
-                    <th className="text-left py-2 px-2">Proposed</th>
-                    <th className="text-right py-2 px-2">%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {portfolio.map((row, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      {row.cells.slice(0, 5).map((cell, ci) => (
-                        <td key={ci} className={`py-1.5 ${ci === 0 ? 'text-foreground font-medium pr-3' : ci === 1 || ci === 4 ? 'text-right px-2 font-mono text-muted-foreground' : 'text-left px-2 text-muted-foreground'}`}>
-                          {cell.replace(/\*\*/g, '')}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CollapsibleSection>
-        </div>
-      )}
-
       {/* Dependency Chains — collapsed */}
       {chains.length > 0 && (
         <div className="mb-4">

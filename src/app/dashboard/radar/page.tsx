@@ -3,6 +3,7 @@ import {
   fetchRadarScorecard,
   fetchRadarDashboard,
   fetchPositionMatrix,
+  fetchMichaelTodo,
 } from '@/lib/github';
 import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
@@ -109,11 +110,12 @@ function parseMarketContext(content: string): { regime: string; vix: string; out
 }
 
 export default async function RadarPage() {
-  const [tradeLog, scorecard, dashboard, positionMatrix] = await Promise.all([
+  const [tradeLog, scorecard, dashboard, positionMatrix, todoMd] = await Promise.all([
     fetchRadarStatus(),
     fetchRadarScorecard(),
     fetchRadarDashboard(),
     fetchPositionMatrix(),
+    fetchMichaelTodo(),
   ]);
 
   if (!dashboard) {
@@ -504,6 +506,49 @@ export default async function RadarPage() {
           </div>
         </CollapsibleSection>
       )}
+
+      {/* ── Investment Portfolio ────────────────────────────────── */}
+      {(() => {
+        if (!todoMd) return null;
+        const start = todoMd.indexOf('## 📈 Investment Portfolio');
+        const end = todoMd.indexOf('## Priority Timeline');
+        if (start === -1 || end === -1) return null;
+        const section = todoMd.slice(start, end);
+        const rows = section.split('\n')
+          .filter(l => l.startsWith('|') && !l.match(/^\|[\s-|]+\|$/) && !l.includes('Account'))
+          .map(line => ({ cells: line.split('|').map(c => c.trim()).filter(Boolean) }));
+        if (rows.length === 0) return null;
+        return (
+          <div className="mb-6">
+            <CollapsibleSection title={`Investment Portfolio (${rows.length} accounts)`} defaultOpen={false}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground border-b border-border bg-muted">
+                      <th className="text-left py-2 pl-3 pr-2">Account</th>
+                      <th className="text-right py-2 px-2">Balance</th>
+                      <th className="text-left py-2 px-2">Current</th>
+                      <th className="text-left py-2 px-2">Proposed</th>
+                      <th className="text-right py-2 pl-2 pr-3">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, i) => (
+                      <tr key={i} className={`border-b border-border ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                        {row.cells.slice(0, 5).map((cell, ci) => (
+                          <td key={ci} className={`py-1.5 ${ci === 0 ? 'text-foreground font-medium pl-3 pr-2' : ci === 1 || ci === 4 ? 'text-right px-2 font-mono text-muted-foreground' : 'text-left px-2 text-muted-foreground'} ${ci === 4 ? 'pr-3' : ''}`}>
+                            {cell.replace(/\*\*/g, '')}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CollapsibleSection>
+          </div>
+        );
+      })()}
     </div>
   );
 }
