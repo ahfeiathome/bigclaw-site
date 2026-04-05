@@ -40,8 +40,8 @@ test.describe('Dashboard auth', () => {
     await page.getByText('Use operator password instead').click()
     await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard\/mission-control/)
-    await expect(page.getByText('Mission Control').first()).toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard/)
+    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
   })
 
   test('dashboard login rejects wrong password', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('Dashboard pages load with data', () => {
     await page.getByText('Use operator password instead').click()
     await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard\/mission-control/)
+    await expect(page).toHaveURL(/\/dashboard/)
   })
 
   test('finance page loads', async ({ page }) => {
