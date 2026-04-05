@@ -6,11 +6,8 @@ import { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { StatusDot } from '@/components/dashboard';
 import { StatusBar } from '@/components/status-bar';
-import { TOP_BAR_TABS } from '@/lib/content';
 
-function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const pathname = usePathname();
-
+function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   return (
     <div className="border-b border-border bg-card">
       <div className="flex items-center px-4 py-2">
@@ -32,30 +29,6 @@ function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
           <StatusDot status="good" size="sm" />
           <span className="text-xs text-muted-foreground font-mono hidden sm:inline">Online</span>
-        </div>
-      </div>
-
-      {/* Top bar tabs — company/ops pages */}
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-0.5 px-4 pb-1 min-w-max">
-          {TOP_BAR_TABS.map((tab) => {
-            const isActive = tab.href === '/dashboard/mission-control'
-              ? pathname === '/dashboard/mission-control' || pathname === '/dashboard'
-              : pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`px-3 py-1.5 text-xs rounded-md no-underline whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
         </div>
       </div>
     </div>
@@ -86,7 +59,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopNav onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 overflow-hidden relative">
         {/* Backdrop — mobile only */}
         {sidebarOpen && (
