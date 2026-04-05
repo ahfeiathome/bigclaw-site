@@ -9,12 +9,11 @@ import { StatusBar } from '@/components/status-bar';
 
 function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   return (
-    <div className="border-b border-border bg-card">
+    <div className="border-b border-border bg-card md:hidden">
       <div className="flex items-center px-4 py-2">
-        {/* Hamburger — mobile only */}
         <button
           onClick={onToggleSidebar}
-          className="md:hidden p-2 -ml-2 mr-1 text-muted-foreground hover:text-foreground"
+          className="p-2 -ml-2 mr-1 text-muted-foreground hover:text-foreground"
           aria-label="Toggle sidebar"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -22,13 +21,13 @@ function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           </svg>
         </button>
 
-        <Link href="/dashboard" className="text-sm font-bold text-primary no-underline shrink-0">
-          BigClaw AI
+        <Link href="/dashboard" className="no-underline shrink-0" style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>
+          🦀 BigClaw AI
         </Link>
 
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
           <StatusDot status="good" size="sm" />
-          <span className="text-xs text-muted-foreground font-mono hidden sm:inline">Online</span>
+          <span className="text-xs text-muted-foreground font-mono">Online</span>
         </div>
       </div>
     </div>
