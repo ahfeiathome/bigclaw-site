@@ -55,7 +55,7 @@ export function middleware(request: NextRequest) {
 
       // Investor: only mission control and finance
       if (role === 'investor') {
-        const allowed = ['/dashboard', '/dashboard/mission-control', '/dashboard/departments/finance'];
+        const allowed = ['/dashboard', '/dashboard/mission-control', '/dashboard/departments/finance', '/dashboard/finance'];
         const isAllowed = allowed.some(p => request.nextUrl.pathname === p) ||
           request.nextUrl.pathname === '/dashboard/';
         if (!isAllowed) {

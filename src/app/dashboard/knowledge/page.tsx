@@ -91,7 +91,7 @@ export default async function KnowledgeHubPage() {
       <div className="mb-6 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Knowledge Hub</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Resources</h1>
             <SignalPill label={`${uniqueEntries.length} entries`} tone="info" />
           </div>
           <ViewSource repo="bigclaw-ai" path="knowledge/KNOWLEDGE_HUB.md" />
