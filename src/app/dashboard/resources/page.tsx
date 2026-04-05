@@ -1,10 +1,9 @@
-import { fetchKnowledgeHub } from '@/lib/github';
+import { fetchKnowledgeHub, fetchSDLCProcess, fetchSDLCViolations } from '@/lib/github';
 import { listKnowledgeEntries } from '@/lib/content';
 import { SignalPill, SectionCard, StatusDot } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
 import { KnowledgeHubView } from '@/components/knowledge-hub-view';
 import type { KHEntry } from '@/components/knowledge-hub-view';
-import { parseSDLC } from '@/lib/parsers/parseSDLC';
 
 function parseKHEntries(content: string): KHEntry[] {
   const entries: KHEntry[] = [];
@@ -57,10 +56,41 @@ const SEVERITY_STYLES: Record<string, string> = {
   Medium: 'bg-yellow-500/20 text-yellow-400',
 };
 
+interface SDLCViolation { date: string; project: string; code: string; severity: string; description: string }
+interface SDLCStage { stage: string; who: string; gate: string; enforcedBy: string }
+
+function parseTable(content: string): Record<string, string>[] {
+  const lines = content.split('\n').filter(l => l.includes('|'));
+  if (lines.length < 2) return [];
+  const headers = lines[0].split('|').map(c => c.trim()).filter(Boolean);
+  const dataLines = lines.slice(1).filter(l => !l.match(/^\|[\s-:|]+\|$/));
+  return dataLines.map(line => {
+    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => { row[h] = cells[i] || ''; });
+    return row;
+  });
+}
+
+function extractSection(content: string, heading: string): string {
+  const regex = new RegExp(`^## ${heading}`, 'm');
+  const match = content.search(regex);
+  if (match === -1) return '';
+  const rest = content.slice(match);
+  const lines = rest.split('\n');
+  let end = lines.length;
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].match(/^## /)) { end = i; break; }
+  }
+  return lines.slice(0, end).join('\n');
+}
+
 export default async function ResourcesPage() {
-  const [khContent, fileList] = await Promise.all([
+  const [khContent, fileList, processMd, violationsMd] = await Promise.all([
     fetchKnowledgeHub(),
     listKnowledgeEntries(),
+    fetchSDLCProcess(),
+    fetchSDLCViolations(),
   ]);
 
   const entries = khContent ? parseKHEntries(khContent) : [];
@@ -83,7 +113,23 @@ export default async function ResourcesPage() {
   const opportunities = uniqueEntries.filter(e => e.type === 'OPPORTUNITY').length;
   const risks = uniqueEntries.filter(e => e.type === 'RISK').length;
 
-  const sdlc = parseSDLC();
+  // Parse SDLC data from GitHub API
+  const stages: SDLCStage[] = processMd
+    ? parseTable(extractSection(processMd, '8-Stage Pipeline \\(every code change\\)')).map(r => ({
+        stage: r['Stage'] || '', who: r['Who'] || '', gate: r['Gate'] || '', enforcedBy: r['Enforced by'] || '',
+      }))
+    : [];
+
+  const violations: SDLCViolation[] = violationsMd
+    ? parseTable(violationsMd).map(r => ({
+        date: r['Date'] || '', project: r['Project'] || '', code: r['Code'] || '',
+        severity: r['Severity'] || '', description: r['Description'] || '',
+      }))
+    : [];
+
+  const criticalCount = violations.filter(v => v.severity === 'Critical').length;
+  const highCount = violations.filter(v => v.severity === 'High').length;
+  const mediumCount = violations.filter(v => v.severity === 'Medium').length;
 
   return (
     <div>
@@ -100,7 +146,7 @@ export default async function ResourcesPage() {
       </div>
 
       {/* ── SDLC PROCESS ─────────────────────────────────────── */}
-      {sdlc && sdlc.stages.length > 0 && (
+      {stages.length > 0 && (
         <>
           <div className="mb-3" style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.5)' }}>
             SDLC Process
@@ -117,7 +163,7 @@ export default async function ResourcesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sdlc.stages.map((s, i) => (
+                  {stages.map((s, i) => (
                     <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
                       <td className="py-2 pl-3 pr-2 font-medium text-foreground">{s.stage}</td>
                       <td className="py-2 px-2 text-muted-foreground">{s.who}</td>
@@ -133,29 +179,29 @@ export default async function ResourcesPage() {
       )}
 
       {/* ── RECENT VIOLATIONS ────────────────────────────────── */}
-      {sdlc && sdlc.violations.length > 0 && (
+      {violations.length > 0 && (
         <>
           <div className="mb-3" style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.5)' }}>
             Recent Violations
           </div>
           <SectionCard
-            title={`${sdlc.violations.length} violations logged`}
+            title={`${violations.length} violations logged`}
             className="mb-6"
           >
             <div className="flex items-center gap-4 mb-4 text-xs">
-              {sdlc.criticalCount > 0 && (
+              {criticalCount > 0 && (
                 <span className="px-2 py-1 rounded bg-red-500/20 text-red-400 font-mono font-semibold">
-                  {sdlc.criticalCount} Critical
+                  {criticalCount} Critical
                 </span>
               )}
-              {sdlc.highCount > 0 && (
+              {highCount > 0 && (
                 <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-400 font-mono font-semibold">
-                  {sdlc.highCount} High
+                  {highCount} High
                 </span>
               )}
-              {sdlc.mediumCount > 0 && (
+              {mediumCount > 0 && (
                 <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 font-mono font-semibold">
-                  {sdlc.mediumCount} Medium
+                  {mediumCount} Medium
                 </span>
               )}
             </div>
@@ -171,7 +217,7 @@ export default async function ResourcesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sdlc.violations.map((v, i) => (
+                  {violations.map((v, i) => (
                     <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
                       <td className="py-2 pl-3 pr-2 font-mono text-muted-foreground whitespace-nowrap">{v.date}</td>
                       <td className="py-2 px-2 text-foreground font-medium">{v.project}</td>
