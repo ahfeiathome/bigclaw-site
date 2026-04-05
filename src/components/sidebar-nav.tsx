@@ -10,10 +10,10 @@ function SectionLink({ label, href }: { label: string; href: string }) {
   return (
     <Link
       href={href}
-      className={`block px-3 py-1.5 rounded-md no-underline transition-colors ${
+      className={`block px-3 py-1.5 rounded-md no-underline transition-all duration-150 ${
         isActive
-          ? 'bg-primary/10 text-primary font-semibold'
-          : 'text-foreground hover:text-primary hover:bg-muted'
+          ? 'bg-primary/10 text-primary font-semibold border-l-2 border-primary -ml-0.5 pl-[10px]'
+          : 'text-foreground/80 hover:text-foreground hover:bg-muted/50'
       }`}
       style={{ fontSize: '14px', fontWeight: 600 }}
     >
@@ -29,10 +29,10 @@ function SubLink({ label, href }: { label: string; href: string }) {
   return (
     <Link
       href={href}
-      className={`block pl-6 pr-3 py-1 rounded-md no-underline transition-colors ${
+      className={`block pl-6 pr-3 py-1 rounded-md no-underline transition-all duration-150 ${
         isActive
-          ? 'bg-primary/10 text-primary font-medium'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          ? 'bg-primary/8 text-primary font-medium'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
       }`}
       style={{ fontSize: '13px', fontWeight: 400 }}
     >
@@ -43,7 +43,7 @@ function SubLink({ label, href }: { label: string; href: string }) {
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <div className="px-3 pt-4 pb-1" style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.5)' }}>
+    <div className="px-3 pt-5 pb-1.5" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.35)' }}>
       {label}
     </div>
   );
@@ -51,7 +51,7 @@ function SectionHeader({ label }: { label: string }) {
 
 export function SidebarNav() {
   return (
-    <nav className="w-56 h-full shrink-0 border-r border-border bg-card overflow-y-auto py-2 px-2">
+    <nav className="w-56 h-full shrink-0 border-r border-border/50 bg-card overflow-y-auto py-2 px-2">
       {/* Brand */}
       <Link
         href="/dashboard/mission-control"

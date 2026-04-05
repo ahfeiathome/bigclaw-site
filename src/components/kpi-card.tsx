@@ -43,7 +43,7 @@ export function KpiCard({
   const deltaColor = deltaIsUp ? 'text-green-400' : deltaIsDown ? 'text-red-400' : 'text-muted-foreground';
 
   return (
-    <div className={`rounded-lg border bg-card p-3 ${BORDER_CLASSES[semantic]}`}>
+    <div className={`rounded-lg border bg-card p-3 transition-colors hover:border-border ${BORDER_CLASSES[semantic]}`}>
       <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{label}</div>
       <div className="flex items-center gap-2">
         <span className={`text-lg font-bold font-mono leading-tight ${VALUE_COLORS[semantic]}`}>{value}</span>

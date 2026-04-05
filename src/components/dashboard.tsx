@@ -42,7 +42,7 @@ export function MetricCard({ label, value, subtitle, icon, trend, semantic }: {
     : 'border-border';
 
   return (
-    <div className={`animate-fade-in rounded-xl bg-card border p-4 transition-all duration-200 ${borderClass}`}>
+    <div className={`animate-fade-in rounded-xl bg-card border border-border/60 p-4 transition-all duration-200 hover:border-border ${borderClass}`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium tracking-wide uppercase text-muted-foreground">{label}</span>
         {icon && <div className="w-4 h-4 text-muted-foreground">{icon}</div>}
@@ -188,11 +188,11 @@ export function HealthRow({ label, value, status, bar, icon }: {
 // ─── SignalPill ──────────────────────────────────────────────────────────────
 
 const pillToneMap = {
-  success: 'bg-green-500/10 text-green-400 border border-green-500/20',
-  warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  error:   'bg-red-500/10 text-red-400 border border-red-500/20',
-  info:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  neutral: 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20',
+  success: 'bg-green-500/15 text-green-400',
+  warning: 'bg-amber-500/15 text-amber-400',
+  error:   'bg-red-500/15 text-red-400',
+  info:    'bg-blue-500/15 text-blue-400',
+  neutral: 'bg-zinc-500/15 text-zinc-400',
 } as const;
 
 const pillDotMap = {
@@ -226,7 +226,7 @@ export function SectionCard({ title, children, className, action }: {
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`animate-fade-in rounded-xl bg-card border border-border ${className || ''}`}>
+    <div className={`animate-fade-in rounded-xl bg-card border border-border/60 ${className || ''}`}>
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

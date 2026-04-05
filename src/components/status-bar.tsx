@@ -33,7 +33,7 @@ export function StatusBar() {
 
   if (!data) {
     return (
-      <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono text-muted-foreground">
+      <div className="border-t border-border/50 bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono text-muted-foreground">
         <span>Loading status...</span>
       </div>
     );
@@ -43,23 +43,23 @@ export function StatusBar() {
   const marketColor = data.marketOpen ? 'text-green-400' : 'text-muted-foreground';
 
   return (
-    <div className="border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono overflow-x-auto scrollbar-hide">
+    <div className="border-t border-border/50 bg-card px-4 py-1.5 flex items-center gap-4 text-xs font-mono overflow-x-auto scrollbar-hide">
       <span className={marketColor}>
         Market: {data.marketOpen ? 'OPEN' : 'CLOSED'}
       </span>
-      <span className="text-border">|</span>
+      <span className="text-muted-foreground/30">|</span>
       <span className={agentColor}>
         Agents: {data.activeAgents}/{data.totalAgents} active
       </span>
-      <span className="text-border">|</span>
+      <span className="text-muted-foreground/30">|</span>
       <span className="text-muted-foreground">
         Last sync: {data.lastSync}
       </span>
-      <span className="text-border">|</span>
+      <span className="text-muted-foreground/30">|</span>
       <span className="text-green-400">
         RADAR: {data.radarMode} {data.radarEquity}
       </span>
-      <span className="text-border">|</span>
+      <span className="text-muted-foreground/30">|</span>
       <span className="text-muted-foreground">
         Git: {data.commitCount} commits today
       </span>
