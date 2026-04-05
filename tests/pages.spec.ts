@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const TEST_PASSWORD = process.env.DASHBOARD_PASSWORD || 'test-password'
+const TEST_EMAIL = 'michaelmkliu@gmail.com'
 
 test.describe('Public pages', () => {
   test('homepage loads with Big Claw branding', async ({ page }) => {
@@ -35,41 +35,38 @@ test.describe('Dashboard auth', () => {
     await expect(page).toHaveURL(/\/dashboard\/login/)
   })
 
-  test('dashboard login works with correct password', async ({ page }) => {
+  test('dashboard login works with authorized email', async ({ page }) => {
     await page.goto('/dashboard/login')
-    await page.getByText('Use operator password instead').click()
-    await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
+    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard/)
-    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
+    await expect(page.locator('h1').first()).toBeVisible()
   })
 
-  test('dashboard login rejects wrong password', async ({ page }) => {
+  test('dashboard login rejects unauthorized email', async ({ page }) => {
     await page.goto('/dashboard/login')
-    await page.getByText('Use operator password instead').click()
-    await page.getByRole('textbox', { name: 'Password' }).fill('wrongpassword')
+    await page.getByRole('textbox', { name: 'Email address' }).fill('nobody@example.com')
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page.getByText('Invalid credentials')).toBeVisible()
+    await expect(page.getByText('not authorized')).toBeVisible()
   })
 })
 
 test.describe('Dashboard pages load with data', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/login')
-    await page.getByText('Use operator password instead').click()
-    await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
+    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard/)
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
   })
 
   test('finance page loads', async ({ page }) => {
-    await page.goto('/dashboard/finance')
+    await page.goto('/dashboard/departments/finance')
     await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
   })
 
   test('projects page loads', async ({ page }) => {
     await page.goto('/dashboard/projects')
-    await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Projects' }).first()).toBeVisible()
   })
 
   test('RADAR page loads', async ({ page }) => {

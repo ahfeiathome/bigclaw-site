@@ -1,15 +1,12 @@
 import { test, expect } from '@playwright/test'
 
-const TEST_PASSWORD = process.env.DASHBOARD_PASSWORD || 'test-password'
+const TEST_EMAIL = 'michaelmkliu@gmail.com'
 
 test.describe('Visual verification — dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/login')
     await page.waitForLoadState('networkidle')
-    await page.getByText('Use operator password instead').click()
-    const passwordInput = page.locator('input[type="password"]')
-    await passwordInput.waitFor({ state: 'visible', timeout: 15000 })
-    await passwordInput.fill(TEST_PASSWORD)
+    await page.getByRole('textbox', { name: 'Email address' }).fill(TEST_EMAIL)
     await page.getByRole('button', { name: 'Sign In' }).click()
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
   })
@@ -17,7 +14,7 @@ test.describe('Visual verification — dashboard', () => {
   test('main dashboard page renders key sections', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
-    // Verify page header renders — works for both old (BigClaw AI) and new (Mission Control)
+    // Verify page header renders
     await expect(page.locator('h1').first()).toBeVisible()
 
     // Screenshot comparison
@@ -28,7 +25,7 @@ test.describe('Visual verification — dashboard', () => {
   })
 
   test('finance page shows operational costs only', async ({ page }) => {
-    await page.goto('/dashboard/finance')
+    await page.goto('/dashboard/departments/finance')
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible()
