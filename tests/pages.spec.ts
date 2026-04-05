@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+const TEST_PASSWORD = process.env.DASHBOARD_PASSWORD || 'test-password'
+
 test.describe('Public pages', () => {
   test('homepage loads with Big Claw branding', async ({ page }) => {
     await page.goto('/')
@@ -36,10 +38,10 @@ test.describe('Dashboard auth', () => {
   test('dashboard login works with correct password', async ({ page }) => {
     await page.goto('/dashboard/login')
     await page.getByText('Use operator password instead').click()
-    await page.getByRole('textbox', { name: 'Password' }).fill('Learnie2026Admin')
+    await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard$/)
-    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard\/mission-control/)
+    await expect(page.getByText('Mission Control').first()).toBeVisible()
   })
 
   test('dashboard login rejects wrong password', async ({ page }) => {
@@ -55,9 +57,9 @@ test.describe('Dashboard pages load with data', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/login')
     await page.getByText('Use operator password instead').click()
-    await page.getByRole('textbox', { name: 'Password' }).fill('Learnie2026Admin')
+    await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page).toHaveURL(/\/dashboard\/mission-control/)
   })
 
   test('finance page loads', async ({ page }) => {

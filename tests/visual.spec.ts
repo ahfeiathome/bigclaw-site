@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+const TEST_PASSWORD = process.env.DASHBOARD_PASSWORD || 'test-password'
+
 test.describe('Visual verification — dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/login')
@@ -7,22 +9,22 @@ test.describe('Visual verification — dashboard', () => {
     await page.getByText('Use operator password instead').click()
     const passwordInput = page.locator('input[type="password"]')
     await passwordInput.waitFor({ state: 'visible', timeout: 15000 })
-    await passwordInput.fill('Learnie2026Admin')
+    await passwordInput.fill(TEST_PASSWORD)
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15000 })
+    await expect(page).toHaveURL(/\/dashboard\/mission-control/, { timeout: 15000 })
   })
 
-  test('overview page renders all key sections', async ({ page }) => {
+  test('mission control page renders all key sections', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
     // Verify page header renders
-    await expect(page.getByText('BigClaw AI', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Mission Control').first()).toBeVisible()
 
-    // Verify executive summary sections exist (use first() — overview has duplicate section labels)
-    await expect(page.getByText('Infrastructure').first()).toBeVisible()
+    // Verify command center exists
+    await expect(page.getByText('Command Center').first()).toBeVisible()
 
     // Screenshot comparison
-    await expect(page).toHaveScreenshot('dashboard-overview.png', {
+    await expect(page).toHaveScreenshot('dashboard-mission-control.png', {
       fullPage: true,
       maxDiffPixelRatio: 0.1,
     })
