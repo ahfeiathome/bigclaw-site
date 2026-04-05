@@ -196,44 +196,43 @@ export async function listKnowledgeEntries(): Promise<string[]> {
   return listDirectoryFiles(REPO_MAP.parent, 'knowledge');
 }
 
-// ── Navigation tree ──────────────────────────────────────────────────────
+// ── Top bar navigation (company/ops tabs) ────────────────────────────────
 
-export const NAV_TREE: NavItem[] = [
-  { label: 'CEO Overview', href: '/dashboard' },
-  { label: 'RADAR', href: '/dashboard/radar' },
-  {
-    label: 'Products',
-    href: '/dashboard/products',
-    children: [
-      { label: 'GrovaKid', href: '/dashboard/products/grovakid' },
-      { label: 'FairConnect', href: '/dashboard/products/fairconnect' },
-      { label: 'KeepTrack', href: '/dashboard/products/keeptrack' },
-      { label: 'SubCheck', href: '/dashboard/products/subcheck' },
-      { label: 'iris-studio', href: '/dashboard/products/iris-studio' },
-      { label: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels' },
-    ],
-  },
-  {
-    label: 'Departments',
-    href: '/dashboard/departments',
-    children: [
-      { label: 'Finance (CFO)', href: '/dashboard/departments/finance' },
-      { label: 'Operations (COO)', href: '/dashboard/departments/operations' },
-      { label: 'Infrastructure (CIO)', href: '/dashboard/departments/infrastructure' },
-      { label: 'Knowledge Hub (BDM)', href: '/dashboard/departments/knowledge' },
-      { label: 'Marketing (CMO)', href: '/dashboard/departments/marketing' },
-    ],
-  },
-  { label: 'Sponsor TODO', href: '/dashboard/sponsor/todo' },
-  { label: 'Settings', href: '/dashboard/settings' },
-  {
-    label: 'Legacy Views',
-    href: '/dashboard/forge',
-    children: [
-      { label: 'Forge', href: '/dashboard/forge' },
-      { label: 'Axiom', href: '/dashboard/axiom' },
-      { label: 'Learnings', href: '/dashboard/learnings' },
-      { label: 'Portfolio', href: '/dashboard/portfolio' },
-    ],
-  },
+export const TOP_BAR_TABS: NavItem[] = [
+  { label: 'Mission Control', href: '/dashboard/mission-control' },
+  { label: 'Finance', href: '/dashboard/departments/finance' },
+  { label: 'Operations', href: '/dashboard/departments/operations' },
+  { label: 'Organization', href: '/dashboard/departments/infrastructure' },
+  { label: 'Resources', href: '/dashboard/departments/knowledge' },
+  { label: 'Marketing', href: '/dashboard/departments/marketing' },
 ];
+
+// ── Product definitions for sidebar ──────────────────────────────────────
+
+export interface ProductDef {
+  slug: string;
+  name: string;
+  href: string;
+  status: 'LIVE' | 'PAPER' | 'SETUP' | 'SPEC' | 'BUILD';
+  stage: string;
+}
+
+export const ALL_PRODUCTS: ProductDef[] = [
+  { slug: 'radar', name: 'RADAR', href: '/dashboard/radar', status: 'LIVE', stage: 'Paper trading' },
+  { slug: 'grovakid', name: 'GrovaKid', href: '/dashboard/products/grovakid', status: 'LIVE', stage: 'S4 BUILD' },
+  { slug: 'fatfrogmodels', name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', status: 'LIVE', stage: 'Launched' },
+  { slug: 'fairconnect', name: 'FairConnect', href: '/dashboard/products/fairconnect', status: 'SETUP', stage: 'S2 DEFINE' },
+  { slug: 'keeptrack', name: 'KeepTrack', href: '/dashboard/products/keeptrack', status: 'SETUP', stage: 'S2 DEFINE' },
+  { slug: 'subcheck', name: 'SubCheck', href: '/dashboard/products/subcheck', status: 'SETUP', stage: 'S1 DONE' },
+  { slug: 'iris-studio', name: 'iris-studio', href: '/dashboard/products/iris-studio', status: 'SPEC', stage: 'Pre-build' },
+  { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'BUILD', stage: 'Active' },
+];
+
+export function getLiveProducts(): ProductDef[] {
+  return ALL_PRODUCTS.filter(p => p.status === 'LIVE' || p.status === 'PAPER');
+}
+
+export function getDevProducts(): ProductDef[] {
+  return ALL_PRODUCTS.filter(p => p.status !== 'LIVE' && p.status !== 'PAPER');
+}
+
