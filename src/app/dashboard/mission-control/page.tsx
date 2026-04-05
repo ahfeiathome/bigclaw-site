@@ -101,11 +101,11 @@ export default async function MissionControlPage() {
         <KpiCard label="Agents" value={`${activeAgents}/${totalAgents}`} semantic={agentSemantic} delta={`${activeAgents} active`} />
       </div>
 
-      {/* ── ROW 2: Action Items ─────────────────────────────────── */}
-      <ActionItems todoMd={todoMd} />
-
-      {/* ── ROW 3: Command Center (collapsed) ───────────────────── */}
+      {/* ── ROW 2: Command Center (collapsed) ───────────────────── */}
       <MissionCommandCenter radarReserve={radarReserve} hasLive={hasLive} defaultCollapsed={true} />
+
+      {/* ── ROW 3: Action Items ─────────────────────────────────── */}
+      <ActionItems todoMd={todoMd} />
     </div>
   );
 }
