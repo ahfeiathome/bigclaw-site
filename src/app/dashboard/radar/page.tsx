@@ -8,8 +8,6 @@ import { MetricCard, HealthRow, SignalPill, SectionCard, StatusDot } from '@/com
 import { ViewSource } from '@/components/view-source';
 import { RechartsEquityChart } from '@/components/radar-charts';
 import { CollapsibleSection } from '@/components/collapsible-section';
-import { RadarControlPanel } from '@/components/radar-control-panel';
-import { RadarKillSwitch } from '@/components/radar-kill-switch';
 
 interface TableRow {
   cells: string[];
@@ -337,20 +335,6 @@ export default async function RadarPage() {
           </div>
         </SectionCard>
       </div>
-
-      {/* ── ZONE 4.5: Control Panel (Mode Grid) ──────────────────── */}
-
-      <SectionCard title="Control Panel — Trading Mode" className="mb-6">
-        <RadarControlPanel hasLive={hasLive} />
-      </SectionCard>
-
-      {/* ── ZONE 4.6: Live Safeguards + Kill Switch ────────────────── */}
-
-      {hasLive && (
-        <SectionCard title="Live Account Safeguards" className="mb-6">
-          <RadarKillSwitch hasLive={hasLive} />
-        </SectionCard>
-      )}
 
       {/* ── ZONE 5: Equity Curve ───────────────────────────────────── */}
 
