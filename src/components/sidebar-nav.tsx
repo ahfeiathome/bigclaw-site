@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -68,7 +69,41 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
+const PRODUCT_ROUTES: Record<string, { label: string; href: string }> = {
+  grovakid: { label: 'GrovaKid', href: '/dashboard/grovakid' },
+  radar: { label: 'RADAR', href: '/dashboard/radar' },
+  fairconnect: { label: 'Foundry', href: '/dashboard/foundry' },
+  keeptrack: { label: 'Foundry', href: '/dashboard/foundry' },
+  subcheck: { label: 'Foundry', href: '/dashboard/foundry' },
+  'iris-studio': { label: 'E-Commerce', href: '/dashboard/ecommerce' },
+  fatfrogmodels: { label: 'E-Commerce', href: '/dashboard/ecommerce' },
+};
+
+function useUserRole(): { role: string; products: string[] } {
+  const [info, setInfo] = useState<{ role: string; products: string[] }>({ role: 'admin', products: [] });
+  useEffect(() => {
+    try {
+      const cookie = document.cookie.split(';').find(c => c.trim().startsWith('bigclaw-user='));
+      if (cookie) {
+        const val = JSON.parse(decodeURIComponent(cookie.split('=').slice(1).join('=')));
+        setInfo({ role: val.role || 'admin', products: val.products || [] });
+      }
+    } catch { /* fallback to admin */ }
+  }, []);
+  return info;
+}
+
 export function SidebarNav() {
+  const { role, products } = useUserRole();
+  const isAdmin = role === 'admin';
+  const isInvestor = role === 'investor';
+  const isProductViewer = role === 'product-viewer';
+
+  // Product-viewer: compute their allowed links
+  const viewerLinks = isProductViewer
+    ? [...new Map(products.map(p => PRODUCT_ROUTES[p]).filter(Boolean).map(r => [r.href, r])).values()]
+    : [];
+
   return (
     <nav className="w-56 h-full shrink-0 border-r border-border/50 bg-card overflow-y-auto py-2 px-2">
       {/* Brand */}
@@ -81,41 +116,51 @@ export function SidebarNav() {
         <span>BigClaw AI</span>
       </Link>
 
-      {/* Mission Control */}
-      <SectionLink label="Mission Control" href="/dashboard/mission-control" />
+      {/* Product-viewer: only their product links */}
+      {isProductViewer && (
+        <div className="space-y-0.5">
+          {viewerLinks.map(link => (
+            <SectionLink key={link.href} label={link.label} href={link.href} />
+          ))}
+        </div>
+      )}
 
-      {/* Finance */}
-      <SectionLink label="Finance" href="/dashboard/finance" />
+      {/* Investor: Mission Control + Finance only */}
+      {isInvestor && (
+        <>
+          <SectionLink label="Mission Control" href="/dashboard/mission-control" />
+          <SectionLink label="Finance" href="/dashboard/finance" />
+        </>
+      )}
 
-      {/* Products */}
-      <SectionHeader label="Products" />
-      <div className="space-y-0.5">
-        <SubLink label="Products" href="/dashboard/products" />
-        <SubLink label="Foundry" href="/dashboard/foundry" />
-        <SubLink label="RADAR" href="/dashboard/radar" />
-      </div>
+      {/* Admin: full navigation */}
+      {isAdmin && (
+        <>
+          <SectionLink label="Mission Control" href="/dashboard/mission-control" />
+          <SectionLink label="Finance" href="/dashboard/finance" />
 
-      {/* Pipeline */}
-      <SectionHeader label="Pipeline" />
-      <div className="space-y-0.5">
-        <SubLink label="PDLC" href="/dashboard/pdlc" />
-        <SubLink label="SDLC" href="/dashboard/sdlc/process" />
-        <DeepLink label="Process" href="/dashboard/sdlc/process" />
-        <DeepLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
-        <DeepLink label="Violations" href="/dashboard/sdlc/violations" />
-        <DeepLink label="Bug RCA" href="/dashboard/sdlc/rca" />
-        <DeepLink label="Lessons" href="/dashboard/sdlc/lessons" />
-        <DeepLink label="Actions" href="/dashboard/sdlc/actions" />
-        <SubLink label="Team" href="/dashboard/organization/team" />
-      </div>
+          <SectionHeader label="Products" />
+          <div className="space-y-0.5">
+            <SubLink label="Products" href="/dashboard/products" />
+            <SubLink label="Product Health" href="/dashboard/products/health" />
+            <SubLink label="Foundry" href="/dashboard/foundry" />
+            <SubLink label="RADAR" href="/dashboard/radar" />
+          </div>
 
-      {/* Resources */}
-      <SectionLink label="Resources" href="/dashboard/resources" />
+          <SectionHeader label="Pipeline" />
+          <div className="space-y-0.5">
+            <SubLink label="PDLC" href="/dashboard/pdlc" />
+            <SubLink label="SDLC" href="/dashboard/sdlc/process" />
+            <SubLink label="Team" href="/dashboard/organization/team" />
+          </div>
 
-      {/* Settings (admin) */}
-      <div className="mt-auto pt-4 border-t border-border/30 mt-6">
-        <SectionLink label="Settings" href="/dashboard/settings/users" />
-      </div>
+          <SectionLink label="Resources" href="/dashboard/resources" />
+
+          <div className="mt-auto pt-4 border-t border-border/30 mt-6">
+            <SectionLink label="Settings" href="/dashboard/settings/users" />
+          </div>
+        </>
+      )}
     </nav>
   );
 }

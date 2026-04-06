@@ -28,7 +28,8 @@ function LoginForm() {
     });
 
     if (res.ok) {
-      const from = searchParams.get('from') || '/dashboard';
+      const data = await res.json();
+      const from = searchParams.get('from') || data.redirect || '/dashboard';
       router.push(from);
       router.refresh();
     } else {
