@@ -63,7 +63,7 @@ test.describe('Dashboard pages load with data', () => {
   })
 
   test('finance page loads', async ({ page }) => {
-    await page.goto('/dashboard/departments/finance')
+    await page.goto('/dashboard/finance')
     await page.waitForLoadState('networkidle')
     await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible({ timeout: 10000 })
   })

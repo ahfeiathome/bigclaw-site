@@ -21,8 +21,9 @@ function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           </svg>
         </button>
 
-        <Link href="/dashboard" className="no-underline shrink-0" style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>
-          🦀 BigClaw AI
+        <Link href="/dashboard" className="no-underline shrink-0 flex items-center gap-1.5" style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>
+          <img src="/images/bigclaw-logo-transparent.jpeg" alt="" className="h-6 w-auto" style={{ mixBlendMode: 'luminosity' }} />
+          BigClaw AI
         </Link>
 
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
@@ -54,6 +55,22 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Watermark */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          backgroundImage: 'url(/images/bigclaw-logo-transparent.jpeg)',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
+          backgroundSize: '480px auto',
+          opacity: 0.06,
+          mixBlendMode: 'luminosity',
+        }}
+      />
       <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 overflow-hidden relative">
         {/* Backdrop — mobile only */}
