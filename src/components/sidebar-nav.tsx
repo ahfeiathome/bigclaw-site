@@ -77,7 +77,7 @@ const COMPANIES: Company[] = [
       { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
       { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
       { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
-      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex', shelved: true },
+      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
     ],
   },
   {
