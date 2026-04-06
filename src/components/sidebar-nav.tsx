@@ -65,6 +65,9 @@ export function SidebarNav() {
       {/* Mission Control */}
       <SectionLink label="Mission Control" href="/dashboard/mission-control" />
 
+      {/* Finance */}
+      <SectionLink label="Finance" href="/dashboard/finance" />
+
       {/* Business */}
       <SectionLink label="Business" href="/dashboard/business" />
 
@@ -77,23 +80,11 @@ export function SidebarNav() {
         <SubLink label="Foundry" href="/dashboard/foundry" />
       </div>
 
-      {/* SDLC */}
-      <SectionHeader label="SDLC" />
-      <div className="space-y-0.5">
-        <SubLink label="Process" href="/dashboard/sdlc/process" />
-        <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
-        <SubLink label="Violations" href="/dashboard/sdlc/violations" />
-        <SubLink label="Bug RCA" href="/dashboard/sdlc/rca" />
-        <SubLink label="Lessons" href="/dashboard/sdlc/lessons" />
-        <SubLink label="Actions" href="/dashboard/sdlc/actions" />
-      </div>
-
-      {/* Finance */}
-      <SectionLink label="Finance" href="/dashboard/finance" />
-
       {/* Organization */}
-      <div className="mt-2">
-        <SectionLink label="Organization" href="/dashboard/organization" />
+      <SectionHeader label="Organization" />
+      <div className="space-y-0.5">
+        <SubLink label="Team" href="/dashboard/organization/team" />
+        <SubLink label="SDLC" href="/dashboard/sdlc/process" />
       </div>
 
       {/* Resources */}
