@@ -222,41 +222,17 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
           <span className="text-xs font-semibold text-muted-foreground uppercase">User Management</span>
           <span className="text-xs text-muted-foreground">{userMgmtOpen ? '▼' : '▶'}</span>
         </button>
-        {userMgmtOpen && accessConfig && (
-          <div className="px-4 pb-4 space-y-3">
-            <div className="space-y-2">
-              {Object.entries(accessConfig.users).map(([email, user]) => (
-                <div key={email} className="flex items-center gap-3 text-sm py-1.5 border-b border-border last:border-0">
-                  <StatusDot status="good" size="sm" />
-                  <span className="text-foreground font-mono text-xs">{email}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono ml-auto">{user.role}</span>
-                  {user.products && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {user.products.join(', ')}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="pt-2 border-t border-border">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Roles</div>
-              <div className="space-y-2">
-                {Object.entries(accessConfig.roles).map(([name, role]) => (
-                  <div key={name} className="flex items-center gap-3 text-xs">
-                    <span className="font-bold text-foreground">{name}</span>
-                    <span className={`font-mono ${role.controls ? 'text-green-400' : 'text-red-400'}`}>
-                      controls: {role.controls ? 'yes' : 'no'}
-                    </span>
-                    <span className={`font-mono ${role.internal ? 'text-green-400' : 'text-red-400'}`}>
-                      internal: {role.internal ? 'yes' : 'no'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-foreground">
-              Edit <code className="text-primary">config/access.json</code> to add/remove users or change roles.
+        {userMgmtOpen && (
+          <div className="px-4 pb-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              Add, edit, and remove dashboard users with role-based access control.
             </p>
+            <a
+              href="/dashboard/settings/users"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors no-underline"
+            >
+              Open User Management →
+            </a>
           </div>
         )}
       </div>
