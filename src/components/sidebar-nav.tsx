@@ -111,6 +111,11 @@ export function SidebarNav() {
 
       {/* Resources */}
       <SectionLink label="Resources" href="/dashboard/resources" />
+
+      {/* Settings (admin) */}
+      <div className="mt-auto pt-4 border-t border-border/30 mt-6">
+        <SectionLink label="Settings" href="/dashboard/settings/users" />
+      </div>
     </nav>
   );
 }
