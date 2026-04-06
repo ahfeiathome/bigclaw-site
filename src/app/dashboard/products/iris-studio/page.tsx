@@ -1,29 +1,15 @@
-import { ProductPageTemplate } from '@/components/product-page-template';
+import { ProductPage } from '@/components/product-page';
 
-export default function IrisStudioPage() {
-  return (
-    <ProductPageTemplate
-      name="iris-studio"
-      description="AI art studio & marketplace — Stripe payments"
-      kpis={{
-        pdlcStage: 'Pre-build',
-        company: 'Axiom',
-        companyColor: 'blue',
-        revenueModel: 'Stripe',
-        openIssues: { p0: 0, p1: 0, p2: 0, total: 0 },
-      }}
-      productStatus={{
-        launchChecklist: [
-          { item: 'Stripe connected', done: false },
-          { item: 'DNS pointed', done: false },
-          { item: 'Product catalog', done: false },
-          { item: 'Payment flow tested', done: false },
-          { item: 'Landing page live', done: false },
-        ],
-      }}
-      projectStatus={{
-        issues: [],
-      }}
-    />
-  );
+export default async function IrisStudioProductPage() {
+  return ProductPage({
+    name: 'iris-studio',
+    company: 'Axiom',
+    pdlcStage: 'S4 BUILD',
+    status: 'active',
+    previewUrl: 'https://iris-studio.vercel.app',
+    description: 'Iris Chiu art portfolio and shop. Migrated from Wix.',
+    nextGate: 'S6 PILOT — DNS cutover + Stripe keys',
+    blocker: 'Stripe keys (💳) + DNS cutover (💳)',
+    revenueModel: 'Stripe per-txn',
+  });
 }

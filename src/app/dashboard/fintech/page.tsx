@@ -1,2 +1,2 @@
-// FinTech vertical = RADAR
-export { default } from '@/app/dashboard/radar/page';
+import { redirect } from 'next/navigation';
+export default function Page() { redirect('/dashboard/products/radar'); }
