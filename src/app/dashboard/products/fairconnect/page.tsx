@@ -6,6 +6,7 @@ export default async function FairConnectProductPage() {
     company: 'Axiom',
     pdlcStage: 'S2 DEFINE',
     status: 'active',
+    previewUrl: 'https://fairconnect.vercel.app',
     repoSlug: 'fairconnect',
     description: "Maker's CRM for solo artists and craft fair vendors.",
     nextGate: 'S3 PRD — Code writes after MRD approved',
