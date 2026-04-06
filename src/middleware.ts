@@ -48,13 +48,15 @@ export function middleware(request: NextRequest) {
       if (role === 'product-viewer') {
         const allowedProducts: string[] = user.products || [];
         const PRODUCT_ROUTES: Record<string, string> = {
-          grovakid: '/dashboard/grovakid',
-          radar: '/dashboard/radar',
-          fairconnect: '/dashboard/foundry',
-          keeptrack: '/dashboard/foundry',
-          subcheck: '/dashboard/foundry',
-          'iris-studio': '/dashboard/ecommerce',
-          fatfrogmodels: '/dashboard/ecommerce',
+          grovakid: '/dashboard/products/grovakid',
+          rehearsal: '/dashboard/products/rehearsal',
+          radar: '/dashboard/products/radar',
+          fairconnect: '/dashboard/products/fairconnect',
+          keeptrack: '/dashboard/products/keeptrack',
+          subcheck: '/dashboard/products/subcheck',
+          cortex: '/dashboard/products/cortex',
+          'iris-studio': '/dashboard/products/iris-studio',
+          fatfrogmodels: '/dashboard/products/fatfrogmodels',
         };
         const allowed = allowedProducts.map(p => PRODUCT_ROUTES[p]).filter(Boolean);
         const ALWAYS_ALLOWED = ['/dashboard/login'];

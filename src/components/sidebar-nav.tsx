@@ -42,25 +42,6 @@ function SubLink({ label, href }: { label: string; href: string }) {
   );
 }
 
-function DeepLink({ label, href }: { label: string; href: string }) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-
-  return (
-    <Link
-      href={href}
-      className={`block pl-10 pr-3 py-0.5 rounded-md no-underline transition-all duration-150 ${
-        isActive
-          ? 'bg-primary/8 text-primary font-medium'
-          : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/50'
-      }`}
-      style={{ fontSize: '12px', fontWeight: 400 }}
-    >
-      {label}
-    </Link>
-  );
-}
-
 function SectionHeader({ label }: { label: string }) {
   return (
     <div className="px-3 pt-5 pb-1.5" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.35)' }}>
@@ -69,15 +50,76 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-const PRODUCT_ROUTES: Record<string, { label: string; href: string }> = {
-  grovakid: { label: 'GrovaKid', href: '/dashboard/grovakid' },
-  radar: { label: 'RADAR', href: '/dashboard/radar' },
-  fairconnect: { label: 'Foundry', href: '/dashboard/foundry' },
-  keeptrack: { label: 'Foundry', href: '/dashboard/foundry' },
-  subcheck: { label: 'Foundry', href: '/dashboard/foundry' },
-  'iris-studio': { label: 'E-Commerce', href: '/dashboard/ecommerce' },
-  fatfrogmodels: { label: 'E-Commerce', href: '/dashboard/ecommerce' },
-};
+// ── Company data (source of truth: REGISTRY.md) ──────────────────────
+
+interface Product { name: string; href: string; slug: string }
+interface Company { id: string; name: string; sector: string; color: string; products: Product[] }
+
+const COMPANIES: Company[] = [
+  {
+    id: 'forge',
+    name: 'Forge',
+    sector: 'Education & Career',
+    color: 'text-green-400',
+    products: [
+      { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
+      { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
+    ],
+  },
+  {
+    id: 'axiom',
+    name: 'Axiom',
+    sector: 'Consumer Apps & Commerce',
+    color: 'text-blue-400',
+    products: [
+      { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
+      { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
+      { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
+      { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
+      { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
+      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
+    ],
+  },
+  {
+    id: 'nexus',
+    name: 'Nexus',
+    sector: 'FinTech & Operations',
+    color: 'text-purple-400',
+    products: [
+      { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
+    ],
+  },
+];
+
+// ── Company block ────────────────────────────────────────────────────
+
+function CompanyBlock({ company, isAdmin, userProducts }: { company: Company; isAdmin: boolean; userProducts: string[] }) {
+  const visibleProducts = isAdmin
+    ? company.products
+    : company.products.filter(p => userProducts.includes(p.slug));
+
+  if (!isAdmin && visibleProducts.length === 0) return null;
+
+  return (
+    <div className="mb-1">
+      <div className="px-3 pt-4 pb-1 flex items-baseline gap-2">
+        <span className={`text-[11px] font-bold tracking-wider uppercase ${company.color}`}>
+          {company.name}
+        </span>
+        <span className="text-[10px] text-muted-foreground/60 truncate">
+          {company.sector}
+        </span>
+      </div>
+      <div className="space-y-0.5">
+        {visibleProducts.map(product => (
+          <SubLink key={product.href} label={product.name} href={product.href} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Role hook ────────────────────────────────────────────────────────
 
 function useUserRole(): { role: string; products: string[] } {
   const [info, setInfo] = useState<{ role: string; products: string[] }>({ role: 'admin', products: [] });
@@ -93,16 +135,13 @@ function useUserRole(): { role: string; products: string[] } {
   return info;
 }
 
+// ── Sidebar ──────────────────────────────────────────────────────────
+
 export function SidebarNav() {
   const { role, products } = useUserRole();
   const isAdmin = role === 'admin';
   const isInvestor = role === 'investor';
   const isProductViewer = role === 'product-viewer';
-
-  // Product-viewer: compute their allowed links
-  const viewerLinks = isProductViewer
-    ? [...new Map(products.map(p => PRODUCT_ROUTES[p]).filter(Boolean).map(r => [r.href, r])).values()]
-    : [];
 
   return (
     <nav className="w-56 h-full shrink-0 border-r border-border/50 bg-card overflow-y-auto py-2 px-2 flex flex-col">
@@ -122,16 +161,7 @@ export function SidebarNav() {
         </span>
       </Link>
 
-      {/* Product-viewer: only their product links */}
-      {isProductViewer && (
-        <div className="space-y-0.5">
-          {viewerLinks.map(link => (
-            <SectionLink key={link.href} label={link.label} href={link.href} />
-          ))}
-        </div>
-      )}
-
-      {/* Investor: Mission Control + Finance only */}
+      {/* ── Investor view ─────────────────────────────────── */}
       {isInvestor && (
         <>
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
@@ -139,30 +169,42 @@ export function SidebarNav() {
         </>
       )}
 
-      {/* Admin: full navigation */}
+      {/* ── Product-viewer view ───────────────────────────── */}
+      {isProductViewer && (
+        <>
+          {COMPANIES.map(company => (
+            <CompanyBlock key={company.id} company={company} isAdmin={false} userProducts={products} />
+          ))}
+        </>
+      )}
+
+      {/* ── Admin view ────────────────────────────────────── */}
       {isAdmin && (
         <>
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
           <SectionLink label="Finance" href="/dashboard/finance" />
 
-          <SectionHeader label="Products" />
-          <div className="space-y-0.5">
-            <SubLink label="Products" href="/dashboard/products" />
-            <SubLink label="Product Health" href="/dashboard/products/health" />
-            <SubLink label="Foundry" href="/dashboard/foundry" />
-            <SubLink label="RADAR" href="/dashboard/radar" />
+          {/* Divider + All Products */}
+          <div className="border-t border-border/30 mt-3 pt-1">
+            <SubLink label="All Products" href="/dashboard/products" />
           </div>
 
+          {/* Company blocks */}
+          {COMPANIES.map(company => (
+            <CompanyBlock key={company.id} company={company} isAdmin={true} userProducts={[]} />
+          ))}
+
+          {/* Pipeline */}
           <SectionHeader label="Pipeline" />
           <div className="space-y-0.5">
             <SubLink label="PDLC" href="/dashboard/pdlc" />
             <SubLink label="SDLC" href="/dashboard/sdlc/process" />
-            <SubLink label="Team" href="/dashboard/organization/team" />
+            <SubLink label="Product Health" href="/dashboard/products/health" />
           </div>
 
           <SectionLink label="Resources" href="/dashboard/resources" />
 
-          <div className="pt-4 border-t border-border/30 mt-6">
+          <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
           </div>
         </>
