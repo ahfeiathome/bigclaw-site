@@ -55,7 +55,7 @@ test.describe('Visual verification — dashboard', () => {
   })
 
   test('RADAR page loads with trading data', async ({ page }) => {
-    await page.goto('/dashboard/radar')
+    await page.goto('/dashboard/products/radar')
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible({ timeout: 10000 })

@@ -77,10 +77,10 @@ export default async function ProductsPage() {
     .slice(0, 15);
 
   return (
-    <div>
+    <div className="-mx-4 sm:-mx-6 px-4 sm:px-6" style={{ maxWidth: 'none' }}>
       <div className="mb-6 animate-fade-in">
-        <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Products</h1>
-        <p className="text-sm text-muted-foreground mt-1">All products across Forge, Axiom, and OpenClaw</p>
+        <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Product Lineup</h1>
+        <p className="text-sm text-muted-foreground mt-1">All products across Forge, Axiom, and Nexus</p>
       </div>
 
       {/* ── Active Products (from PDLC registry) ───────────── */}

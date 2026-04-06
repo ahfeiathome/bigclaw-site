@@ -58,7 +58,7 @@ export default async function ProductHealthPage() {
 
   return (
     <div>
-      <h1 className="mb-1" style={{ fontSize: '28px', fontWeight: 700 }}>Product Health</h1>
+      <h1 className="mb-1" style={{ fontSize: '28px', fontWeight: 700 }}>Product Gates</h1>
       <p className="text-sm text-muted-foreground mb-6">Gates, violations, bugs, and improvement actions across all products</p>
 
       {/* A. Gates Matrix */}

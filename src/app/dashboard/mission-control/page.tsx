@@ -1,4 +1,5 @@
-import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { SectionCard, SignalPill } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
 import { ActionItems } from '@/components/action-items';
@@ -33,14 +34,23 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd] = await Promise.all([
+  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
     fetchHealth(),
     fetchMichaelTodo(),
     fetchBandwidth(),
     fetchRadarDashboard(),
+    fetchPDLCRegistry(),
   ]);
+
+  // PDLC
+  const pdlcRows = pdlcMd ? (() => {
+    const section = pdlcMd.split('## Active Products')[1]?.split('##')[0] || '';
+    const lines = section.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/));
+    if (lines.length <= 1) return [];
+    return lines.slice(1).map(line => line.split('|').map(c => c.trim()).filter(Boolean));
+  })() : [];
 
   // Finance
   const financial = content ? parseMarkdownTable(extractSection(content, 'Financial Summary')) : [];
@@ -106,6 +116,47 @@ export default async function MissionControlPage() {
 
       {/* ── ROW 3: Action Items ─────────────────────────────────── */}
       <ActionItems todoMd={todoMd} />
+
+      {/* ── ROW 4: PDLC Summary ────────────────────────────────── */}
+      {pdlcRows.length > 0 && (
+        <SectionCard title={`Product Pipeline (${pdlcRows.length})`} className="mt-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Product</th>
+                  <th className="text-left py-2 px-2">Company</th>
+                  <th className="text-left py-2 px-2">Stage</th>
+                  <th className="text-left py-2 px-2">Next Gate</th>
+                  <th className="text-left py-2 pl-2 pr-3">Blocker</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pdlcRows.map((cells, i) => {
+                  const stage = cells[2] || '';
+                  const blocker = cells[5] || '';
+                  const hasGate = blocker.includes('💳') || blocker.includes('⚖️') || blocker.includes('🧠');
+                  const tone = stage.includes('S1') || stage.includes('S2') || stage.includes('S3') ? 'info' as const
+                    : stage.includes('S4') || stage.includes('S5') ? 'warning' as const
+                    : 'success' as const;
+                  const companyColor = cells[1]?.includes('Forge') ? 'bg-green-500/10 text-green-400'
+                    : cells[1]?.includes('Nexus') || cells[1]?.includes('OpenClaw') ? 'bg-purple-500/10 text-purple-400'
+                    : 'bg-blue-500/10 text-blue-400';
+                  return (
+                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2 text-foreground font-medium">{cells[0]}</td>
+                      <td className="py-2 px-2"><span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${companyColor}`}>{cells[1]}</span></td>
+                      <td className="py-2 px-2"><SignalPill label={stage} tone={tone} /></td>
+                      <td className="py-2 px-2 text-muted-foreground">{cells[4]}</td>
+                      <td className={`py-2 pl-2 pr-3 ${hasGate ? 'text-amber-400' : 'text-muted-foreground'}`}>{blocker || 'None'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
     </div>
   );
 }
