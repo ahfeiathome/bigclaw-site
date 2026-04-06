@@ -113,6 +113,13 @@ export async function fetchLessonsLearned(): Promise<string | null> {
 }
 
 export async function fetchPDLCRegistry(): Promise<string | null> {
+  // Read from committed data file (synced from bigclaw-ai/knowledge/PDLC_REGISTRY.md)
+  try {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const filePath = path.join(process.cwd(), 'data', 'pdlcRegistry.md');
+    if (fs.existsSync(filePath)) return fs.readFileSync(filePath, 'utf8');
+  } catch { /* fallback to API */ }
   return fetchRepoFile('bigclaw-ai', 'knowledge/PDLC_REGISTRY.md');
 }
 
