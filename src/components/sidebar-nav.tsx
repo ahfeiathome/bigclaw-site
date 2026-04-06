@@ -41,6 +41,25 @@ function SubLink({ label, href }: { label: string; href: string }) {
   );
 }
 
+function DeepLink({ label, href }: { label: string; href: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      href={href}
+      className={`block pl-10 pr-3 py-0.5 rounded-md no-underline transition-all duration-150 ${
+        isActive
+          ? 'bg-primary/8 text-primary font-medium'
+          : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/50'
+      }`}
+      style={{ fontSize: '12px', fontWeight: 400 }}
+    >
+      {label}
+    </Link>
+  );
+}
+
 function SectionHeader({ label }: { label: string }) {
   return (
     <div className="px-3 pt-5 pb-1.5" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.35)' }}>
@@ -85,6 +104,12 @@ export function SidebarNav() {
       <div className="space-y-0.5">
         <SubLink label="Team" href="/dashboard/organization/team" />
         <SubLink label="SDLC" href="/dashboard/sdlc/process" />
+        <DeepLink label="Process" href="/dashboard/sdlc/process" />
+        <DeepLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
+        <DeepLink label="Violations" href="/dashboard/sdlc/violations" />
+        <DeepLink label="Bug RCA" href="/dashboard/sdlc/rca" />
+        <DeepLink label="Lessons" href="/dashboard/sdlc/lessons" />
+        <DeepLink label="Actions" href="/dashboard/sdlc/actions" />
       </div>
 
       {/* Resources */}
