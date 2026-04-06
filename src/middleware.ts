@@ -44,12 +44,23 @@ export function middleware(request: NextRequest) {
         return new NextResponse('Forbidden', { status: 403 });
       }
 
-      // Product-viewer: check product access
-      if (role === 'product-viewer' && request.nextUrl.pathname.startsWith('/dashboard/products/')) {
-        const product = request.nextUrl.pathname.replace('/dashboard/products/', '').split('/')[0];
+      // Product-viewer: only allowed product routes
+      if (role === 'product-viewer') {
         const allowedProducts: string[] = user.products || [];
-        if (allowedProducts.length > 0 && !allowedProducts.includes(product)) {
-          return new NextResponse('Forbidden', { status: 403 });
+        const PRODUCT_ROUTES: Record<string, string> = {
+          grovakid: '/dashboard/grovakid',
+          radar: '/dashboard/radar',
+          fairconnect: '/dashboard/foundry',
+          keeptrack: '/dashboard/foundry',
+          subcheck: '/dashboard/foundry',
+          'iris-studio': '/dashboard/ecommerce',
+          fatfrogmodels: '/dashboard/ecommerce',
+        };
+        const allowed = allowedProducts.map(p => PRODUCT_ROUTES[p]).filter(Boolean);
+        const ALWAYS_ALLOWED = ['/dashboard/login'];
+        const isAllowed = [...ALWAYS_ALLOWED, ...allowed].some(p => request.nextUrl.pathname.startsWith(p));
+        if (!isAllowed) {
+          return NextResponse.redirect(new URL(allowed[0] || '/dashboard/login', request.url));
         }
       }
 

@@ -16,7 +16,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email not authorized' }, { status: 401 });
     }
 
-    const response = NextResponse.json({ ok: true, role: access.role });
+    // Compute role-based redirect
+    let redirectTo = '/dashboard';
+    if (access.role === 'product-viewer' && access.products?.length) {
+      const PRODUCT_ROUTES: Record<string, string> = {
+        grovakid: '/dashboard/grovakid',
+        radar: '/dashboard/radar',
+        fairconnect: '/dashboard/foundry',
+      };
+      redirectTo = PRODUCT_ROUTES[access.products[0]] || '/dashboard';
+    } else if (access.role === 'investor') {
+      redirectTo = '/dashboard/mission-control';
+    }
+
+    const response = NextResponse.json({ ok: true, role: access.role, redirect: redirectTo });
     response.cookies.set('bigclaw-auth', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -24,7 +37,7 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     });
-    response.cookies.set('bigclaw-user', JSON.stringify({ email: access.email, role: access.role }), {
+    response.cookies.set('bigclaw-user', JSON.stringify({ email: access.email, role: access.role, products: access.products || [] }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
