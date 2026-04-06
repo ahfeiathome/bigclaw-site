@@ -112,6 +112,10 @@ export async function fetchLessonsLearned(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'knowledge/lessons-learned.md');
 }
 
+export async function fetchPDLCRegistry(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/PDLC_REGISTRY.md');
+}
+
 export async function fetchRadarStatus(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
 }
