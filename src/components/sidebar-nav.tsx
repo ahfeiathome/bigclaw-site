@@ -65,6 +65,9 @@ export function SidebarNav() {
       {/* Mission Control */}
       <SectionLink label="Mission Control" href="/dashboard/mission-control" />
 
+      {/* Business */}
+      <SectionLink label="Business" href="/dashboard/business" />
+
       {/* Product — business verticals */}
       <SectionHeader label="Product" />
       <div className="space-y-0.5">
@@ -72,11 +75,6 @@ export function SidebarNav() {
         <SubLink label="FinTech" href="/dashboard/fintech" />
         <SubLink label="E-Commerce" href="/dashboard/ecommerce" />
         <SubLink label="Foundry" href="/dashboard/foundry" />
-      </div>
-
-      {/* Organization */}
-      <div className="mt-2">
-        <SectionLink label="Organization" href="/dashboard/organization" />
       </div>
 
       {/* SDLC */}
@@ -93,8 +91,10 @@ export function SidebarNav() {
       {/* Finance */}
       <SectionLink label="Finance" href="/dashboard/finance" />
 
-      {/* Business */}
-      <SectionLink label="Business" href="/dashboard/business" />
+      {/* Organization */}
+      <div className="mt-2">
+        <SectionLink label="Organization" href="/dashboard/organization" />
+      </div>
 
       {/* Resources */}
       <SectionLink label="Resources" href="/dashboard/resources" />
