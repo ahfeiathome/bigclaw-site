@@ -18,7 +18,6 @@
   },
   "users": {
     "michaelmkliu@gmail.com": { "role": "admin" },
-    "binlam@outlook.com": { "role": "product-viewer", "products": ["grovakid"] },
     "bin.lam@outlook.com": { "role": "product-viewer", "products": ["grovakid"] }
   }
 }
