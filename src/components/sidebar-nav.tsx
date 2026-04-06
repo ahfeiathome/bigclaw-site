@@ -87,22 +87,18 @@ export function SidebarNav() {
       {/* Finance */}
       <SectionLink label="Finance" href="/dashboard/finance" />
 
-      {/* Business */}
-      <SectionLink label="Business" href="/dashboard/business" />
-
-      {/* Product — business verticals */}
-      <SectionHeader label="Product" />
+      {/* Products */}
+      <SectionHeader label="Products" />
       <div className="space-y-0.5">
-        <SubLink label="Education" href="/dashboard/education" />
-        <SubLink label="FinTech" href="/dashboard/fintech" />
-        <SubLink label="E-Commerce" href="/dashboard/ecommerce" />
+        <SubLink label="Products" href="/dashboard/products" />
         <SubLink label="Foundry" href="/dashboard/foundry" />
+        <SubLink label="RADAR" href="/dashboard/radar" />
       </div>
 
-      {/* Organization */}
-      <SectionHeader label="Organization" />
+      {/* Pipeline */}
+      <SectionHeader label="Pipeline" />
       <div className="space-y-0.5">
-        <SubLink label="Team" href="/dashboard/organization/team" />
+        <SubLink label="PDLC" href="/dashboard/pdlc" />
         <SubLink label="SDLC" href="/dashboard/sdlc/process" />
         <DeepLink label="Process" href="/dashboard/sdlc/process" />
         <DeepLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
@@ -110,6 +106,7 @@ export function SidebarNav() {
         <DeepLink label="Bug RCA" href="/dashboard/sdlc/rca" />
         <DeepLink label="Lessons" href="/dashboard/sdlc/lessons" />
         <DeepLink label="Actions" href="/dashboard/sdlc/actions" />
+        <SubLink label="Team" href="/dashboard/organization/team" />
       </div>
 
       {/* Resources */}
