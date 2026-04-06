@@ -186,9 +186,10 @@ export function SidebarNav() {
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
           <SectionLink label="Finance" href="/dashboard/finance" />
 
-          {/* Divider + All Products */}
+          {/* Product Lineup */}
           <div className="border-t border-border/30 mt-3 pt-1">
-            <SubLink label="All Products" href="/dashboard/products" />
+            <SectionLink label="Product Lineup" href="/dashboard/products" />
+            <SubLink label="Product Gates" href="/dashboard/products/health" />
           </div>
 
           {/* Company blocks */}
@@ -196,15 +197,9 @@ export function SidebarNav() {
             <CompanyBlock key={company.id} company={company} isAdmin={true} userProducts={[]} />
           ))}
 
-          {/* Pipeline */}
-          <SectionHeader label="Pipeline" />
-          <div className="space-y-0.5">
-            <SubLink label="PDLC" href="/dashboard/pdlc" />
-            <SubLink label="SDLC" href="/dashboard/sdlc/process" />
-            <SubLink label="Product Health" href="/dashboard/products/health" />
-          </div>
-
-          <SectionLink label="Resources" href="/dashboard/resources" />
+          {/* Knowledge */}
+          <SectionLink label="Knowledge" href="/dashboard/resources" />
+          <SubLink label="SDLC Process" href="/dashboard/sdlc/process" />
 
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />

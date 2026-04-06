@@ -75,7 +75,7 @@ test.describe('Dashboard pages load with data', () => {
   })
 
   test('RADAR page loads', async ({ page }) => {
-    await page.goto('/dashboard/radar')
+    await page.goto('/dashboard/products/radar')
     await page.waitForLoadState('networkidle')
     await expect(page.getByRole('heading', { name: 'RADAR' })).toBeVisible({ timeout: 10000 })
   })
