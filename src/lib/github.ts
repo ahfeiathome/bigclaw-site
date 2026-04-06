@@ -100,6 +100,18 @@ export async function fetchSDLCViolations(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'growth/SDLC_VIOLATIONS.md');
 }
 
+export async function fetchSDLCGatesMatrix(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/SDLC_GATES_MATRIX.md');
+}
+
+export async function fetchLearnings(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'growth/LEARNINGS.md');
+}
+
+export async function fetchLessonsLearned(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/lessons-learned.md');
+}
+
 export async function fetchRadarStatus(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/projects/radar/TRADE_LOG.md');
 }

@@ -79,6 +79,17 @@ export function SidebarNav() {
         <SectionLink label="Organization" href="/dashboard/organization" />
       </div>
 
+      {/* SDLC */}
+      <SectionHeader label="SDLC" />
+      <div className="space-y-0.5">
+        <SubLink label="Process" href="/dashboard/sdlc/process" />
+        <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
+        <SubLink label="Violations" href="/dashboard/sdlc/violations" />
+        <SubLink label="Bug RCA" href="/dashboard/sdlc/rca" />
+        <SubLink label="Lessons" href="/dashboard/sdlc/lessons" />
+        <SubLink label="Actions" href="/dashboard/sdlc/actions" />
+      </div>
+
       {/* Finance */}
       <SectionLink label="Finance" href="/dashboard/finance" />
 
