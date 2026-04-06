@@ -29,7 +29,7 @@ test.describe('Visual verification — dashboard', () => {
   })
 
   test('finance page shows operational costs only', async ({ page }) => {
-    await page.goto('/dashboard/departments/finance')
+    await page.goto('/dashboard/finance')
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('heading', { name: 'Finance' })).toBeVisible({ timeout: 10000 })
