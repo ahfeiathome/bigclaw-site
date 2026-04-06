@@ -50,64 +50,73 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-// ── Company data (source of truth: REGISTRY.md) ──────────────────────
+// ── Sector data (source of truth: REGISTRY.md) ──────────────────────
 
 interface Product { name: string; href: string; slug: string; shelved?: boolean }
-interface Company { id: string; name: string; sector: string; color: string; products: Product[] }
+interface Sector { id: string; name: string; icon: string; products: Product[] }
 
-const COMPANIES: Company[] = [
+const SECTORS: Sector[] = [
   {
-    id: 'forge',
-    name: 'Forge',
-    sector: 'Education & Career',
-    color: 'text-green-400',
+    id: 'education',
+    name: 'Education & Career',
+    icon: '🎓',
     products: [
       { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
       { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
     ],
   },
   {
-    id: 'axiom',
-    name: 'Axiom',
-    sector: 'Consumer Apps & Commerce',
-    color: 'text-blue-400',
+    id: 'commerce',
+    name: 'Commerce',
+    icon: '🛍️',
     products: [
       { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
       { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
+    ],
+  },
+  {
+    id: 'consumer',
+    name: 'Consumer Tools',
+    icon: '📱',
+    products: [
       { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
       { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
       { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
+    ],
+  },
+  {
+    id: 'knowledge',
+    name: 'Knowledge',
+    icon: '🧠',
+    products: [
       { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
     ],
   },
   {
-    id: 'nexus',
-    name: 'Nexus',
-    sector: 'FinTech & Operations',
-    color: 'text-purple-400',
+    id: 'fintech',
+    name: 'FinTech',
+    icon: '📈',
     products: [
       { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
     ],
   },
 ];
 
-// ── Company block ────────────────────────────────────────────────────
+// ── Sector block ─────────────────────────────────────────────────────
 
-function CompanyBlock({ company, isAdmin, userProducts }: { company: Company; isAdmin: boolean; userProducts: string[] }) {
+function SectorBlock({ sector, isAdmin, userProducts }: { sector: Sector; isAdmin: boolean; userProducts: string[] }) {
   const visibleProducts = isAdmin
-    ? company.products
-    : company.products.filter(p => userProducts.includes(p.slug));
+    ? sector.products
+    : sector.products.filter(p => userProducts.includes(p.slug));
 
   if (!isAdmin && visibleProducts.length === 0) return null;
 
   return (
     <div className="mb-1">
-      <div className="px-3 pt-4 pb-1 flex items-baseline gap-2">
-        <span className={`text-[11px] font-bold tracking-wider uppercase ${company.color}`}>
-          {company.name}
-        </span>
-        <span className="text-[10px] text-muted-foreground/60 truncate">
-          {company.sector}
+      <div className="px-3 pt-4 pb-1 flex items-center gap-1.5">
+        <span style={{ fontSize: '11px' }}>{sector.icon}</span>
+        <span className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground/70">
+          {sector.name}
         </span>
       </div>
       <div className="space-y-0.5">
@@ -174,8 +183,8 @@ export function SidebarNav() {
       {/* ── Product-viewer view ───────────────────────────── */}
       {isProductViewer && (
         <>
-          {COMPANIES.map(company => (
-            <CompanyBlock key={company.id} company={company} isAdmin={false} userProducts={products} />
+          {SECTORS.map(sector => (
+            <SectorBlock key={sector.id} sector={sector} isAdmin={false} userProducts={products} />
           ))}
         </>
       )}
@@ -192,9 +201,9 @@ export function SidebarNav() {
             <SubLink label="Product Gates" href="/dashboard/products/health" />
           </div>
 
-          {/* Company blocks */}
-          {COMPANIES.map(company => (
-            <CompanyBlock key={company.id} company={company} isAdmin={true} userProducts={[]} />
+          {/* Sector blocks */}
+          {SECTORS.map(sector => (
+            <SectorBlock key={sector.id} sector={sector} isAdmin={true} userProducts={[]} />
           ))}
 
           {/* Knowledge */}
