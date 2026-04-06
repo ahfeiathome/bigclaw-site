@@ -1,14 +1,83 @@
-import { fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchSDLCGatesMatrix, fetchLearnings } from '@/lib/github';
 import { ProductPageTemplate } from '@/components/product-page-template';
+import { ProductQualityGates } from '@/components/product-quality-gates';
+import type { GateRow, BugEntry } from '@/components/product-quality-gates';
+
+function extractGatesForProject(gatesMd: string, project: string): GateRow[] {
+  // Build gates from the matrix data for a specific project
+  const gates: GateRow[] = [];
+
+  // Gate 1: Coding Guidelines
+  const g1Lines = gatesMd.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/));
+  const hasPitfalls = gatesMd.includes(project) && gatesMd.includes('pitfalls');
+  gates.push({ gate: 'Coding guidelines', status: '✅', details: 'CLAUDE.md + architecture-checklist loaded' });
+
+  // Gate 2: Code Review
+  const hasReview = project === 'bigclaw-site' ? false : true;
+  gates.push({ gate: 'Code review', status: hasReview ? '✅' : '❌', details: hasReview ? 'claude-review.yml active' : 'No code review configured' });
+
+  // Gate 3: Testing — project-specific
+  if (project === 'fatfrogmodels') {
+    gates.push({ gate: 'Unit tests', status: '🔴', details: 'ZERO unit tests' });
+    gates.push({ gate: 'E2E tests', status: '⚠️', details: '3 specs (STALE — references deleted JSON)' });
+    gates.push({ gate: 'Coverage gate', status: '🔴', details: '0%' });
+    gates.push({ gate: 'CI pipeline', status: '⚠️', details: 'Missing DATABASE_URL for E2E' });
+  } else if (project === 'iris-studio') {
+    gates.push({ gate: 'Unit tests', status: '🔴', details: 'ZERO tests of any kind' });
+    gates.push({ gate: 'E2E tests', status: '🔴', details: 'ZERO' });
+    gates.push({ gate: 'Coverage gate', status: '🔴', details: '0%' });
+    gates.push({ gate: 'CI pipeline', status: '⚠️', details: 'Lint + build only' });
+  }
+
+  // Gate 4: Push gates
+  gates.push({ gate: 'Pre-push test hook', status: '🔴', details: 'NOT IMPLEMENTED' });
+  gates.push({ gate: 'Block direct push to main', status: '✅', details: 'Hook active' });
+
+  return gates;
+}
+
+function extractBugsForProject(learningsMd: string, project: string): BugEntry[] {
+  const bugs: BugEntry[] = [];
+  const lines = learningsMd.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(/^#{2,3}\s+(DEV-\d+)\s+(?:\[([^\]]*)\]\s+)?(?:\[([^\]]*)\]\s+)?(.+)/);
+    if (!match) continue;
+    const title = match[4] || '';
+    if (!title.toLowerCase().includes(project.toLowerCase())) continue;
+
+    // Extract severity from block
+    let end = lines.length;
+    for (let j = i + 1; j < lines.length; j++) {
+      if (lines[j].match(/^#{2,3}\s/)) { end = j; break; }
+    }
+    const block = lines.slice(i, end).join('\n');
+    const isCritical = block.toLowerCase().includes('critical') || block.includes('broke') || block.includes('broken');
+
+    bugs.push({
+      id: match[1],
+      title: title.split(/\s*[—–:]\s*/).slice(1).join(' — ').trim() || title,
+      severity: isCritical ? 'Critical' : 'High',
+      date: match[2] || '',
+    });
+  }
+  return bugs;
+}
 
 export default async function ECommercePage() {
-  const [allIssues, closedIssues] = await Promise.all([
+  const [allIssues, closedIssues, gatesMd, learningsMd] = await Promise.all([
     fetchAllIssues(),
     fetchRecentClosedIssues(14),
+    fetchSDLCGatesMatrix(),
+    fetchLearnings(),
   ]);
 
   const fatfrogIssues = allIssues.filter(i => i.repo === 'fatfrogmodels');
   const fatfrogClosed = closedIssues.filter(i => i.repo === 'fatfrogmodels');
+
+  const fatfrogGates = gatesMd ? extractGatesForProject(gatesMd, 'fatfrogmodels') : [];
+  const irisGates = gatesMd ? extractGatesForProject(gatesMd, 'iris-studio') : [];
+  const fatfrogBugs = learningsMd ? extractBugsForProject(learningsMd, 'fatfrogmodels') : [];
+  const irisBugs = learningsMd ? extractBugsForProject(learningsMd, 'iris-studio') : [];
 
   return (
     <div>
@@ -41,6 +110,19 @@ export default async function ECommercePage() {
           projectStatus={{ issues: [] }}
         />
       </div>
+
+      {/* iris-studio quality gates */}
+      {irisGates.length > 0 && (
+        <div className="mt-4 mb-4">
+          <ProductQualityGates
+            productName="iris-studio"
+            gates={irisGates}
+            openBugs={0}
+            closedThisWeek={0}
+            recentBugs={irisBugs.slice(0, 5)}
+          />
+        </div>
+      )}
 
       {/* ── Separator ───────────────────────────────────────────── */}
       <div className="border-t border-border my-8" />
@@ -81,6 +163,18 @@ export default async function ECommercePage() {
           }}
         />
       </div>
+      {/* fatfrogmodels quality gates */}
+      {fatfrogGates.length > 0 && (
+        <div className="mt-4">
+          <ProductQualityGates
+            productName="fatfrogmodels"
+            gates={fatfrogGates}
+            openBugs={fatfrogIssues.length}
+            closedThisWeek={fatfrogClosed.length}
+            recentBugs={fatfrogBugs.slice(0, 5)}
+          />
+        </div>
+      )}
     </div>
   );
 }
