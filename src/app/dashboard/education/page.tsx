@@ -1,2 +1,2 @@
-// Education vertical = GrovaKid
-export { default } from '@/app/dashboard/grovakid/page';
+import { redirect } from 'next/navigation';
+export default function Page() { redirect('/dashboard/products/grovakid'); }

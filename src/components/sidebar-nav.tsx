@@ -52,7 +52,7 @@ function SectionHeader({ label }: { label: string }) {
 
 // ── Company data (source of truth: REGISTRY.md) ──────────────────────
 
-interface Product { name: string; href: string; slug: string }
+interface Product { name: string; href: string; slug: string; shelved?: boolean }
 interface Company { id: string; name: string; sector: string; color: string; products: Product[] }
 
 const COMPANIES: Company[] = [
@@ -77,7 +77,7 @@ const COMPANIES: Company[] = [
       { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
       { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
       { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
-      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
+      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex', shelved: true },
     ],
   },
   {
@@ -112,7 +112,9 @@ function CompanyBlock({ company, isAdmin, userProducts }: { company: Company; is
       </div>
       <div className="space-y-0.5">
         {visibleProducts.map(product => (
-          <SubLink key={product.href} label={product.name} href={product.href} />
+          <div key={product.href} className={product.shelved ? 'opacity-60' : ''}>
+            <SubLink label={product.name} href={product.href} />
+          </div>
         ))}
       </div>
     </div>
