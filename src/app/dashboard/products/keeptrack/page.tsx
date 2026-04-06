@@ -10,5 +10,6 @@ export default async function KeepTrackProductPage() {
     description: 'Warranty and return tracker. Reuses OCR from VAULT.',
     nextGate: 'S3 PRD',
     revenueModel: 'Apple IAP',
+    previewUrl: 'https://keeptrack-two.vercel.app',
   });
 }

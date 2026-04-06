@@ -10,5 +10,6 @@ export default async function FairConnectProductPage() {
     description: "Maker's CRM for solo artists and craft fair vendors.",
     nextGate: 'S3 PRD — Code writes after MRD approved',
     revenueModel: 'Apple IAP',
+    previewUrl: 'https://fairconnect.vercel.app',
   });
 }
