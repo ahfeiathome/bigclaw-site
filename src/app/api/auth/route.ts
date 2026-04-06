@@ -44,6 +44,14 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     });
+    // Non-httpOnly cookie for client-side UI (role filtering in sidebar)
+    response.cookies.set('bigclaw-role', JSON.stringify({ role: access.role, products: access.products || [] }), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
     return response;
   }
 
@@ -59,6 +67,13 @@ export async function POST(request: NextRequest) {
     });
     response.cookies.set('bigclaw-user', JSON.stringify({ email: 'michaelmkliu@gmail.com', role: 'admin' }), {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+    response.cookies.set('bigclaw-role', JSON.stringify({ role: 'admin', products: [] }), {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,

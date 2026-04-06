@@ -83,7 +83,7 @@ function useUserRole(): { role: string; products: string[] } {
   const [info, setInfo] = useState<{ role: string; products: string[] }>({ role: 'admin', products: [] });
   useEffect(() => {
     try {
-      const cookie = document.cookie.split(';').find(c => c.trim().startsWith('bigclaw-user='));
+      const cookie = document.cookie.split(';').find(c => c.trim().startsWith('bigclaw-role='));
       if (cookie) {
         const val = JSON.parse(decodeURIComponent(cookie.split('=').slice(1).join('=')));
         setInfo({ role: val.role || 'admin', products: val.products || [] });
