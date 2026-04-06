@@ -105,15 +105,21 @@ export function SidebarNav() {
     : [];
 
   return (
-    <nav className="w-56 h-full shrink-0 border-r border-border/50 bg-card overflow-y-auto py-2 px-2">
+    <nav className="w-56 h-full shrink-0 border-r border-border/50 bg-card overflow-y-auto py-2 px-2 flex flex-col">
       {/* Brand */}
       <Link
         href="/dashboard/mission-control"
-        className="flex items-center gap-2 px-3 py-3 mb-2 no-underline"
-        style={{ fontSize: '22px', fontWeight: 700, color: 'white' }}
+        className="flex flex-col items-center px-3 py-4 mb-2 no-underline gap-2"
       >
-        <img src="/images/bigclaw-logo-transparent.jpeg" alt="" className="h-8 w-auto rounded" style={{ background: '#1a1f2e' }} />
-        <span>BigClaw AI</span>
+        <img
+          src="/images/bigclaw-logo-transparent.jpeg"
+          alt="BigClaw AI"
+          className="w-full rounded-lg"
+          style={{ maxHeight: '120px', objectFit: 'contain', mixBlendMode: 'luminosity' }}
+        />
+        <span style={{ fontSize: '14px', fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>
+          BigClaw AI
+        </span>
       </Link>
 
       {/* Product-viewer: only their product links */}
@@ -156,11 +162,25 @@ export function SidebarNav() {
 
           <SectionLink label="Resources" href="/dashboard/resources" />
 
-          <div className="mt-auto pt-4 border-t border-border/30 mt-6">
+          <div className="pt-4 border-t border-border/30 mt-6">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
           </div>
         </>
       )}
+
+      {/* Sign out — all roles */}
+      <div className="px-2 pb-4 mt-auto border-t border-border/30 pt-3">
+        <button
+          onClick={async () => {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/dashboard/login';
+          }}
+          className="w-full px-3 py-1.5 rounded-md text-left text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-150 bg-transparent border-none cursor-pointer"
+          style={{ fontSize: '13px' }}
+        >
+          Sign out
+        </button>
+      </div>
     </nav>
   );
 }

@@ -66,8 +66,8 @@ export default function DashboardLayout({
           backgroundImage: 'url(/images/bigclaw-logo-transparent.jpeg)',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
-          backgroundSize: '480px auto',
-          opacity: 0.06,
+          backgroundSize: '70vw auto',
+          opacity: 0.05,
           mixBlendMode: 'luminosity',
         }}
       />
