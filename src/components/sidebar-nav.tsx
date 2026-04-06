@@ -77,7 +77,7 @@ export function SidebarNav() {
         className="flex items-center gap-2 px-3 py-3 mb-2 no-underline"
         style={{ fontSize: '22px', fontWeight: 700, color: 'white' }}
       >
-        <span>🦀</span>
+        <img src="/images/bigclaw-logo-transparent.jpeg" alt="" className="h-8 w-auto" style={{ mixBlendMode: 'luminosity' }} />
         <span>BigClaw AI</span>
       </Link>
 

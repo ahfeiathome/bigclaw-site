@@ -52,7 +52,7 @@ function LoginForm() {
       <div className="relative z-10 w-full max-w-lg px-6 animate-fade-in">
         {/* Brand */}
         <div className="text-center mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="text-5xl mb-4">🦀</div>
+          <img src="/images/bigclaw-logo-transparent.jpeg" alt="BigClaw AI" width={240} className="mx-auto mb-6" style={{ mixBlendMode: 'luminosity' }} />
           <h1 className="text-3xl font-bold text-white tracking-tight">
             BigClaw <span style={{ color: '#F97316' }}>AI</span>
           </h1>
