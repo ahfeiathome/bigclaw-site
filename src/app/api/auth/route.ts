@@ -19,12 +19,7 @@ export async function POST(request: NextRequest) {
     // Compute role-based redirect
     let redirectTo = '/dashboard';
     if (access.role === 'product-viewer' && access.products?.length) {
-      const PRODUCT_ROUTES: Record<string, string> = {
-        grovakid: '/dashboard/grovakid',
-        radar: '/dashboard/radar',
-        fairconnect: '/dashboard/foundry',
-      };
-      redirectTo = PRODUCT_ROUTES[access.products[0]] || '/dashboard';
+      redirectTo = `/dashboard/products/${access.products[0]}`;
     } else if (access.role === 'investor') {
       redirectTo = '/dashboard/mission-control';
     }
