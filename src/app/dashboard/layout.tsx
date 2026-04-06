@@ -22,7 +22,7 @@ function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         </button>
 
         <Link href="/dashboard" className="no-underline shrink-0 flex items-center gap-1.5" style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>
-          <img src="/images/bigclaw-logo-transparent.jpeg" alt="" className="h-6 w-auto" style={{ mixBlendMode: 'luminosity' }} />
+          <img src="/images/bigclaw-logo-transparent.jpeg" alt="" className="h-6 w-auto rounded" style={{ mixBlendMode: 'multiply', filter: 'brightness(1.5)' }} />
           BigClaw AI
         </Link>
 
