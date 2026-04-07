@@ -167,7 +167,7 @@ export function SidebarNav() {
           className="w-full rounded-lg"
           style={{ maxHeight: '120px', objectFit: 'contain', mixBlendMode: 'luminosity' }}
         />
-        <span style={{ fontSize: '14px', fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: '22px', fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>
           BigClaw AI
         </span>
       </Link>
@@ -195,10 +195,12 @@ export function SidebarNav() {
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
           <SectionLink label="Finance" href="/dashboard/finance" />
 
-          {/* Product Lineup */}
+          {/* Product verticals */}
           <div className="border-t border-border/30 mt-3 pt-1">
             <SectionLink label="Product Lineup" href="/dashboard/products" />
             <SubLink label="Product Gates" href="/dashboard/products/health" />
+            <SubLink label="E-Commerce" href="/dashboard/ecommerce" />
+            <SubLink label="Foundry" href="/dashboard/foundry" />
           </div>
 
           {/* Sector blocks */}
