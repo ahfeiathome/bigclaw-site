@@ -1,0 +1,27 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          direct_prompt: |
+            Review this PR for bugs, regressions, and known anti-patterns.
+            This is the BigClaw Dashboard (Next.js App Router).
+            Focus on: markdown parser correctness, data source accuracy vs REGISTRY.md,
+            Vercel serverless constraints (no mutable bundled files),
+            and GET route caching (force-dynamic for mutable data).
