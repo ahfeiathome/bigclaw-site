@@ -1,8 +1,21 @@
 import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
-import { SectionCard, SignalPill } from '@/components/dashboard';
+import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
 import { ActionItems } from '@/components/action-items';
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface PendingGate { product: string; repo: string; branch: string; prUrl: string; previewUrl: string; summary: string; builtAt: string }
+interface ProductGate { product: string; repo: string; protected: boolean }
+
+function readJsonFile<T>(filename: string): T | null {
+  try {
+    const p = path.join(process.cwd(), 'data', filename);
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch { return null; }
+}
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -43,6 +56,12 @@ export default async function MissionControlPage() {
     fetchRadarDashboard(),
     fetchPDLCRegistry(),
   ]);
+
+  // Production Gates
+  const gatesData = readJsonFile<{ gates: ProductGate[] }>('productionGates.json');
+  const pendingData = readJsonFile<{ pending: PendingGate[] }>('pendingGates.json');
+  const gates = gatesData?.gates || [];
+  const pendingGates = pendingData?.pending || [];
 
   // PDLC
   const pdlcRows = pdlcMd ? (() => {
@@ -157,6 +176,60 @@ export default async function MissionControlPage() {
           </div>
         </SectionCard>
       )}
+
+      {/* ── Awaiting Approval ──────────────────────────────────── */}
+      {pendingGates.length > 0 && (
+        <SectionCard title={`Awaiting Your Approval (${pendingGates.length})`} className="mt-4">
+          <div className="space-y-3">
+            {pendingGates.map((gate, i) => (
+              <div key={i} className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-bold text-foreground">{gate.product}</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">{new Date(gate.builtAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">{gate.summary}</p>
+                <div className="flex gap-2">
+                  <a href={gate.previewUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary no-underline hover:bg-primary/20">Preview →</a>
+                  <a href={gate.prUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary no-underline hover:bg-primary/20">Review PR →</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+      {pendingGates.length === 0 && (
+        <div className="mt-4 text-xs text-muted-foreground px-1">No deployments waiting for approval.</div>
+      )}
+
+      {/* ── Production Gates ───────────────────────────────────── */}
+      <SectionCard title="Production Gates" className="mt-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Product</th>
+                <th className="text-left py-2 px-2">Repo</th>
+                <th className="text-left py-2 pl-2 pr-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gates.map((gate, i) => (
+                <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
+                  <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
+                  <td className="py-1.5 pl-2 pr-3">
+                    {gate.protected
+                      ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
+                      : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">To change protection, edit REGISTRY.md and run data sync.</p>
+      </SectionCard>
     </div>
   );
 }

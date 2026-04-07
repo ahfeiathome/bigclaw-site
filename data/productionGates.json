@@ -1,0 +1,15 @@
+{
+  "updatedAt": "2026-04-06",
+  "gates": [
+    { "product": "fatfrogmodels", "repo": "fatfrogmodels", "protected": true },
+    { "product": "iris-studio", "repo": "iris-studio", "protected": true },
+    { "product": "GrovaKid", "repo": "learnie-ai", "protected": true },
+    { "product": "REHEARSAL", "repo": "rehearsal", "protected": true },
+    { "product": "FairConnect", "repo": "fairconnect", "protected": true },
+    { "product": "KeepTrack", "repo": "keeptrack", "protected": true },
+    { "product": "SubCheck", "repo": "subcheck", "protected": true },
+    { "product": "CORTEX", "repo": "cortex", "protected": true },
+    { "product": "RADAR", "repo": "radar-site", "protected": true },
+    { "product": "BigClaw Dashboard", "repo": "bigclaw-site", "protected": false }
+  ]
+}
