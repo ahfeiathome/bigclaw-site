@@ -116,6 +116,10 @@ export async function fetchMorningBrainLog(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'ops/morning-brain.log');
 }
 
+export async function fetchDailyCosts(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'ops/DAILY_COSTS.md');
+}
+
 export async function fetchPDLCRegistry(): Promise<string | null> {
   // Read from committed data file (synced from bigclaw-ai/knowledge/PDLC_REGISTRY.md)
   try {

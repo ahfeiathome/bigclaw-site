@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function FatfrogmodelsProductPage() {
   return ProductPage({
+    slug: 'fatfrogmodels',
     name: 'fatfrogmodels',
     company: 'Axiom',
     pdlcStage: 'S7 LAUNCH',

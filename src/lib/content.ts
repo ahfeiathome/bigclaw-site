@@ -214,6 +214,12 @@ export interface ProductDef {
   href: string;
   status: 'LIVE' | 'PAPER' | 'SETUP' | 'SPEC' | 'BUILD';
   stage: string;
+  stageRaw: string;
+  repo: string;
+  revenue: string;
+  liveUrl: string;
+  evidence: string;
+  company: string;
 }
 
 // Slug mapping for products whose name differs from URL slug
@@ -238,23 +244,43 @@ function inferStatus(stage: string): ProductDef['status'] {
   return 'SPEC';
 }
 
+// Map sector headings to company names
+const SECTOR_COMPANY: Record<string, string> = {
+  'Education & Career': 'Forge',
+  'Commerce': 'Axiom',
+  'Consumer Tools': 'Axiom',
+  'Knowledge': 'Forge',
+  'FinTech': 'BigClaw AI',
+  'Operations': 'BigClaw AI',
+};
+
 function parseRegistryProducts(registryMd: string): ProductDef[] {
   const products: ProductDef[] = [];
   const lines = registryMd.split('\n');
+  let currentCompany = '';
 
   for (const line of lines) {
-    // Match table rows: | Product | Repo | Revenue | Stage | ...
-    if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('Product') && line.includes('Repo')) continue;
+    // Track current sector heading (e.g. "### 🎓 Education & Career")
+    const sectorMatch = line.match(/^### .+ (.+)$/);
+    if (sectorMatch) {
+      currentCompany = SECTOR_COMPANY[sectorMatch[1]] || '';
+      continue;
+    }
+
+    // Match table rows: | Product | Repo | Revenue | Stage | Live | Evidence | Docs |
+    if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || (line.includes('Product') && line.includes('Repo'))) continue;
 
     const cells = line.split('|').map(c => c.trim()).filter(Boolean);
     if (cells.length < 4) continue;
 
     const name = cells[0];
-    const stageRaw = cells[3]; // Stage column
+    const repo = cells[1] || '';
+    const revenue = cells[2] || '';
+    const stageRaw = cells[3] || '';
+    const liveUrl = cells[4] || '';
+    const evidence = cells[5] || '';
 
-    // Skip non-product rows (headers, Operations section without standard stage)
     if (!stageRaw || !name || name === 'Product') continue;
-    // Extract just the stage code (e.g. "S4 BUILD" from "S4 BUILD (advanced)")
     const stageMatch = stageRaw.match(/(S\d\s+\w+)/);
     if (!stageMatch && !stageRaw.toLowerCase().includes('active')) continue;
 
@@ -268,6 +294,12 @@ function parseRegistryProducts(registryMd: string): ProductDef[] {
       href,
       status: inferStatus(stageRaw),
       stage,
+      stageRaw,
+      repo,
+      revenue,
+      liveUrl: liveUrl.startsWith('http') ? liveUrl : liveUrl ? `https://${liveUrl}` : '',
+      evidence,
+      company: currentCompany,
     });
   }
 
@@ -286,8 +318,16 @@ export async function fetchProducts(): Promise<ProductDef[]> {
   }
   // Fallback: return minimal set so dashboard doesn't break
   return [
-    { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'LIVE', stage: 'Active' },
+    { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'LIVE', stage: 'Active', stageRaw: 'Active', repo: 'bigclaw-site', revenue: 'Internal', liveUrl: 'https://bigclaw-site.vercel.app', evidence: '', company: 'BigClaw AI' },
   ];
+}
+
+/**
+ * Fetch a single product by slug from REGISTRY.md.
+ */
+export async function fetchProductBySlug(slug: string): Promise<ProductDef | null> {
+  const products = await fetchProducts();
+  return products.find(p => p.slug === slug) || null;
 }
 
 // Kept for backward compat — consumers should migrate to fetchProducts()

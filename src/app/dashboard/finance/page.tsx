@@ -1,4 +1,4 @@
-import { fetchFinanceData, fetchRadarDashboard } from '@/lib/github';
+import { fetchFinanceData, fetchRadarDashboard, fetchDailyCosts } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard, HealthRow } from '@/components/dashboard';
 import { ViewSource } from '@/components/view-source';
 import { CollapsibleSection } from '@/components/collapsible-section';
@@ -175,9 +175,10 @@ function extractPendingExpenses(content: string): TableRow[] {
 }
 
 export default async function FinancePage() {
-  const [finance, radarMd] = await Promise.all([
+  const [finance, radarMd, dailyCostsMd] = await Promise.all([
     fetchFinanceData(),
     fetchRadarDashboard(),
+    fetchDailyCosts(),
   ]);
 
   if (!finance) {
@@ -191,6 +192,9 @@ export default async function FinancePage() {
 
   const costRows = buildCostRows(finance);
   const alerts = extractAlerts(finance);
+
+  // Daily costs
+  const dailyCostRows = dailyCostsMd ? parseMarkdownTable(dailyCostsMd) : [];
   const freeTierItems = extractFreeTierUsage(finance);
   const projections = extractProjections(finance);
   const pendingExpenses = extractPendingExpenses(finance);
@@ -271,6 +275,43 @@ export default async function FinancePage() {
           <span className="text-sm font-bold font-mono text-foreground">~$5-20/mo</span>
         </div>
       </SectionCard>
+
+      {/* ── DAILY COST TRACKING ──────────────────────────────── */}
+      {dailyCostRows.length > 0 && (
+        <SectionCard title={`Daily Cost Tracking (${dailyCostRows.length} days)`} className="mb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Date</th>
+                  <th className="text-right py-2 px-2">Used</th>
+                  <th className="text-right py-2 px-2">Remaining</th>
+                  <th className="text-right py-2 px-2">Daily Spend</th>
+                  <th className="text-right py-2 px-2">Runway</th>
+                  <th className="text-center py-2 pl-2 pr-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyCostRows.map((row, i) => {
+                  const alert = row.cells[5] || '';
+                  const isAlert = alert.includes('⚠') || alert.includes('🔴');
+                  return (
+                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2 font-mono text-muted-foreground">{row.cells[0]}</td>
+                      <td className="py-2 px-2 text-right font-mono text-foreground">{row.cells[1]}</td>
+                      <td className="py-2 px-2 text-right font-mono text-foreground">{row.cells[2]}</td>
+                      <td className="py-2 px-2 text-right font-mono text-foreground">{row.cells[3]}</td>
+                      <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.cells[4]}</td>
+                      <td className={`py-2 pl-2 pr-3 text-center ${isAlert ? 'text-amber-400' : 'text-green-400'}`}>{alert}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">Source: ops/DAILY_COSTS.md — updated by Rex (CFO) on each RADAR check</p>
+        </SectionCard>
+      )}
 
       {/* ── ALERTS ────────────────────────────────────────────── */}
       {alerts.length > 0 && (

@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function RadarProductPage() {
   return ProductPage({
+    slug: 'radar',
     name: 'RADAR',
     company: 'BigClaw AI',
     pdlcStage: 'S4 BUILD',

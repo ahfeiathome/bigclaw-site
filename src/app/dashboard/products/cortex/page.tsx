@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function CortexProductPage() {
   return ProductPage({
+    slug: 'cortex',
     name: 'CORTEX',
     company: 'Axiom',
     pdlcStage: 'S4 BUILD',
