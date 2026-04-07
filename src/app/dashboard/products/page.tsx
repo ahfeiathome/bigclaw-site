@@ -61,7 +61,8 @@ function stageTone(stage: string): 'neutral' | 'info' | 'warning' | 'success' {
 
 function companyColor(company: string): string {
   if (company.includes('Forge')) return 'bg-green-500/10 text-green-400';
-  if (company.includes('OpenClaw')) return 'bg-purple-500/10 text-purple-400';
+  if (company.includes('BigClaw')) return 'bg-purple-500/10 text-purple-400';
+  if (company.includes('Nexus')) return 'bg-purple-500/10 text-purple-400';
   return 'bg-blue-500/10 text-blue-400';
 }
 

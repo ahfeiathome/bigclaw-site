@@ -159,7 +159,8 @@ export default async function MissionControlPage() {
                     : stage.includes('S4') || stage.includes('S5') ? 'warning' as const
                     : 'success' as const;
                   const companyColor = cells[1]?.includes('Forge') ? 'bg-green-500/10 text-green-400'
-                    : cells[1]?.includes('Nexus') || cells[1]?.includes('OpenClaw') ? 'bg-purple-500/10 text-purple-400'
+                    : cells[1]?.includes('BigClaw') ? 'bg-purple-500/10 text-purple-400'
+                    : cells[1]?.includes('Nexus') ? 'bg-purple-500/10 text-purple-400'
                     : 'bg-blue-500/10 text-blue-400';
                   return (
                     <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>

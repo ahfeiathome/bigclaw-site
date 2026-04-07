@@ -209,6 +209,9 @@ export function SidebarNav() {
           {/* Knowledge */}
           <SectionLink label="Knowledge" href="/dashboard/resources" />
           <SubLink label="SDLC Process" href="/dashboard/sdlc/process" />
+          <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
+          <SubLink label="Violations" href="/dashboard/sdlc/violations" />
+          <SubLink label="RCA" href="/dashboard/sdlc/rca" />
 
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
