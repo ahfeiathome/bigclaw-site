@@ -1,6 +1,8 @@
 import { fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
+import { ProductIntelligencePanel } from './product-intelligence';
+import { fetchProductIntel } from '@/lib/product-intel';
 
 interface ProductPageProps {
   name: string;
@@ -39,10 +41,12 @@ function hasGate(text: string): boolean {
 export async function ProductPage(props: ProductPageProps) {
   const { name, company, pdlcStage, status, previewUrl, productionUrl, repoSlug, prdItems, description, nextGate, blocker, revenueModel, shelvedReason, revivalCondition } = props;
 
-  // Fetch issues if repo provided
-  const [allIssues, closedIssues] = repoSlug
-    ? await Promise.all([fetchAllIssues(), fetchRecentClosedIssues(14)])
-    : [[], []];
+  // Fetch issues and product intel
+  const [allIssues, closedIssues, intel] = await Promise.all([
+    repoSlug ? fetchAllIssues() : Promise.resolve([]),
+    repoSlug ? fetchRecentClosedIssues(14) : Promise.resolve([]),
+    fetchProductIntel(name),
+  ]);
 
   const productIssues = repoSlug ? allIssues.filter(i => i.repo === repoSlug) : [];
   const productClosed = repoSlug ? closedIssues.filter(i => i.repo === repoSlug) : [];
@@ -133,6 +137,13 @@ export async function ProductPage(props: ProductPageProps) {
         <div className={`rounded-xl border p-4 mb-6 ${blocker && hasGate(blocker) ? 'border-amber-500/30 bg-amber-500/5' : 'border-border bg-card'}`}>
           {nextGate && <div className="text-sm text-foreground mb-1"><span className="text-muted-foreground">Next gate:</span> {nextGate}</div>}
           {blocker && <div className={`text-sm ${hasGate(blocker) ? 'text-amber-400' : 'text-muted-foreground'}`}><span className="text-muted-foreground">Blocker:</span> {blocker}</div>}
+        </div>
+      )}
+
+      {/* ── Product Intelligence ──────────────────────────── */}
+      {intel && (
+        <div className="mb-6">
+          <ProductIntelligencePanel intel={intel} />
         </div>
       )}
 
