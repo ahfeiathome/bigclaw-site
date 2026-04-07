@@ -206,7 +206,7 @@ export const TOP_BAR_TABS: NavItem[] = [
   { label: 'Marketing', href: '/dashboard/departments/marketing' },
 ];
 
-// ── Product definitions for sidebar ──────────────────────────────────────
+// ── Product definitions — read dynamically from REGISTRY.md ──────────────
 
 export interface ProductDef {
   slug: string;
@@ -216,24 +216,88 @@ export interface ProductDef {
   stage: string;
 }
 
-export const ALL_PRODUCTS: ProductDef[] = [
-  { slug: 'radar', name: 'RADAR', href: '/dashboard/products/radar', status: 'PAPER', stage: 'S2 DEFINE' },
-  { slug: 'grovakid', name: 'GrovaKid', href: '/dashboard/products/grovakid', status: 'LIVE', stage: 'S4 BUILD' },
-  { slug: 'fatfrogmodels', name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', status: 'LIVE', stage: 'S7 LAUNCH' },
-  { slug: 'iris-studio', name: 'iris-studio', href: '/dashboard/products/iris-studio', status: 'BUILD', stage: 'S4 BUILD' },
-  { slug: 'cortex', name: 'CORTEX', href: '/dashboard/products/cortex', status: 'BUILD', stage: 'S4 BUILD' },
-  { slug: 'rehearsal', name: 'REHEARSAL', href: '/dashboard/products/rehearsal', status: 'BUILD', stage: 'S3 DESIGN' },
-  { slug: 'fairconnect', name: 'FairConnect', href: '/dashboard/products/fairconnect', status: 'SETUP', stage: 'S2 DEFINE' },
-  { slug: 'keeptrack', name: 'KeepTrack', href: '/dashboard/products/keeptrack', status: 'SETUP', stage: 'S2 DEFINE' },
-  { slug: 'subcheck', name: 'SubCheck', href: '/dashboard/products/subcheck', status: 'SETUP', stage: 'S1 DONE' },
-  { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'LIVE', stage: 'S7 LAUNCH' },
-];
+// Slug mapping for products whose name differs from URL slug
+const SLUG_MAP: Record<string, string> = {
+  GrovaKid: 'grovakid',
+  RADAR: 'radar',
+  REHEARSAL: 'rehearsal',
+  FairConnect: 'fairconnect',
+  KeepTrack: 'keeptrack',
+  SubCheck: 'subcheck',
+  CORTEX: 'cortex',
+  'iris-studio': 'iris-studio',
+  fatfrogmodels: 'fatfrogmodels',
+  'BigClaw Dashboard': 'bigclaw-dashboard',
+};
+
+function inferStatus(stage: string): ProductDef['status'] {
+  if (stage.includes('S7') || stage.includes('S8') || stage.toLowerCase().includes('launch') || stage.toLowerCase().includes('active')) return 'LIVE';
+  if (stage.toLowerCase().includes('paper')) return 'PAPER';
+  if (stage.includes('S4') || stage.includes('S5') || stage.includes('S3')) return 'BUILD';
+  if (stage.includes('S1') || stage.includes('S2')) return 'SETUP';
+  return 'SPEC';
+}
+
+function parseRegistryProducts(registryMd: string): ProductDef[] {
+  const products: ProductDef[] = [];
+  const lines = registryMd.split('\n');
+
+  for (const line of lines) {
+    // Match table rows: | Product | Repo | Revenue | Stage | ...
+    if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('Product') && line.includes('Repo')) continue;
+
+    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+    if (cells.length < 4) continue;
+
+    const name = cells[0];
+    const stageRaw = cells[3]; // Stage column
+
+    // Skip non-product rows (headers, Operations section without standard stage)
+    if (!stageRaw || !name || name === 'Product') continue;
+    // Extract just the stage code (e.g. "S4 BUILD" from "S4 BUILD (advanced)")
+    const stageMatch = stageRaw.match(/(S\d\s+\w+)/);
+    if (!stageMatch && !stageRaw.toLowerCase().includes('active')) continue;
+
+    const stage = stageMatch?.[1] || stageRaw;
+    const slug = SLUG_MAP[name] || name.toLowerCase().replace(/\s+/g, '-');
+    const href = slug === 'bigclaw-dashboard' ? '/dashboard' : `/dashboard/products/${slug}`;
+
+    products.push({
+      slug,
+      name,
+      href,
+      status: inferStatus(stageRaw),
+      stage,
+    });
+  }
+
+  return products;
+}
+
+/**
+ * Fetch products dynamically from REGISTRY.md via GitHub API.
+ * Returns parsed products or falls back to minimal defaults.
+ */
+export async function fetchProducts(): Promise<ProductDef[]> {
+  const registryMd = await fetchRepoFile('bigclaw-ai', 'REGISTRY.md');
+  if (registryMd) {
+    const parsed = parseRegistryProducts(registryMd);
+    if (parsed.length > 0) return parsed;
+  }
+  // Fallback: return minimal set so dashboard doesn't break
+  return [
+    { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'LIVE', stage: 'Active' },
+  ];
+}
+
+// Kept for backward compat — consumers should migrate to fetchProducts()
+export const ALL_PRODUCTS: ProductDef[] = [];
 
 export function getLiveProducts(): ProductDef[] {
-  return ALL_PRODUCTS.filter(p => p.status === 'LIVE' || p.status === 'PAPER');
+  return []; // Use fetchProducts() instead
 }
 
 export function getDevProducts(): ProductDef[] {
-  return ALL_PRODUCTS.filter(p => p.status !== 'LIVE' && p.status !== 'PAPER');
+  return []; // Use fetchProducts() instead
 }
 

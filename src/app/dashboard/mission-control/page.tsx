@@ -1,4 +1,4 @@
-import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
@@ -47,7 +47,7 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd] = await Promise.all([
+  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
     fetchHealth(),
@@ -55,6 +55,7 @@ export default async function MissionControlPage() {
     fetchBandwidth(),
     fetchRadarDashboard(),
     fetchPDLCRegistry(),
+    fetchMorningBrainLog(),
   ]);
 
   // Production Gates
@@ -133,7 +134,54 @@ export default async function MissionControlPage() {
       {/* ── ROW 2: Command Center (collapsed) ───────────────────── */}
       <MissionCommandCenter radarReserve={radarReserve} hasLive={hasLive} defaultCollapsed={true} />
 
-      {/* ── ROW 3: Action Items ─────────────────────────────────── */}
+      {/* ── ROW 3: Morning Brain Report ──────────────────────────── */}
+      {morningLog && (() => {
+        // Extract the latest report block (between === START === and === DONE ===)
+        const blocks = morningLog.split('=== MORNING BRAIN START ===');
+        const lastBlock = blocks[blocks.length - 1] || '';
+        const timestampMatch = lastBlock.match(/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/);
+        const timestamp = timestampMatch?.[1] || '';
+        // Extract the summary section (markdown table + completion notes)
+        const summaryStart = lastBlock.indexOf('**Morning Brain Complete');
+        const summary = summaryStart > -1 ? lastBlock.slice(summaryStart).split('=== MORNING BRAIN DONE ===')[0].trim() : '';
+        if (!summary) return null;
+        // Parse table rows
+        const specRows = summary.split('\n')
+          .filter(l => l.startsWith('|') && !l.includes('---') && !l.includes('Priority'))
+          .map(l => l.split('|').map(c => c.trim()).filter(Boolean));
+        const completionNote = summary.match(/\*\*(\d+ pilot completions[^*]*)\*\*/)?.[1] || '';
+        return (
+          <SectionCard title={`Morning Brain — ${timestamp.split(' ')[0] || 'Today'}`} className="mt-4">
+            {specRows.length > 0 && (
+              <div className="overflow-x-auto mb-2">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground border-b border-border bg-muted">
+                      <th className="text-left py-2 pl-3 pr-2">Priority</th>
+                      <th className="text-left py-2 px-2">Spec</th>
+                      <th className="text-left py-2 px-2">Product</th>
+                      <th className="text-left py-2 pl-2 pr-3">Rationale</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {specRows.map((cells, i) => (
+                      <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                        <td className="py-2 pl-3 pr-2"><SignalPill label={cells[0]?.replace(/\*/g, '') || ''} tone={cells[0]?.includes('P0') ? 'error' : cells[0]?.includes('P1') ? 'warning' : 'neutral'} /></td>
+                        <td className="py-2 px-2 text-foreground font-mono text-[10px]">{cells[1]?.replace(/`/g, '') || ''}</td>
+                        <td className="py-2 px-2 text-muted-foreground">{cells[2] || ''}</td>
+                        <td className="py-2 pl-2 pr-3 text-muted-foreground">{cells[3] || ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {completionNote && <p className="text-xs text-muted-foreground">{completionNote}</p>}
+          </SectionCard>
+        );
+      })()}
+
+      {/* ── ROW 4: Action Items ─────────────────────────────────── */}
       <ActionItems todoMd={todoMd} />
 
       {/* ── ROW 4: PDLC Summary ────────────────────────────────── */}

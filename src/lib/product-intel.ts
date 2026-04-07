@@ -15,17 +15,18 @@ export interface ProductIntel {
   staleness: 'current' | 'stale' | 'outdated' | 'missing';
 }
 
-// Map product names to their GitHub repo
-const PRODUCT_REPOS: Record<string, string> = {
-  GrovaKid: 'learnie-ai',
-  'iris-studio': 'iris-studio',
-  fatfrogmodels: 'fatfrogmodels',
-  FairConnect: 'fairconnect',
-  KeepTrack: 'keeptrack',
-  SubCheck: 'subcheck',
-  CORTEX: 'cortex',
-  REHEARSAL: 'rehearsal',
-  RADAR: 'radar-site',
+// Map product names to their GitHub repo + docs path
+interface RepoMapping { repo: string; docsPath: string }
+const PRODUCT_REPOS: Record<string, RepoMapping> = {
+  GrovaKid: { repo: 'learnie-ai', docsPath: 'docs/product' },
+  'iris-studio': { repo: 'iris-studio', docsPath: 'docs/product' },
+  fatfrogmodels: { repo: 'fatfrogmodels', docsPath: 'docs/product' },
+  FairConnect: { repo: 'fairconnect', docsPath: 'docs/product' },
+  KeepTrack: { repo: 'keeptrack', docsPath: 'docs/product' },
+  SubCheck: { repo: 'subcheck', docsPath: 'docs/product' },
+  CORTEX: { repo: 'cortex', docsPath: 'docs/product' },
+  REHEARSAL: { repo: 'axiom', docsPath: 'rehearsal/docs/product' },
+  RADAR: { repo: 'the-firm', docsPath: 'scripts/radar/docs/product' },
 };
 
 function parseUpdatedDate(content: string): string | null {
@@ -82,15 +83,17 @@ function parsePrdCompletion(content: string): { done: number; total: number } | 
 }
 
 export async function fetchProductIntel(product: string): Promise<ProductIntel | null> {
-  const repo = PRODUCT_REPOS[product];
-  if (!repo) return null;
+  const mapping = PRODUCT_REPOS[product];
+  if (!mapping) return null;
+
+  const { repo, docsPath } = mapping;
 
   const [s1, s2, s3, s3Checklist, compLog] = await Promise.all([
-    fetchRepoFile(repo, 'docs/product/S1_COMPETITIVE_RESEARCH.md'),
-    fetchRepoFile(repo, 'docs/product/S2_MRD.md'),
-    fetchRepoFile(repo, 'docs/product/S3_PRD.md').then(r => r || fetchRepoFile(repo, 'docs/product/S3_PRD_CHECKLIST.md')),
-    fetchRepoFile(repo, 'docs/product/S3_PRD_CHECKLIST.md'),
-    fetchRepoFile(repo, 'docs/product/COMPETITIVE_LOG.md'),
+    fetchRepoFile(repo, `${docsPath}/S1_COMPETITIVE_RESEARCH.md`),
+    fetchRepoFile(repo, `${docsPath}/S2_MRD.md`),
+    fetchRepoFile(repo, `${docsPath}/S3_PRD.md`).then(r => r || fetchRepoFile(repo, `${docsPath}/S3_PRD_CHECKLIST.md`)),
+    fetchRepoFile(repo, `${docsPath}/S3_PRD_CHECKLIST.md`),
+    fetchRepoFile(repo, `${docsPath}/COMPETITIVE_LOG.md`),
   ]);
 
   const compData = compLog ? parseCompetitiveLog(compLog) : { lastDate: null, changes: [] };
@@ -104,7 +107,7 @@ export async function fetchProductIntel(product: string): Promise<ProductIntel |
 
   return {
     product,
-    repo,
+    repo: mapping.repo,
     s1Exists: !!s1,
     s1Date,
     s2Exists: !!s2,
