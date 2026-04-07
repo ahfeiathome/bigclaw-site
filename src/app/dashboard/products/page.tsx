@@ -1,5 +1,7 @@
 import { fetchAllIssues, fetchPDLCRegistry } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard } from '@/components/dashboard';
+import { ProductIntelSummaryTable } from '@/components/product-intelligence';
+import { fetchAllProductIntel } from '@/lib/product-intel';
 import Link from 'next/link';
 
 interface TableRow { cells: string[] }
@@ -67,9 +69,10 @@ function companyColor(company: string): string {
 }
 
 export default async function ProductsPage() {
-  const [allIssues, pdlcMd] = await Promise.all([
+  const [allIssues, pdlcMd, allIntel] = await Promise.all([
     fetchAllIssues(),
     fetchPDLCRegistry(),
+    fetchAllProductIntel(),
   ]);
 
   const activeProducts = pdlcMd ? parseMarkdownTable(extractSection(pdlcMd, 'Active Products')) : [];
@@ -136,6 +139,18 @@ export default async function ProductsPage() {
           </table>
         </div>
       </SectionCard>
+
+      {/* ── Market Intelligence ──────────────────────────────── */}
+      {allIntel.length > 0 && (
+        <SectionCard title="Market Intelligence" className="mb-6">
+          <ProductIntelSummaryTable allIntel={allIntel} />
+          {allIntel.some(i => i.staleness === 'outdated' || i.staleness === 'missing') && (
+            <div className="mt-2 px-2 py-1.5 rounded bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+              Products with missing or outdated research need attention before GTM decisions.
+            </div>
+          )}
+        </SectionCard>
+      )}
 
       {/* ── P0/P1 Work Items ────────────────────────────────── */}
       <SectionCard title="Active Projects — P0/P1 Work Items" className="mb-6">
