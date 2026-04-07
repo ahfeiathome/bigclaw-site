@@ -19,6 +19,21 @@ if echo "$CMD" | grep -qE 'git push.*(origin|upstream)\s+main'; then
   exit 0
 fi
 
+# 2b. Block gh pr merge on PROTECTED repos
+if echo "$CMD" | grep -qE 'gh pr merge'; then
+  PROTECTED_REPO=$(echo "$CMD" | grep -oE 'fatfrogmodels|iris-studio|learnie-ai|rehearsal|fairconnect|keeptrack|subcheck|cortex|radar-site')
+  if [ -n "$PROTECTED_REPO" ]; then
+    echo "{\"decision\":\"block\",\"reason\":\"BLOCKED: $PROTECTED_REPO is 🔒 PROTECTED. PR merge requires Michael approval. Write PRODUCTION GATE entry to founder/FOUNDER_TODO.md instead.\"}"
+    exit 0
+  fi
+  # Check current working directory
+  CWD_REPO=$(pwd | grep -oE 'fatfrogmodels|iris-studio|learnie-ai|rehearsal|fairconnect|keeptrack|subcheck|cortex|radar-site')
+  if [ -n "$CWD_REPO" ]; then
+    echo "{\"decision\":\"block\",\"reason\":\"BLOCKED: $CWD_REPO is 🔒 PROTECTED. PR merge requires Michael approval.\"}"
+    exit 0
+  fi
+fi
+
 # 3. Pre-push test gate — run checks before any push
 if echo "$CMD" | grep -qE 'git push'; then
   echo "=== Pre-push QA Gate ==="
