@@ -1,0 +1,57 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "WebFetch",
+      "WebSearch",
+      "mcp__*"
+    ],
+    "additionalDirectories": [
+      "/Users/michaelliu/Projects/bigclaw-ai"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== BIGCLAW SESSION START ===' && echo '--- Unprocessed specs ---' && find $HOME/Projects/bigclaw-ai/docs/specs -name '*.md' -not -path '*/done/*' -not -path '*/queue/*' 2>/dev/null | head -20 && echo '--- BOUNDARY: Never execute forge/ or axiom/ specs ---' && echo '--- PIPELINE: code→test→review→PR→merge→deploy→verify→DONE→next ---' && echo '==='"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $CLAUDE_PROJECT_DIR/scripts/pre-push-gate.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd $CLAUDE_PROJECT_DIR && git add -A && git diff --staged --quiet || git commit -m 'chore: auto-commit on session stop'"
+          },
+          {
+            "type": "command",
+            "command": "echo '⛔ PIPELINE CHECK: Did you complete the FULL pipeline for every change? code→test→review→PR→merge→deploy→verify live→DONE. If any step was skipped, fix it NOW before session ends.'"
+          },
+          {
+            "type": "command",
+            "command": "SESSION_FILE=\"$HOME/Projects/bigclaw-ai/knowledge/sessions/$(date +%Y-%m-%d-%H-%M)-bigclaw-site.md\" && mkdir -p \"$HOME/Projects/bigclaw-ai/knowledge/sessions\" && echo \"# Session Log — bigclaw-site — $(date '+%Y-%m-%d %H:%M')\" > \"$SESSION_FILE\" && echo '' >> \"$SESSION_FILE\" && echo '## What was done' >> \"$SESSION_FILE\" && cd \"$CLAUDE_PROJECT_DIR\" && git log --oneline --since='4 hours ago' 2>/dev/null | head -20 >> \"$SESSION_FILE\" && echo '' >> \"$SESSION_FILE\" && echo '## Files changed' >> \"$SESSION_FILE\" && git diff --stat HEAD~10 2>/dev/null | tail -5 >> \"$SESSION_FILE\" && echo '' >> \"$SESSION_FILE\" && echo '## Test results' >> \"$SESSION_FILE\" && echo 'TypeScript:' >> \"$SESSION_FILE\" && npx tsc --noEmit 2>&1 | tail -1 >> \"$SESSION_FILE\" && echo '' >> \"$SESSION_FILE\" && echo \"Session log: $SESSION_FILE\""
+          }
+        ]
+      }
+    ]
+  }
+}
