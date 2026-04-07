@@ -50,85 +50,18 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-// ── Sector data (source of truth: REGISTRY.md) ──────────────────────
-
-interface Product { name: string; href: string; slug: string; shelved?: boolean }
-interface Sector { id: string; name: string; icon: string; products: Product[] }
-
-const SECTORS: Sector[] = [
-  {
-    id: 'education',
-    name: 'Education & Career',
-    icon: '🎓',
-    products: [
-      { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
-      { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
-    ],
-  },
-  {
-    id: 'commerce',
-    name: 'Commerce',
-    icon: '🛍️',
-    products: [
-      { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
-      { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
-    ],
-  },
-  {
-    id: 'consumer',
-    name: 'Consumer Tools',
-    icon: '📱',
-    products: [
-      { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
-      { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
-      { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
-    ],
-  },
-  {
-    id: 'knowledge',
-    name: 'Knowledge',
-    icon: '🧠',
-    products: [
-      { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
-    ],
-  },
-  {
-    id: 'fintech',
-    name: 'FinTech',
-    icon: '📈',
-    products: [
-      { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
-    ],
-  },
+// ── Product list (all products in REGISTRY.md) ─────────────────────
+const PRODUCTS = [
+  { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
+  { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
+  { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
+  { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
+  { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
+  { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
+  { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
+  { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
+  { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
 ];
-
-// ── Sector block ─────────────────────────────────────────────────────
-
-function SectorBlock({ sector, isAdmin, userProducts }: { sector: Sector; isAdmin: boolean; userProducts: string[] }) {
-  const visibleProducts = isAdmin
-    ? sector.products
-    : sector.products.filter(p => userProducts.includes(p.slug));
-
-  if (!isAdmin && visibleProducts.length === 0) return null;
-
-  return (
-    <div className="mb-1">
-      <div className="px-3 pt-4 pb-1 flex items-center gap-1.5">
-        <span style={{ fontSize: '11px' }}>{sector.icon}</span>
-        <span className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground/70">
-          {sector.name}
-        </span>
-      </div>
-      <div className="space-y-0.5">
-        {visibleProducts.map(product => (
-          <div key={product.href} className={product.shelved ? 'opacity-60' : ''}>
-            <SubLink label={product.name} href={product.href} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ── Role hook ────────────────────────────────────────────────────────
 
@@ -183,8 +116,8 @@ export function SidebarNav() {
       {/* ── Product-viewer view ───────────────────────────── */}
       {isProductViewer && (
         <>
-          {SECTORS.map(sector => (
-            <SectorBlock key={sector.id} sector={sector} isAdmin={false} userProducts={products} />
+          {PRODUCTS.filter(p => products.includes(p.slug)).map(p => (
+            <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
         </>
       )}
@@ -192,29 +125,37 @@ export function SidebarNav() {
       {/* ── Admin view ────────────────────────────────────── */}
       {isAdmin && (
         <>
+          {/* Command Center */}
+          <SectionHeader label="Command Center" />
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
-          <SectionLink label="Finance" href="/dashboard/finance" />
+          <SubLink label="Sponsor Gates" href="/dashboard/sponsor/todo" />
 
-          {/* Product verticals */}
-          <div className="border-t border-border/30 mt-3 pt-1">
-            <SectionLink label="Product Lineup" href="/dashboard/products" />
-            <SubLink label="Product Gates" href="/dashboard/products/health" />
-            <SubLink label="E-Commerce" href="/dashboard/ecommerce" />
-            <SubLink label="Foundry" href="/dashboard/foundry" />
-          </div>
-
-          {/* Sector blocks */}
-          {SECTORS.map(sector => (
-            <SectorBlock key={sector.id} sector={sector} isAdmin={true} userProducts={[]} />
+          {/* Product Portfolio */}
+          <SectionHeader label="Product Portfolio" />
+          <SectionLink label="Portfolio Overview" href="/dashboard/products" />
+          {PRODUCTS.map(p => (
+            <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
 
-          {/* Knowledge */}
-          <SectionLink label="Knowledge" href="/dashboard/resources" />
+          {/* Engineering */}
+          <SectionHeader label="Engineering" />
           <SubLink label="SDLC Process" href="/dashboard/sdlc/process" />
           <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
           <SubLink label="Violations" href="/dashboard/sdlc/violations" />
+          <SubLink label="Test Health" href="/dashboard/products/health" />
+
+          {/* Finance */}
+          <SectionHeader label="Finance" />
+          <SectionLink label="Finance" href="/dashboard/finance" />
+          <SubLink label="Portfolio" href="/dashboard/portfolio" />
+
+          {/* Knowledge */}
+          <SectionHeader label="Knowledge" />
+          <SubLink label="Market Intel" href="/dashboard/resources" />
+          <SubLink label="Learnings" href="/dashboard/learnings" />
           <SubLink label="RCA" href="/dashboard/sdlc/rca" />
 
+          {/* Settings */}
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
           </div>
