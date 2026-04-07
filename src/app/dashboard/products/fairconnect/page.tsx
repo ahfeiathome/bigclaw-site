@@ -4,12 +4,12 @@ export default async function FairConnectProductPage() {
   return ProductPage({
     name: 'FairConnect',
     company: 'Axiom',
-    pdlcStage: 'S2 DEFINE',
+    pdlcStage: 'S4 BUILD',
     status: 'active',
     previewUrl: 'https://fairconnect.vercel.app',
     repoSlug: 'fairconnect',
-    description: "Maker's CRM for solo artists and craft fair vendors.",
-    nextGate: 'S3 PRD — Code writes after MRD approved',
+    description: "Maker's CRM for solo artists and craft fair vendors. PRD complete, data model live on Neon.",
+    nextGate: 'S5 HARDEN — Complete CRUD, add tests',
     revenueModel: 'Apple IAP',
   });
 }
