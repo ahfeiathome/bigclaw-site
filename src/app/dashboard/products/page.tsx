@@ -27,15 +27,16 @@ function extractSection(content: string, heading: string): string {
 
 // Map product names to dashboard routes
 const PRODUCT_ROUTES: Record<string, string> = {
-  GrovaKid: '/dashboard/education',
-  'iris-studio': '/dashboard/ecommerce',
-  fatfrogmodels: '/dashboard/ecommerce',
-  RADAR: '/dashboard/radar',
+  GrovaKid: '/dashboard/products/grovakid',
+  'iris-studio': '/dashboard/products/iris-studio',
+  fatfrogmodels: '/dashboard/products/fatfrogmodels',
+  RADAR: '/dashboard/products/radar',
+  CORTEX: '/dashboard/products/cortex',
+  REHEARSAL: '/dashboard/products/rehearsal',
   'BigClaw Dashboard': '/dashboard/mission-control',
-  FairConnect: '/dashboard/foundry',
-  KeepTrack: '/dashboard/foundry',
-  SubCheck: '/dashboard/foundry',
-  REHEARSAL: '/dashboard/foundry',
+  FairConnect: '/dashboard/products/fairconnect',
+  KeepTrack: '/dashboard/products/keeptrack',
+  SubCheck: '/dashboard/products/subcheck',
 };
 
 // Map product names to repo slugs for issue counts
@@ -43,7 +44,9 @@ const PRODUCT_REPOS: Record<string, string> = {
   GrovaKid: 'learnie-ai',
   'iris-studio': 'iris-studio',
   fatfrogmodels: 'fatfrogmodels',
-  RADAR: 'the-firm',
+  RADAR: 'radar-site',
+  CORTEX: 'cortex',
+  REHEARSAL: 'rehearsal',
   FairConnect: 'fairconnect',
   KeepTrack: 'keeptrack',
   SubCheck: 'subcheck',

@@ -217,14 +217,16 @@ export interface ProductDef {
 }
 
 export const ALL_PRODUCTS: ProductDef[] = [
-  { slug: 'radar', name: 'RADAR', href: '/dashboard/radar', status: 'LIVE', stage: 'Paper trading' },
+  { slug: 'radar', name: 'RADAR', href: '/dashboard/products/radar', status: 'PAPER', stage: 'S2 DEFINE' },
   { slug: 'grovakid', name: 'GrovaKid', href: '/dashboard/products/grovakid', status: 'LIVE', stage: 'S4 BUILD' },
-  { slug: 'fatfrogmodels', name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', status: 'LIVE', stage: 'Launched' },
+  { slug: 'fatfrogmodels', name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', status: 'LIVE', stage: 'S7 LAUNCH' },
+  { slug: 'iris-studio', name: 'iris-studio', href: '/dashboard/products/iris-studio', status: 'BUILD', stage: 'S4 BUILD' },
+  { slug: 'cortex', name: 'CORTEX', href: '/dashboard/products/cortex', status: 'BUILD', stage: 'S4 BUILD' },
+  { slug: 'rehearsal', name: 'REHEARSAL', href: '/dashboard/products/rehearsal', status: 'BUILD', stage: 'S3 DESIGN' },
   { slug: 'fairconnect', name: 'FairConnect', href: '/dashboard/products/fairconnect', status: 'SETUP', stage: 'S2 DEFINE' },
   { slug: 'keeptrack', name: 'KeepTrack', href: '/dashboard/products/keeptrack', status: 'SETUP', stage: 'S2 DEFINE' },
   { slug: 'subcheck', name: 'SubCheck', href: '/dashboard/products/subcheck', status: 'SETUP', stage: 'S1 DONE' },
-  { slug: 'iris-studio', name: 'iris-studio', href: '/dashboard/products/iris-studio', status: 'SPEC', stage: 'Pre-build' },
-  { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'BUILD', stage: 'Active' },
+  { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', href: '/dashboard', status: 'LIVE', stage: 'S7 LAUNCH' },
 ];
 
 export function getLiveProducts(): ProductDef[] {
