@@ -1,12 +1,15 @@
 import { fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
+import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
 import { ProductIntelligencePanel } from './product-intelligence';
 import { fetchProductIntel } from '@/lib/product-intel';
 
 interface ProductPageProps {
+  /** Product slug — used to fetch dynamic data from REGISTRY.md */
+  slug: string;
   name: string;
-  company: 'Forge' | 'Axiom' | 'Nexus' | 'BigClaw AI';
+  company: string;
   pdlcStage: string;
   status: 'active' | 'shelved' | 'launched';
   previewUrl?: string;
@@ -47,7 +50,23 @@ function currentStageNum(stage: string): number {
 }
 
 export async function ProductPage(props: ProductPageProps) {
-  const { name, company, pdlcStage, status, previewUrl, productionUrl, repoSlug, prdItems, description, nextGate, blocker, revenueModel, shelvedReason, revivalCondition } = props;
+  // Fetch dynamic data from REGISTRY.md — overrides hardcoded props
+  const dynamic = await fetchProductBySlug(props.slug);
+
+  const name = props.name;
+  const company = dynamic?.company || props.company;
+  const pdlcStage = dynamic?.stage || props.pdlcStage;
+  const status = props.status;
+  const repoSlug = dynamic?.repo || props.repoSlug;
+  const previewUrl = dynamic?.liveUrl || props.previewUrl;
+  const productionUrl = props.productionUrl;
+  const revenueModel = dynamic?.revenue || props.revenueModel;
+  const description = props.description;
+  const nextGate = props.nextGate;
+  const blocker = props.blocker;
+  const prdItems = props.prdItems;
+  const shelvedReason = props.shelvedReason;
+  const revivalCondition = props.revivalCondition;
 
   const [allIssues, closedIssues, intel] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),

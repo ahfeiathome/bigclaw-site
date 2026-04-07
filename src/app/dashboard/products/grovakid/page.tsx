@@ -9,6 +9,7 @@ function parsePrdItems(content: string) {
 
 export default async function GrovakidProductPage() {
   return ProductPage({
+    slug: 'grovakid',
     name: 'GrovaKid',
     company: 'Forge',
     pdlcStage: 'S4 BUILD',

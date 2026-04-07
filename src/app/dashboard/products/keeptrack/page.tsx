@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function KeepTrackProductPage() {
   return ProductPage({
+    slug: 'keeptrack',
     name: 'KeepTrack',
     company: 'Axiom',
     pdlcStage: 'S5 HARDEN',

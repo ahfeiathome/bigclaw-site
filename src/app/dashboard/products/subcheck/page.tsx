@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function SubCheckProductPage() {
   return ProductPage({
+    slug: 'subcheck',
     name: 'SubCheck',
     company: 'Axiom',
     pdlcStage: 'S1 DONE',

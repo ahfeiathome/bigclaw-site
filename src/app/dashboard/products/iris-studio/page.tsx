@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function IrisStudioProductPage() {
   return ProductPage({
+    slug: 'iris-studio',
     name: 'iris-studio',
     company: 'Axiom',
     pdlcStage: 'S4 BUILD',

@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function FairConnectProductPage() {
   return ProductPage({
+    slug: 'fairconnect',
     name: 'FairConnect',
     company: 'Axiom',
     pdlcStage: 'S4 BUILD',

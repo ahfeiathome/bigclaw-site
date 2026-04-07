@@ -2,6 +2,7 @@ import { ProductPage } from '@/components/product-page';
 
 export default async function RehearsalProductPage() {
   return ProductPage({
+    slug: 'rehearsal',
     name: 'REHEARSAL',
     company: 'Forge',
     pdlcStage: 'S3 DESIGN',
