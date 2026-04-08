@@ -192,6 +192,7 @@ export interface GitHubIssue {
   labels: string[];
   createdAt: string;
   updatedAt: string;
+  closedAt?: string;
   url: string;
 }
 
@@ -293,6 +294,7 @@ export async function fetchRecentClosedIssues(days = 7): Promise<GitHubIssue[]> 
             labels: issue.labels.map((l) => l.name),
             createdAt: issue.created_at,
             updatedAt: issue.updated_at,
+            closedAt: issue.closed_at,
             url: issue.html_url,
           });
         }
