@@ -1,4 +1,8 @@
 import { fetchAllIssues, fetchRecentClosedIssues, fetchSDLCGatesMatrix, fetchSDLCViolations, fetchDailyCosts, fetchRadarDashboard, fetchPatrolReport, fetchPortfolioSummary, fetchAgentSystem, fetchPi5Health, fetchOvernightReport } from '@/lib/github';
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface ProductGate { product: string; repo: string; protected: boolean }
 import { fetchProducts } from '@/lib/content';
 import { fetchAllProductIntel } from '@/lib/product-intel';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
@@ -27,6 +31,15 @@ export default async function ExecutiveDashboardPage() {
     fetchPi5Health(),
     fetchOvernightReport(),
   ]);
+
+  // Production Gates
+  let gates: ProductGate[] = [];
+  try {
+    const gatesPath = path.join(process.cwd(), 'data', 'productionGates.json');
+    if (fs.existsSync(gatesPath)) {
+      gates = JSON.parse(fs.readFileSync(gatesPath, 'utf8')).gates || [];
+    }
+  } catch { /* no gates file */ }
 
   const p0Count = allIssues.filter(i => i.labels.includes('P0')).length;
   const violationRows = violationsMd ? parseMarkdownTable(extractSection(violationsMd, 'Raw Violations Log')) : [];
@@ -322,6 +335,37 @@ export default async function ExecutiveDashboardPage() {
           <p className="text-sm text-muted-foreground">Operations data not available. Agent system files will appear when Pi5 crons populate them.</p>
         )}
       </SectionCard>
+
+      {/* ── PANEL 7: Production Gates ─────────────────────── */}
+      {gates.length > 0 && (
+        <SectionCard title="Production Gates" className="mb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Product</th>
+                  <th className="text-left py-2 px-2">Repo</th>
+                  <th className="text-left py-2 pl-2 pr-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gates.map((gate, i) => (
+                  <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
+                    <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
+                    <td className="py-1.5 pl-2 pr-3">
+                      {gate.protected
+                        ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
+                        : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
     </div>
   );
 }
