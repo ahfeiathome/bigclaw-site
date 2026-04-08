@@ -63,20 +63,35 @@ function parsePrdCompletion(content: string): { done: number; total: number } | 
   let done = 0;
   let total = 0;
 
+  // Method 1: checkbox format
   for (const line of lines) {
     if (line.match(/^\s*-\s*\[x\]/i)) { done++; total++; }
     else if (line.match(/^\s*-\s*\[\s*\]/)) { total++; }
   }
+  if (total > 0) return { done, total };
 
+  // Method 2: PRD_CHECKLIST table format — count only PRD-### rows
+  for (const line of lines) {
+    if (!line.includes('|') || line.match(/^\|[\s-:|]+\|$/)) continue;
+    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+    if (!cells[0]?.startsWith('PRD-')) continue;
+    total++;
+    const status = cells[3]?.replace(/\*\*/g, '').trim().toLowerCase() || '';
+    if (status === 'done') done++;
+  }
+
+  // Method 3: If Total row exists in summary table, use it directly
   if (total === 0) {
-    // Try table format: count rows with ✅ or Done
-    for (const line of lines) {
-      if (line.includes('|') && !line.match(/^\|[\s-:|]+\|$/)) {
-        total++;
-        if (line.includes('✅') || line.toLowerCase().includes('done') || line.toLowerCase().includes('complete')) done++;
+    const totalMatch = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|[^|]*\|\s*(\d+)\s*\|/i) ||
+                       content.match(/Total.*?(\d+)\s*\|\s*(\d+)%/);
+    if (totalMatch) {
+      // Try to find the summary table with Done count
+      const summaryMatch = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
+      if (summaryMatch) {
+        done = parseInt(summaryMatch[1]);
+        total = parseInt(totalMatch[1]);
       }
     }
-    if (total > 0) total--; // subtract header row
   }
 
   return total > 0 ? { done, total } : null;
@@ -88,22 +103,29 @@ export async function fetchProductIntel(product: string): Promise<ProductIntel |
 
   const { repo, docsPath } = mapping;
 
-  const [s1, s2, s3, s3Checklist, compLog] = await Promise.all([
+  // Fetch docs with alternate filename fallbacks
+  const [s1Primary, s1Alt, s2, s3Primary, s3Alt, s3Checklist, compLog] = await Promise.all([
     fetchRepoFile(repo, `${docsPath}/S1_COMPETITIVE_RESEARCH.md`),
+    fetchRepoFile(repo, `${docsPath}/POSITIONING_BRIEF.md`),
     fetchRepoFile(repo, `${docsPath}/S2_MRD.md`),
-    fetchRepoFile(repo, `${docsPath}/S3_PRD.md`).then(r => r || fetchRepoFile(repo, `${docsPath}/S3_PRD_CHECKLIST.md`)),
+    fetchRepoFile(repo, `${docsPath}/S3_PRD.md`),
     fetchRepoFile(repo, `${docsPath}/S3_PRD_CHECKLIST.md`),
+    fetchRepoFile(repo, `${docsPath}/PRD_CHECKLIST.md`),
     fetchRepoFile(repo, `${docsPath}/COMPETITIVE_LOG.md`),
   ]);
 
-  const compData = compLog ? parseCompetitiveLog(compLog) : { lastDate: null, changes: [] };
-  const s3Comp = s3Checklist ? parsePrdCompletion(s3Checklist) : (s3 ? parsePrdCompletion(s3) : null);
+  const s1 = s1Primary || s1Alt;
+  const s3 = s3Primary || s3Alt;
+  const prdForCompletion = s3Checklist || s3Alt || s3Primary;
 
-  // Use most recent date for staleness: competitive log date, or s1/s2/s3 dates
+  const compData = compLog ? parseCompetitiveLog(compLog) : { lastDate: null, changes: [] };
+  const s3Comp = prdForCompletion ? parsePrdCompletion(prdForCompletion) : null;
+
+  // Use most recent date for staleness: competitive log, s1, or s2 dates
   const s1Date = s1 ? parseUpdatedDate(s1) : null;
   const s2Date = s2 ? parseUpdatedDate(s2) : null;
   const s3Date = s3 ? parseUpdatedDate(s3) : null;
-  const refreshDate = compData.lastDate || s1Date;
+  const refreshDate = compData.lastDate || s1Date || s2Date;
 
   return {
     product,
@@ -117,7 +139,7 @@ export async function fetchProductIntel(product: string): Promise<ProductIntel |
     s3Completion: s3Comp,
     lastCompetitiveRefresh: refreshDate,
     recentChanges: compData.changes,
-    staleness: calcStaleness(refreshDate),
+    staleness: (s1 || compLog) ? calcStaleness(refreshDate) : 'missing',
   };
 }
 
