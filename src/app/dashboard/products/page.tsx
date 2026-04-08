@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchPDLCRegistry } from '@/lib/github';
+import { fetchAllIssues, fetchPDLCRegistry, fetchPortfolioSummary } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard } from '@/components/dashboard';
 import { ProductIntelSummaryTable } from '@/components/product-intelligence';
 import { fetchAllProductIntel } from '@/lib/product-intel';
@@ -69,11 +69,17 @@ function companyColor(company: string): string {
 }
 
 export default async function ProductsPage() {
-  const [allIssues, pdlcMd, allIntel] = await Promise.all([
+  const [allIssues, pdlcMd, allIntel, portfolioMd] = await Promise.all([
     fetchAllIssues(),
     fetchPDLCRegistry(),
     fetchAllProductIntel(),
+    fetchPortfolioSummary(),
   ]);
+
+  // Product summaries
+  const summaryRows = portfolioMd ? parseMarkdownTable(extractSection(portfolioMd, 'Product Summaries')) : [];
+  // PDLC gate status
+  const gateRows = portfolioMd ? parseMarkdownTable(extractSection(portfolioMd, 'PDLC Gate Status')) : [];
 
   const activeProducts = pdlcMd ? parseMarkdownTable(extractSection(pdlcMd, 'Active Products')) : [];
   const foundryProducts = pdlcMd ? parseMarkdownTable(extractSection(pdlcMd, 'Foundry Pipeline \\(Axiom — Apple IAP\\)')) : [];
@@ -89,6 +95,39 @@ export default async function ProductsPage() {
         <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Product Lineup</h1>
         <p className="text-sm text-muted-foreground mt-1">All products across Forge, Axiom, and Nexus</p>
       </div>
+
+      {/* ── Product Summaries (from PORTFOLIO_SUMMARY.md) ──── */}
+      {summaryRows.length > 0 && (
+        <SectionCard title={`Product Summaries (${summaryRows.length})`} className="mb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2.5 pl-3 pr-2">Product</th>
+                  <th className="text-left py-2.5 px-2">Problem</th>
+                  <th className="text-left py-2.5 pl-2 pr-3">Positioning</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summaryRows.map((row, i) => {
+                  const name = row.cells[0] || '';
+                  const slug = name.toLowerCase().replace(/\s+/g, '-');
+                  const href = PRODUCT_ROUTES[name] || `/dashboard/products/${slug}`;
+                  return (
+                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2 font-medium whitespace-nowrap">
+                        <Link href={href} className="text-foreground no-underline hover:text-primary">{name}</Link>
+                      </td>
+                      <td className="py-2 px-2 text-muted-foreground max-w-[300px]">{row.cells[1]}</td>
+                      <td className="py-2 pl-2 pr-3 text-muted-foreground max-w-[300px]">{row.cells[3]}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
 
       {/* ── Active Products (from PDLC registry) ───────────── */}
       <SectionCard title={`Active Products (${activeProducts.length})`} className="mb-6">
@@ -149,6 +188,53 @@ export default async function ProductsPage() {
               Products with missing or outdated research need attention before GTM decisions.
             </div>
           )}
+        </SectionCard>
+      )}
+
+      {/* ── PDLC Gate Status ──────────────────────────────── */}
+      {gateRows.length > 0 && (
+        <SectionCard title="PDLC Gate Status" className="mb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Product</th>
+                  {['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'].map(s => (
+                    <th key={s} className="text-center py-2 px-1.5 font-mono">{s}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {gateRows.map((row, i) => {
+                  const name = row.cells[0] || '';
+                  const slug = name.toLowerCase().replace(/\s+/g, '-');
+                  const href = PRODUCT_ROUTES[name] || `/dashboard/products/${slug}`;
+                  return (
+                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2 font-medium whitespace-nowrap">
+                        <Link href={href} className="text-foreground no-underline hover:text-primary">{name}</Link>
+                      </td>
+                      {row.cells.slice(1, 9).map((cell, ci) => {
+                        const isPass = cell.includes('✅');
+                        const isCurrent = cell.includes('🔄');
+                        const color = isPass ? 'text-green-400' : isCurrent ? 'text-amber-400' : 'text-muted-foreground/30';
+                        return (
+                          <td key={ci} className={`py-2 px-1.5 text-center ${color}`}>
+                            {isPass ? '●' : isCurrent ? '◐' : '○'}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex gap-4 mt-2 text-[10px] text-muted-foreground px-1">
+            <span><span className="text-green-400">●</span> Passed</span>
+            <span><span className="text-amber-400">◐</span> Current</span>
+            <span><span className="text-muted-foreground/30">○</span> Not started</span>
+          </div>
         </SectionCard>
       )}
 

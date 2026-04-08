@@ -1,17 +1,39 @@
-# EXECUTION BRIEF — Wire PRD Checklist to GrovaKid Dashboard Page
+# EXECUTION BRIEF — Fix PRD Checklist Parser (One-Line Bug)
 
 **Date:** 2026-04-07 | **To:** Code CLI (lc-bigclaw) | **Priority:** P0
 **Status:** MANDATORY — Michael reviews PRD progress with co-founder Mr. L. Must work.
+**Effort:** 5 minutes — one regex fix + verify.
 
 ## SITUATION
 
-The `PrdChecklist` component in `src/components/prd-checklist.tsx` is fully built — category progress bars, done/in-progress/deferred counters, filterable + sortable table, GitHub issue links. BUT the GrovaKid page at `src/app/dashboard/products/grovakid/page.tsx` has an empty `parsePrdItems()` that returns `[]`. The component renders nothing.
+Everything is already wired — PRD_CHECKLIST.md files exist for 7 products, parser exists at `src/lib/prd-parser.ts`, all product pages call `fetchPrdChecklist(repo)` and pass `prdItems` to `ProductPage`, and the `PrdChecklist` component is fully built.
 
-The data exists at `learnie-ai/docs/product/PRD_CHECKLIST.md` — 61 items across 9 categories with status, owner, priority, and GitHub issue links.
+**One bug:** The parser only matches GrovaKid's `PRD-xxx` prefix. All other products use different prefixes (FC-, KT-, IS-, CX-, FF-, RH-) and get silently skipped.
 
-## FIX
+## FIX — One line in `src/lib/prd-parser.ts`
 
-### STEP 1: Implement parsePrdItems() to parse PRD_CHECKLIST.md
+Change line:
+```typescript
+if (cells.length < 5 || !cells[0].startsWith('PRD-')) continue;
+```
+
+To:
+```typescript
+if (cells.length < 5 || !cells[0].match(/^[A-Z]+-\d+/)) continue;
+```
+
+This matches any uppercase prefix followed by dash and digits: PRD-001, FC-001, KT-001, IS-001, CX-001, FF-001, RH-001.
+
+## VERIFY
+
+After the fix, check these product pages show PRD progress:
+- [ ] /dashboard/products/grovakid — 61 items (PRD-xxx)
+- [ ] /dashboard/products/fairconnect — 13 items (FC-xxx)
+- [ ] /dashboard/products/keeptrack — 12 items (KT-xxx)
+- [ ] /dashboard/products/iris-studio — 20 items (IS-xxx)
+- [ ] /dashboard/products/fatfrogmodels — 21 items (FF-xxx)
+- [ ] /dashboard/products/cortex — 15 items (CX-xxx)
+- [ ] /dashboard/products/rehearsal — 13 items (RH-xxx)
 
 The markdown file has tables like:
 ```
