@@ -141,43 +141,7 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
       {expanded && (
         <div className="px-3 pb-3 pt-0 space-y-2">
 
-          {/* ── RADAR Controls ─────────────────────────────── */}
-          <div className="border border-border/50 rounded-lg p-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">RADAR Controls</div>
-
-            {/* Kill switch */}
-            <div className="mb-2 pb-2 border-b border-border/30">
-              <Toggle enabled={controls.radar.frozen} onToggle={() => toggle('radar.frozen', controls.radar.frozen)} label={controls.radar.frozen ? 'FROZEN — Kill Switch ON' : 'Trading active'} danger={true} />
-            </div>
-
-            {/* Trading Mode — compact */}
-            <div className="mb-2">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Trading Mode</div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {['Auto', 'Aggressive', 'Balanced', 'Conservative'].map(s => (
-                  <button key={s} onClick={() => setSelectedStrategy(s)} className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${selectedStrategy === s ? 'bg-primary/20 text-primary border-primary/40 font-semibold' : 'text-muted-foreground border-border hover:border-primary/30 bg-transparent'}`}>{s}</button>
-                ))}
-                <span className="text-muted-foreground/40 text-xs">×</span>
-                {['Accelerate', 'Grow', 'Build'].map(m => (
-                  <button key={m} onClick={() => setSelectedMode(m)} className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${selectedMode === m ? 'bg-primary/20 text-primary border-primary/40 font-semibold' : 'text-muted-foreground border-border hover:border-primary/30 bg-transparent'}`}>{m}</button>
-                ))}
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">Switch:</span>
-                  <button onClick={() => setSwitchType(t => t === 'Hard' ? 'Soft' : 'Hard')} className="text-[11px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground bg-transparent cursor-pointer">{switchType}</button>
-                  <button onClick={handleApplyMode} className="text-[11px] px-3 py-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer border-none">Apply</button>
-                </div>
-              </div>
-              <div className="text-[10px] text-muted-foreground mt-1">
-                Active: <span className="text-primary font-mono">{controls.radar.strategy || 'Auto'} — {controls.radar.mode || 'Grow'}</span>
-              </div>
-            </div>
-
-            {/* Constitution */}
-            <div className="flex items-center gap-2 text-xs">
-              <StatusDot status="good" size="sm" />
-              <span className="text-muted-foreground">Constitution: All laws enforced</span>
-            </div>
-          </div>
+          {/* RADAR controls removed — lives in RADAR app (radar-bigclaw.vercel.app) */}
 
           {/* ── Product Pipeline ────────────────────────────── */}
           <div className="border border-border/50 rounded-lg p-3">
@@ -223,45 +187,7 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
             </div>
           </div>
 
-          {/* ── User Management — embedded ──────────────────── */}
-          <div className="border border-border/50 rounded-lg p-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">User Management</div>
-
-            {accessConfig ? (
-              <>
-                <div className="space-y-1 mb-3">
-                  {Object.entries(accessConfig.users).map(([email, user]) => (
-                    <div key={email} className="flex items-center gap-2 text-xs">
-                      <StatusDot status="good" size="sm" />
-                      <span className="text-foreground font-mono flex-1 truncate">{email}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${ROLE_COLORS[user.role] || 'bg-muted text-muted-foreground'}`}>{user.role}</span>
-                      {user.products?.length ? <span className="text-[10px] text-muted-foreground">{user.products.join(', ')}</span> : null}
-                      {email !== 'michaelmkliu@gmail.com' && (
-                        <button onClick={() => handleRemoveUser(email)} className="text-[10px] text-red-400 hover:text-red-300 border-none bg-transparent cursor-pointer">✕</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="email@example.com" className="text-xs px-2 py-1 rounded border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 flex-1 min-w-[160px]" />
-                  <select value={newRole} onChange={e => setNewRole(e.target.value)} className="text-xs px-2 py-1 rounded border border-border bg-background text-foreground">
-                    <option value="product-viewer">product-viewer</option>
-                    <option value="investor">investor</option>
-                    <option value="admin">admin</option>
-                  </select>
-                  {newRole === 'product-viewer' && (
-                    <select value={newProduct} onChange={e => setNewProduct(e.target.value)} className="text-xs px-2 py-1 rounded border border-border bg-background text-foreground">
-                      <option value="">product...</option>
-                      {ALL_PRODUCTS.filter(p => p.slug !== 'bigclaw-dashboard').map(p => <option key={p.slug} value={p.slug}>{p.slug}</option>)}
-                    </select>
-                  )}
-                  <button onClick={handleAddUser} className="text-xs px-3 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer border-none">Add</button>
-                </div>
-              </>
-            ) : (
-              <p className="text-xs text-muted-foreground">Session expired — sign out and back in.</p>
-            )}
-          </div>
+          {/* User Management moved to Access Control (/dashboard/settings/users) */}
 
         </div>
       )}
