@@ -107,27 +107,7 @@ export function ActionItems({ todoMd }: { todoMd: string | null }) {
         </SectionCard>
       )}
 
-      {/* Upcoming — collapsed */}
-      {(byApril10.length > 0 || afterNaming.length > 0) && (
-        <div className="mb-4">
-          <CollapsibleSection title={`Upcoming (${byApril10.length + afterNaming.length})`} defaultOpen={false}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-1">
-              {[...byApril10, ...afterNaming].map((item, i) => <TodoCard key={i} item={item} />)}
-            </div>
-          </CollapsibleSection>
-        </div>
-      )}
-
-      {/* Dependency Chains — collapsed */}
-      {chains.length > 0 && (
-        <div className="mb-4">
-          <CollapsibleSection title="Dependency Chains" defaultOpen={false}>
-            <div className="rounded-xl border border-border bg-card p-4">
-              <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap">{chains.join('\n')}</pre>
-            </div>
-          </CollapsibleSection>
-        </div>
-      )}
+      {/* Upcoming and Dependency Chains removed — not actionable on dashboard */}
     </div>
   );
 }

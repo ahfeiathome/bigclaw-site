@@ -98,7 +98,7 @@ export function SidebarNav() {
           src="/images/bigclaw-logo.png"
           alt="BigClaw AI"
           className="w-full rounded-lg"
-          style={{ maxHeight: '120px', objectFit: 'contain' }}
+          style={{ maxHeight: '120px', objectFit: 'contain', borderRadius: '12px' }}
         />
         <span style={{ fontSize: '22px', fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>
           BigClaw AI
@@ -127,8 +127,8 @@ export function SidebarNav() {
         <>
           {/* Company */}
           <SectionHeader label="Company" />
-          <SectionLink label="Mission Control" href="/dashboard/mission-control" />
-          <SectionLink label="Executive Dashboard" href="/dashboard/executive" />
+          <SectionLink label="Dashboard" href="/dashboard/mission-control" />
+          <SubLink label="Organization" href="/dashboard/organization" />
 
           {/* Product Lineup */}
           <SectionHeader label="Product Lineup" />
