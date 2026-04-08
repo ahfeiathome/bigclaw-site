@@ -139,15 +139,21 @@ export function SidebarNav() {
 
           {/* Engineering */}
           <SectionHeader label="Engineering" />
+          <SectionLink label="Overview" href="/dashboard/engineering" />
           <SubLink label="SDLC Process" href="/dashboard/sdlc/process" />
           <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
           <SubLink label="Violations" href="/dashboard/sdlc/violations" />
-          <SubLink label="Test Health" href="/dashboard/products/health" />
+          {PRODUCTS.map(p => (
+            <SubLink key={`eng-${p.slug}`} label={p.name} href={`/dashboard/engineering/${p.slug}`} />
+          ))}
 
           {/* Finance */}
           <SectionHeader label="Finance" />
-          <SectionLink label="Finance" href="/dashboard/finance" />
+          <SectionLink label="Overview" href="/dashboard/finance" />
           <SubLink label="Portfolio" href="/dashboard/portfolio" />
+          {PRODUCTS.map(p => (
+            <SubLink key={`fin-${p.slug}`} label={p.name} href={`/dashboard/finance/${p.slug}`} />
+          ))}
 
           {/* Knowledge */}
           <SectionHeader label="Knowledge" />
