@@ -112,21 +112,48 @@ export default function HelpPage() {
       {/* RADAR Controls */}
       <SectionCard title="RADAR Trading Controls (Command Center)" className="mb-6">
         <div className="space-y-3 text-xs">
-          <div>
-            <span className="text-foreground font-medium">Trading Active toggle:</span>
-            <span className="text-muted-foreground ml-1">Kill switch. When OFF, RADAR engine stops all trading. Paper and live accounts both halt.</span>
+          <p className="text-muted-foreground">The Command Center is where you control RADAR trading. Changes you make here are written to <code className="font-mono text-primary">config/controls.json</code> and the RADAR engine on Pi5 reads this file on every cron cycle (every 30 min during market hours).</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Control</th>
+                  <th className="text-left py-2 px-2">What It Does</th>
+                  <th className="text-left py-2 pl-2 pr-3">How It Works</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/30">
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Trading Active toggle</td>
+                  <td className="py-2 px-2 text-muted-foreground">Kill switch. Stops all trading immediately.</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Writes <code className="font-mono text-primary">trading_active: false</code> to controls.json. Engine halts on next cycle.</td>
+                </tr>
+                <tr className="border-b border-border/30 bg-muted/50">
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Strategy pills (Auto, Aggressive, Balanced, Conservative)</td>
+                  <td className="py-2 px-2 text-muted-foreground">Sets which trading strategy the engine uses. Affects risk level and position sizing.</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Click a strategy → click Apply → writes to controls.json → engine picks up on next 30-min cycle.</td>
+                </tr>
+                <tr className="border-b border-border/30">
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Mode pills (Accelerate, Grow, Build)</td>
+                  <td className="py-2 px-2 text-muted-foreground">Sets the growth mode. Affects how aggressively the engine deploys capital.</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Same as strategy — select mode, click Apply.</td>
+                </tr>
+                <tr className="border-b border-border/30 bg-muted/50">
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Apply button</td>
+                  <td className="py-2 px-2 text-muted-foreground">Saves your strategy + mode selection to the engine config.</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Writes to <code className="font-mono text-primary">config/controls.json</code>. Engine reads this file every 30 min during market hours.</td>
+                </tr>
+                <tr className="border-b border-border/30">
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">&quot;Active: options_stocks — auto&quot;</td>
+                  <td className="py-2 px-2 text-muted-foreground">Shows what the engine is currently running. Confirms your last Apply took effect.</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Reads current config. &quot;options_stocks&quot; = strategy type, &quot;auto&quot; = execution mode.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div>
-            <span className="text-foreground font-medium">Trading Mode (Strategy × Mode):</span>
-            <span className="text-muted-foreground ml-1">These are READ-ONLY display values showing what the RADAR Python engine is currently configured to use. The dashboard does NOT control trading — it only reads the current config from <code className="font-mono text-primary">controls.json</code>. The actual RADAR engine on Pi5 reads its own config.</span>
-          </div>
-          <div>
-            <span className="text-foreground font-medium">&quot;Active: options_stocks — auto&quot;:</span>
-            <span className="text-muted-foreground ml-1">Shows the currently active strategy name and mode from the RADAR engine config. &quot;options_stocks&quot; is the strategy type, &quot;auto&quot; is the execution mode. This is paper trading only — live trading requires separate approval and the live account threshold (30% win rate on paper first).</span>
-          </div>
-          <div>
-            <span className="text-foreground font-medium">Apply button:</span>
-            <span className="text-muted-foreground ml-1">Writes to <code className="font-mono text-primary">config/controls.json</code> in the dashboard repo. The RADAR engine on Pi5 reads this file periodically. Changes take effect on next RADAR cron cycle (every 30 min during market hours).</span>
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 mt-2">
+            <span className="text-amber-400 font-semibold text-xs">Paper trading only.</span>
+            <span className="text-muted-foreground text-xs ml-1">Currently trading with paper (simulated) money. Live trading requires paper account to sustain 40% win rate first, then Michael approval (💳 gate).</span>
           </div>
         </div>
       </SectionCard>
