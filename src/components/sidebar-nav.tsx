@@ -140,6 +140,7 @@ export function SidebarNav() {
           {/* Settings */}
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
+            <SubLink label="Help" href="/dashboard/help" />
           </div>
         </>
       )}

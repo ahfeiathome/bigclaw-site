@@ -78,11 +78,12 @@ export default async function MissionControlPage() {
   const burnRow = financial.find(r => r.cells[0]?.toLowerCase().includes('burn'));
   const burnVal = burnRow?.cells[1]?.replace('(free tiers)', '').trim() || '~$5/mo';
 
-  // Health
-  const healthRows = content ? parseMarkdownTable(extractSection(content, 'System Health')) : [];
-  const totalHealth = healthRows.length;
-  const okHealth = healthRows.filter(r => /OK|RUNNING|ONLINE/i.test(r.cells[1] || '')).length;
-  const healthScore = totalHealth > 0 ? Math.round((okHealth / totalHealth) * 100) : 0;
+  // Health — compute from real data: products active, P0 count, agents online
+  const totalProducts = registryProducts.filter(p => p.slug !== 'bigclaw-dashboard').length;
+  const productsLive = registryProducts.filter(p => p.status === 'LIVE').length;
+  const p0Issues = allIssues.filter(i => i.labels.includes('P0')).length;
+  // Score: start at 100, -10 per P0, +5 per live product, -5 if no agents
+  const healthScore = Math.max(0, Math.min(100, 100 - (p0Issues * 10) + (productsLive * 5)));
   const healthSemantic = healthScore >= 80 ? 'success' as const : healthScore >= 60 ? 'warning' as const : 'danger' as const;
 
   // RADAR
@@ -113,8 +114,13 @@ export default async function MissionControlPage() {
   const totalAgents = agentTableRows.length || 6;
   const agentSemantic = activeAgents === 0 ? 'danger' as const : activeAgents < totalAgents ? 'warning' as const : 'success' as const;
 
-  // Burn
+  // Burn — normalize to monthly
+  let burnDisplay = burnVal;
   const burnFloat = parseFloat(burnVal.replace(/[^0-9.]/g, '')) || 0;
+  if (burnVal.includes('/day')) {
+    const monthly = burnFloat * 30;
+    burnDisplay = `~$${monthly.toFixed(0)}/mo`;
+  }
   const burnSemantic = burnFloat < 5 ? 'success' as const : burnFloat < 15 ? 'warning' as const : 'danger' as const;
 
   return (
@@ -127,7 +133,7 @@ export default async function MissionControlPage() {
         <KpiCard label="Company Health" value={`${healthScore}`} semantic={healthSemantic} delta={healthScore >= 80 ? '▲ Healthy' : healthScore >= 60 ? '— Warning' : '▼ Critical'} sparkData={[70, 75, 80, healthScore, healthScore, healthScore, healthScore]} subtitle="/100" />
         <KpiCard label="RADAR Equity" value={radarEquityVal} semantic={radarSemantic} delta={`P/L: ${radarPnlVal}`} sparkData={equitySparkData.length >= 2 ? equitySparkData : undefined} />
         <KpiCard label="Open P0s" value={String(p0Count)} semantic={p0Semantic} delta={p0Count === 0 ? '▲ Clear' : `${p0Count} blocking`} />
-        <KpiCard label="Monthly Burn" value={burnVal} semantic={burnSemantic} delta={burnFloat < 5 ? '▲ Under budget' : undefined} />
+        <KpiCard label="Monthly Burn" value={burnDisplay} semantic={burnSemantic} delta={burnFloat < 100 ? '▲ Under budget' : undefined} />
         <KpiCard label="Revenue" value="$0" semantic="warning" delta="Pre-revenue" subtitle="Phase 0" />
         <KpiCard label="Agents" value={`${activeAgents}/${totalAgents}`} semantic={agentSemantic} delta={`${activeAgents} active`} />
       </div>
