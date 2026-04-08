@@ -105,9 +105,12 @@ export async function ProductPage(props: ProductPageProps) {
   const gatesSections = gatesMd ? (() => {
     const gate3Section = gatesMd.split('## Gate 3: Testing')[1]?.split('## Gate 4')[0] || '';
     const gate3Lines = gate3Section.split('\n').filter(l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/));
+    const nameLower = name.toLowerCase();
+    const slugLower = props.slug.toLowerCase();
     const productGateRow = gate3Lines.find(l => {
       const cells = l.split('|').map(c => c.trim()).filter(Boolean);
-      return cells[0]?.toLowerCase().includes(name.toLowerCase()) || cells[0]?.toLowerCase() === repoSlug?.replace('-', '');
+      const cellName = cells[0]?.toLowerCase() || '';
+      return cellName === nameLower || cellName === slugLower || cellName.includes(nameLower) || nameLower.includes(cellName);
     });
     if (!productGateRow) return null;
     const cells = productGateRow.split('|').map(c => c.trim()).filter(Boolean);
