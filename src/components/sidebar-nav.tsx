@@ -136,6 +136,9 @@ export function SidebarNav() {
             <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
 
+          {/* Reference */}
+          <SubLink label="Agent Docs" href="/dashboard/reference" />
+
           {/* Settings */}
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Settings" href="/dashboard/settings/users" />
