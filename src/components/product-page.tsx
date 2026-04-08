@@ -3,6 +3,7 @@ import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
 import { ProductIntelligencePanel } from './product-intelligence';
+import { IssueTrendChart } from './issues-trend-chart';
 import { fetchProductIntel } from '@/lib/product-intel';
 
 interface ProductPageProps {
@@ -70,7 +71,7 @@ export async function ProductPage(props: ProductPageProps) {
 
   const [allIssues, closedIssues, intel] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),
-    repoSlug ? fetchRecentClosedIssues(30) : Promise.resolve([]),
+    repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
     fetchProductIntel(name),
   ]);
 
@@ -185,7 +186,12 @@ export async function ProductPage(props: ProductPageProps) {
 
       {/* ── SECTION 3: Issues Trend ────────────────────────── */}
       {repoSlug && (
-        <SectionCard title="Issues Trend (30 days)" className="mb-6">
+        <SectionCard title="Issues Trend (90 days)" className="mb-6">
+          {/* Line chart */}
+          <div className="mb-4">
+            <IssueTrendChart openIssues={productIssues} closedIssues={productClosed} days={90} />
+          </div>
+
           {/* Open vs Closed bar */}
           <div className="mb-4">
             <div className="flex items-center gap-4 text-xs mb-2">
