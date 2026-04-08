@@ -3,15 +3,21 @@ import fs from 'fs';
 import path from 'path';
 
 function getAdmin(request: NextRequest): { email: string; role: string } | null {
+  // Check bigclaw-user cookie first (set during email/password login)
   const userCookie = request.cookies.get('bigclaw-user');
-  if (!userCookie) return null;
-  try {
-    const user = JSON.parse(userCookie.value);
-    if (user.role !== 'admin') return null;
-    return user;
-  } catch {
-    return null;
+  if (userCookie) {
+    try {
+      const user = JSON.parse(userCookie.value);
+      if (user.role === 'admin') return user;
+    } catch { /* fall through */ }
   }
+  // Fallback: if authenticated but no user cookie (stale session), treat as admin
+  // Only admins can log in via password, so bigclaw-auth=authenticated implies admin
+  const authCookie = request.cookies.get('bigclaw-auth');
+  if (authCookie?.value === 'authenticated') {
+    return { email: 'michaelmkliu@gmail.com', role: 'admin' };
+  }
+  return null;
 }
 
 function readConfig(): Record<string, unknown> {
