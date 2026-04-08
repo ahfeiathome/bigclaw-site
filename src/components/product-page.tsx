@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
@@ -69,12 +69,14 @@ export async function ProductPage(props: ProductPageProps) {
   const shelvedReason = props.shelvedReason;
   const revivalCondition = props.revivalCondition;
 
-  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd] = await Promise.all([
+  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),
     repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
     fetchProductIntel(name),
     repoSlug ? fetchRepoFile(repoSlug, 'docs/product/S2_MRD.md') : Promise.resolve(null),
     fetchDailyCosts(),
+    fetchSDLCViolations(),
+    fetchSDLCGatesMatrix(),
   ]);
 
   // Parse MRD for market positioning
@@ -88,6 +90,29 @@ export async function ProductPage(props: ProductPageProps) {
       mrdSections[heading.toLowerCase()] = body.slice(0, 200);
     }
   }
+
+  // Parse SDLC violations for this product
+  const allViolationLines = violationsMd ? violationsMd.split('\n').filter(l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/) && !l.includes('| Date ')) : [];
+  const productViolations = allViolationLines.filter(l => {
+    const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+    return cells[1]?.toLowerCase().includes(name.toLowerCase()) || cells[1]?.toLowerCase().includes(props.slug);
+  }).map(l => {
+    const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+    return { date: cells[0], project: cells[1], code: cells[2], severity: cells[3], description: cells[4] };
+  });
+
+  // Parse SDLC gates for this product's repo
+  const gatesSections = gatesMd ? (() => {
+    const gate3Section = gatesMd.split('## Gate 3: Testing')[1]?.split('## Gate 4')[0] || '';
+    const gate3Lines = gate3Section.split('\n').filter(l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/));
+    const productGateRow = gate3Lines.find(l => {
+      const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+      return cells[0]?.toLowerCase().includes(name.toLowerCase()) || cells[0]?.toLowerCase() === repoSlug?.replace('-', '');
+    });
+    if (!productGateRow) return null;
+    const cells = productGateRow.split('|').map(c => c.trim()).filter(Boolean);
+    return { project: cells[0], unitTests: cells[1], e2eTests: cells[2], coverage: cells[3], ci: cells[4], localTesting: cells[5] };
+  })() : null;
 
   // Parse per-product cost from DAILY_COSTS.md
   let productCost: string | null = null;
@@ -225,6 +250,48 @@ export async function ProductPage(props: ProductPageProps) {
           <div className="mt-4">
             <PrdChecklist items={prdItems} repoSlug={repoSlug || ''} />
           </div>
+        )}
+      </SectionCard>
+
+      {/* ── SECTION D: SDLC Gates + Violations ────────────── */}
+      <SectionCard title="SDLC Gates & Violations" className="mb-6">
+        {gatesSections ? (
+          <div className="mb-4">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Test Health</div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {[
+                { label: 'Unit Tests', value: gatesSections.unitTests },
+                { label: 'E2E Tests', value: gatesSections.e2eTests },
+                { label: 'Coverage', value: gatesSections.coverage },
+                { label: 'CI Pipeline', value: gatesSections.ci },
+                { label: 'Local Testing', value: gatesSections.localTesting },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-lg border border-border bg-card/50 p-2">
+                  <div className="text-[9px] text-muted-foreground uppercase">{label}</div>
+                  <div className={`text-xs font-mono mt-0.5 ${value?.includes('✅') || value?.includes('pass') ? 'text-green-400' : value?.includes('❌') || value?.includes('ZERO') ? 'text-red-400' : 'text-muted-foreground'}`}>{value || '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground mb-4">No test health data in SDLC_GATES_MATRIX.md for this product.</div>
+        )}
+
+        {productViolations.length > 0 ? (
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Violations ({productViolations.length})</div>
+            <div className="space-y-1">
+              {productViolations.map((v, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <span className="font-mono text-muted-foreground whitespace-nowrap">{v.date}</span>
+                  <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${v.severity === 'Critical' ? 'bg-red-500/20 text-red-400' : v.severity === 'High' ? 'bg-amber-500/20 text-amber-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{v.code}</span>
+                  <span className="text-muted-foreground truncate">{v.description}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-green-400">No violations recorded for this product.</div>
         )}
       </SectionCard>
 

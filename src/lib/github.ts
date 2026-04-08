@@ -187,7 +187,7 @@ export async function fetchLearnieHealth(): Promise<{
 // Forge repos
 export const FORGE_REPOS = new Set(['learnie-ai', 'bigclaw-site', 'the-firm']);
 // Axiom repos
-export const AXIOM_REPOS = new Set(['axiom', 'fairconnect', 'keeptrack', 'subcheck']);
+export const AXIOM_REPOS = new Set(['axiom', 'iris-studio', 'fatfrogmodels', 'fairconnect', 'keeptrack', 'subcheck', 'cortex', 'radar-site', 'rehearsal']);
 // All repos for cross-repo queries
 const ALL_REPOS = [...FORGE_REPOS, ...AXIOM_REPOS, 'bigclaw-ai'];
 
