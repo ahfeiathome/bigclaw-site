@@ -65,8 +65,11 @@ export async function fetchTooling(): Promise<string | null> {
   return fetchRepoFile('the-firm', 'docs/operations/TOOLING.md');
 }
 
-export async function fetchPrdChecklist(): Promise<string | null> {
-  return fetchRepoFile('learnie-ai', 'docs/product/PRD_CHECKLIST.md');
+export async function fetchPrdChecklist(
+  repo: string = 'learnie-ai',
+  path: string = 'docs/product/PRD_CHECKLIST.md',
+): Promise<string | null> {
+  return fetchRepoFile(repo, path);
 }
 
 export async function fetchTestMatrix(): Promise<string | null> {
