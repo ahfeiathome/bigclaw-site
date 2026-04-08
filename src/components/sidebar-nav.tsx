@@ -129,15 +129,13 @@ export function SidebarNav() {
           <SectionHeader label="Company" />
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
           <SectionLink label="Executive Dashboard" href="/dashboard/executive" />
+          <SubLink label="Agent Team" href="/dashboard/agent-team" />
 
           {/* Product Lineup */}
           <SectionHeader label="Product Lineup" />
           {PRODUCTS.map(p => (
             <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
-
-          {/* Reference */}
-          <SubLink label="Agent Docs" href="/dashboard/reference" />
 
           {/* Settings */}
           <div className="pt-4 border-t border-border/30 mt-4">

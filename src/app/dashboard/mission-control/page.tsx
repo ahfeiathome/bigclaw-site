@@ -1,4 +1,5 @@
-import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchProducts } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
@@ -47,7 +48,7 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog] = await Promise.all([
+  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
     fetchHealth(),
@@ -56,6 +57,7 @@ export default async function MissionControlPage() {
     fetchRadarDashboard(),
     fetchPDLCRegistry(),
     fetchMorningBrainLog(),
+    fetchProducts(),
   ]);
 
   // Production Gates
@@ -64,13 +66,10 @@ export default async function MissionControlPage() {
   const gates = gatesData?.gates || [];
   const pendingGates = pendingData?.pending || [];
 
-  // PDLC
-  const pdlcRows = pdlcMd ? (() => {
-    const section = pdlcMd.split('## Active Products')[1]?.split('##')[0] || '';
-    const lines = section.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/));
-    if (lines.length <= 1) return [];
-    return lines.slice(1).map(line => line.split('|').map(c => c.trim()).filter(Boolean));
-  })() : [];
+  // PDLC — use dynamic products from REGISTRY.md (all products, not just Active Products section)
+  const pdlcRows = registryProducts
+    .filter(p => p.slug !== 'bigclaw-dashboard')
+    .map(p => [p.name, p.company, p.stage, p.stageRaw, '', '', p.revenue]);
 
   // Finance
   const financial = content ? parseMarkdownTable(extractSection(content, 'Financial Summary')) : [];
