@@ -1,8 +1,9 @@
-import { fetchPatrolReport, fetchAllIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchRecentClosedIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
+import { IssueTrendChart } from '@/components/issues-trend-chart';
 import { ActionItems } from '@/components/action-items';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,9 +49,10 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts] = await Promise.all([
+  const [content, allIssues, closedIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
+    fetchRecentClosedIssues(90),
     fetchHealth(),
     fetchMichaelTodo(),
     fetchBandwidth(),
@@ -224,6 +226,11 @@ export default async function MissionControlPage() {
           </div>
         </SectionCard>
       )}
+
+      {/* ── Aggregate Issues Trend ────────────────────────────── */}
+      <SectionCard title="Issues Trend (all products, 90 days)" className="mt-4">
+        <IssueTrendChart openIssues={allIssues} closedIssues={closedIssues} days={90} />
+      </SectionCard>
 
       {/* ── Awaiting Approval ──────────────────────────────────── */}
       {pendingGates.length > 0 && (

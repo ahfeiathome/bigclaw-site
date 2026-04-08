@@ -59,18 +59,18 @@ function parseCompetitiveLog(content: string): { lastDate: string | null; change
 }
 
 function parsePrdCompletion(content: string): { done: number; total: number } | null {
+  // Best method: parse the Summary section directly (most reliable)
+  // Format: | Done | 33 | or | Status | Count | ... | Done | 33 |
+  const doneMatch = content.match(/\|\s*Done\s*\|\s*(\d+)\s*\|/);
+  const totalLine = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
+  if (doneMatch && totalLine) {
+    return { done: parseInt(doneMatch[1]), total: parseInt(totalLine[1]) };
+  }
+
+  // Fallback: count PRD-### rows with "Done" status
   const lines = content.split('\n');
   let done = 0;
   let total = 0;
-
-  // Method 1: checkbox format
-  for (const line of lines) {
-    if (line.match(/^\s*-\s*\[x\]/i)) { done++; total++; }
-    else if (line.match(/^\s*-\s*\[\s*\]/)) { total++; }
-  }
-  if (total > 0) return { done, total };
-
-  // Method 2: PRD_CHECKLIST table format — count only PRD-### rows
   for (const line of lines) {
     if (!line.includes('|') || line.match(/^\|[\s-:|]+\|$/)) continue;
     const cells = line.split('|').map(c => c.trim()).filter(Boolean);
@@ -79,21 +79,13 @@ function parsePrdCompletion(content: string): { done: number; total: number } | 
     const status = cells[3]?.replace(/\*\*/g, '').trim().toLowerCase() || '';
     if (status === 'done') done++;
   }
+  if (total > 0) return { done, total };
 
-  // Method 3: If Total row exists in summary table, use it directly
-  if (total === 0) {
-    const totalMatch = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|[^|]*\|\s*(\d+)\s*\|/i) ||
-                       content.match(/Total.*?(\d+)\s*\|\s*(\d+)%/);
-    if (totalMatch) {
-      // Try to find the summary table with Done count
-      const summaryMatch = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
-      if (summaryMatch) {
-        done = parseInt(summaryMatch[1]);
-        total = parseInt(totalMatch[1]);
-      }
-    }
+  // Last fallback: checkbox format
+  for (const line of lines) {
+    if (line.match(/^\s*-\s*\[x\]/i)) { done++; total++; }
+    else if (line.match(/^\s*-\s*\[\s*\]/)) { total++; }
   }
-
   return total > 0 ? { done, total } : null;
 }
 
