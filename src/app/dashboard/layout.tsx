@@ -55,22 +55,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Watermark */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: 'none',
-          backgroundImage: 'url(/images/bigclaw-logo-transparent.jpeg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center center',
-          backgroundSize: '70vw auto',
-          opacity: 0.05,
-          mixBlendMode: 'luminosity',
-        }}
-      />
+      {/* Watermark removed per Michael's request */}
       <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 overflow-hidden relative">
         {/* Backdrop — mobile only */}
