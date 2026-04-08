@@ -1,6 +1,11 @@
 import { ProductPage } from '@/components/product-page';
+import { fetchPrdChecklist } from '@/lib/github';
+import { parsePrdItems } from '@/lib/prd-parser';
 
 export default async function KeepTrackProductPage() {
+  const prdContent = await fetchPrdChecklist('keeptrack');
+  const prdItems = prdContent ? parsePrdItems(prdContent) : [];
+
   return ProductPage({
     slug: 'keeptrack',
     name: 'KeepTrack',
@@ -13,5 +18,6 @@ export default async function KeepTrackProductPage() {
     nextGate: 'S6 PILOT — TestFlight upload (blocked: Apple Developer $99 💳)',
     blocker: 'Apple Developer ($99 💳)',
     revenueModel: 'Apple IAP',
+    prdItems,
   });
 }

@@ -1,6 +1,11 @@
 import { ProductPage } from '@/components/product-page';
+import { fetchPrdChecklist } from '@/lib/github';
+import { parsePrdItems } from '@/lib/prd-parser';
 
 export default async function RadarProductPage() {
+  const prdContent = await fetchPrdChecklist('the-firm', 'scripts/radar/docs/product/PRD_CHECKLIST.md');
+  const prdItems = prdContent ? parsePrdItems(prdContent) : [];
+
   return ProductPage({
     slug: 'radar',
     name: 'RADAR',
@@ -13,5 +18,6 @@ export default async function RadarProductPage() {
     nextGate: 'Phase 0 gate April 18 (🧠) — then S3 PRD',
     blocker: 'Phase 0 gate review (🧠)',
     revenueModel: 'Personal brokerage',
+    prdItems,
   });
 }
