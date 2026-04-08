@@ -125,41 +125,16 @@ export function SidebarNav() {
       {/* ── Admin view ────────────────────────────────────── */}
       {isAdmin && (
         <>
-          {/* Command Center */}
-          <SectionHeader label="Command Center" />
+          {/* Company */}
+          <SectionHeader label="Company" />
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
-          <SubLink label="Sponsor Gates" href="/dashboard/sponsor/todo" />
+          <SectionLink label="Executive Dashboard" href="/dashboard/executive" />
 
-          {/* Product Portfolio */}
-          <SectionHeader label="Product Portfolio" />
-          <SectionLink label="Portfolio Overview" href="/dashboard/products" />
+          {/* Product Lineup */}
+          <SectionHeader label="Product Lineup" />
           {PRODUCTS.map(p => (
             <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
-
-          {/* Engineering */}
-          <SectionHeader label="Engineering" />
-          <SectionLink label="Overview" href="/dashboard/engineering" />
-          <SubLink label="SDLC Process" href="/dashboard/sdlc/process" />
-          <SubLink label="Gates Matrix" href="/dashboard/sdlc/gates" />
-          <SubLink label="Violations" href="/dashboard/sdlc/violations" />
-          {PRODUCTS.map(p => (
-            <SubLink key={`eng-${p.slug}`} label={p.name} href={`/dashboard/engineering/${p.slug}`} />
-          ))}
-
-          {/* Finance */}
-          <SectionHeader label="Finance" />
-          <SectionLink label="Overview" href="/dashboard/finance" />
-          <SubLink label="Portfolio" href="/dashboard/portfolio" />
-          {PRODUCTS.map(p => (
-            <SubLink key={`fin-${p.slug}`} label={p.name} href={`/dashboard/finance/${p.slug}`} />
-          ))}
-
-          {/* Knowledge */}
-          <SectionHeader label="Knowledge" />
-          <SubLink label="Market Intel" href="/dashboard/resources" />
-          <SubLink label="Learnings" href="/dashboard/learnings" />
-          <SubLink label="RCA" href="/dashboard/sdlc/rca" />
 
           {/* Settings */}
           <div className="pt-4 border-t border-border/30 mt-4">

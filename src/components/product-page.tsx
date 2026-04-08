@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
@@ -69,11 +69,38 @@ export async function ProductPage(props: ProductPageProps) {
   const shelvedReason = props.shelvedReason;
   const revivalCondition = props.revivalCondition;
 
-  const [allIssues, closedIssues, intel] = await Promise.all([
+  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),
     repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
     fetchProductIntel(name),
+    repoSlug ? fetchRepoFile(repoSlug, 'docs/product/S2_MRD.md') : Promise.resolve(null),
+    fetchDailyCosts(),
   ]);
+
+  // Parse MRD for market positioning
+  const mrdSections: Record<string, string> = {};
+  if (mrdContent) {
+    for (const match of mrdContent.matchAll(/^##\s+(?:Section \d+[:.]\s*)?(.+)/gm)) {
+      const heading = match[1].trim();
+      const start = (match.index ?? 0) + match[0].length;
+      const nextSection = mrdContent.indexOf('\n## ', start);
+      const body = mrdContent.slice(start, nextSection > -1 ? nextSection : undefined).trim();
+      mrdSections[heading.toLowerCase()] = body.slice(0, 200);
+    }
+  }
+
+  // Parse per-product cost from DAILY_COSTS.md
+  let productCost: string | null = null;
+  if (dailyCostsMd) {
+    const costLines = dailyCostsMd.split('\n');
+    for (const line of costLines) {
+      if (line.includes('|') && (line.toLowerCase().includes(name.toLowerCase()) || line.toLowerCase().includes(props.slug))) {
+        const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+        productCost = cells[cells.length - 1] || null;
+        break;
+      }
+    }
+  }
 
   const productIssues = repoSlug ? allIssues.filter(i => i.repo === repoSlug) : [];
   const productClosed = repoSlug ? closedIssues.filter(i => i.repo === repoSlug) : [];
@@ -150,7 +177,27 @@ export async function ProductPage(props: ProductPageProps) {
         )}
       </div>
 
-      {/* ── SECTION 2: PDLC + SDLC Progress ────────────────── */}
+      {/* ── SECTION B: Market & Positioning ─────────────────── */}
+      {(intel || Object.keys(mrdSections).length > 0) && (
+        <SectionCard title="Market & Positioning" className="mb-6">
+          {Object.keys(mrdSections).length > 0 && (
+            <div className="space-y-2 mb-4">
+              {mrdSections['target customer'] && (
+                <div className="text-xs"><span className="text-muted-foreground">Target:</span> <span className="text-foreground">{mrdSections['target customer'].slice(0, 150)}</span></div>
+              )}
+              {mrdSections['positioning'] && (
+                <div className="text-xs"><span className="text-muted-foreground">Positioning:</span> <span className="text-foreground">{mrdSections['positioning'].slice(0, 150)}</span></div>
+              )}
+              {mrdSections['competitive landscape'] && (
+                <div className="text-xs"><span className="text-muted-foreground">Competitors:</span> <span className="text-foreground">{mrdSections['competitive landscape'].slice(0, 150)}</span></div>
+              )}
+            </div>
+          )}
+          {intel && <ProductIntelligencePanel intel={intel} />}
+        </SectionCard>
+      )}
+
+      {/* ── SECTION C: PDLC + SDLC Progress ────────────────── */}
       <SectionCard title="PDLC + SDLC Progress" className="mb-6">
         {/* PDLC Progress Bar */}
         <div className="mb-4">
@@ -172,9 +219,6 @@ export async function ProductPage(props: ProductPageProps) {
             })}
           </div>
         </div>
-
-        {/* Product Intelligence (S1/S2/S3 + staleness) */}
-        {intel && <ProductIntelligencePanel intel={intel} />}
 
         {/* PRD Checklist */}
         {prdItems && prdItems.length > 0 && (
@@ -262,6 +306,28 @@ export async function ProductPage(props: ProductPageProps) {
           )}
         </SectionCard>
       )}
+
+      {/* ── SECTION E: Finance / Cost ──────────────────────── */}
+      <SectionCard title="Finance / Cost" className="mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+          <div className="rounded-lg border border-border bg-card/50 p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue Model</div>
+            <div className="text-sm font-mono text-foreground mt-1">{revenueModel || '—'}</div>
+          </div>
+          <div className="rounded-lg border border-border bg-card/50 p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Monthly Cost</div>
+            <div className="text-sm font-mono text-foreground mt-1">{productCost || 'No data yet'}</div>
+          </div>
+          <div className="rounded-lg border border-border bg-card/50 p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Current MRR</div>
+            <div className="text-sm font-mono text-foreground mt-1">$0</div>
+            <div className="text-[10px] text-amber-400">Pre-revenue</div>
+          </div>
+        </div>
+        {!productCost && (
+          <p className="text-[10px] text-muted-foreground">Per-product cost data will appear when Rex populates <code className="font-mono text-primary">ops/DAILY_COSTS.md</code> with per-product breakdown.</p>
+        )}
+      </SectionCard>
     </div>
   );
 }
