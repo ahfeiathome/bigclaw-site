@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues, fetchSDLCGatesMatrix, fetchSDLCViolations, fetchDailyCosts, fetchRadarDashboard, fetchPatrolReport, fetchPortfolioSummary } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchSDLCGatesMatrix, fetchSDLCViolations, fetchDailyCosts, fetchRadarDashboard, fetchPatrolReport, fetchPortfolioSummary, fetchAgentSystem, fetchPi5Health, fetchOvernightReport } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
 import { fetchAllProductIntel } from '@/lib/product-intel';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
@@ -12,7 +12,7 @@ function clean(s: string): string {
 }
 
 export default async function ExecutiveDashboardPage() {
-  const [products, allIssues, closedIssues, gatesMd, violationsMd, dailyCostsMd, radarMd, patrolMd, portfolioMd, allIntel] = await Promise.all([
+  const [products, allIssues, closedIssues, gatesMd, violationsMd, dailyCostsMd, radarMd, patrolMd, portfolioMd, allIntel, agentMd, pi5HealthMd, overnightMd] = await Promise.all([
     fetchProducts(),
     fetchAllIssues(),
     fetchRecentClosedIssues(90),
@@ -23,6 +23,9 @@ export default async function ExecutiveDashboardPage() {
     fetchPatrolReport(),
     fetchPortfolioSummary(),
     fetchAllProductIntel(),
+    fetchAgentSystem(),
+    fetchPi5Health(),
+    fetchOvernightReport(),
   ]);
 
   const p0Count = allIssues.filter(i => i.labels.includes('P0')).length;
@@ -205,6 +208,118 @@ export default async function ExecutiveDashboardPage() {
               </tbody>
             </table>
           </div>
+        )}
+      </SectionCard>
+
+      {/* ── PANEL 6: Operations / Agent Health ────────────── */}
+      <SectionCard title="Operations / Agent Health" className="mb-6">
+        {/* Agent roster */}
+        {agentMd && (() => {
+          const rosterLines = agentMd.split('\n').filter(l => l.startsWith('|') && l.includes('**') && !l.includes('Agent') && !l.match(/^\|[\s-:|]+\|$/));
+          const agents = rosterLines.map(l => {
+            const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+            return { name: cells[0]?.replace(/\*/g, ''), title: cells[1], model: cells[2], duty: cells[4], mode: cells[5] };
+          });
+          return agents.length > 0 ? (
+            <div className="mb-4">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Agent Roster ({agents.length})</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {agents.map(a => (
+                  <div key={a.name} className="rounded-lg border border-border bg-card/50 p-2 flex items-center gap-2">
+                    <StatusDot status="good" size="sm" />
+                    <div>
+                      <div className="text-xs font-semibold text-foreground">{a.name} <span className="text-muted-foreground font-normal">— {a.title}</span></div>
+                      <div className="text-[10px] text-muted-foreground font-mono">{a.model} · {a.mode}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Cron schedule */}
+        {agentMd && (() => {
+          const cronSection = agentMd.split('## Cron Schedule')[1]?.split('## ')[0] || '';
+          const cronLines = cronSection.split('\n').filter(l => l.startsWith('|') && l.includes('`') && !l.includes('Script') && !l.match(/^\|[\s-:|]+\|$/));
+          const crons = cronLines.map(l => {
+            const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+            return { script: cells[0]?.replace(/`/g, ''), schedule: cells[1], agent: cells[2], duty: cells[3] };
+          });
+          return crons.length > 0 ? (
+            <div className="mb-4">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Cron Jobs ({crons.length})</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground border-b border-border bg-muted">
+                      <th className="text-left py-1.5 pl-3 pr-2">Script</th>
+                      <th className="text-left py-1.5 px-2">Schedule</th>
+                      <th className="text-left py-1.5 px-2">Agent</th>
+                      <th className="text-left py-1.5 pl-2 pr-3">Duty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {crons.map((c, i) => (
+                      <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                        <td className="py-1.5 pl-3 pr-2 font-mono text-[10px] text-primary">{c.script}</td>
+                        <td className="py-1.5 px-2 text-muted-foreground">{c.schedule}</td>
+                        <td className="py-1.5 px-2 text-foreground">{c.agent}</td>
+                        <td className="py-1.5 pl-2 pr-3 text-muted-foreground">{c.duty}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Pi5 Health */}
+        {pi5HealthMd && (() => {
+          const healthLines = pi5HealthMd.split('\n').filter(l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/) && !l.includes('Metric'));
+          const metrics = healthLines.slice(0, 6).map(l => {
+            const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+            return { metric: cells[0], value: cells[1] };
+          });
+          return metrics.length > 0 ? (
+            <div className="mb-4">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Pi5 System Health</div>
+              <div className="flex flex-wrap gap-3">
+                {metrics.map(m => (
+                  <div key={m.metric} className="text-xs">
+                    <span className="text-muted-foreground">{m.metric}:</span>{' '}
+                    <span className="font-mono text-foreground">{m.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Overnight Report */}
+        {overnightMd && (() => {
+          const lines = overnightMd.split('\n');
+          const timestampMatch = overnightMd.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/);
+          const summaryLines = lines.filter(l => l.startsWith('- ') || l.startsWith('* ')).slice(0, 5);
+          return (
+            <div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Overnight Patrol {timestampMatch ? `— ${timestampMatch[1]}` : ''}</div>
+              {summaryLines.length > 0 ? (
+                <ul className="space-y-0.5">
+                  {summaryLines.map((l, i) => (
+                    <li key={i} className="text-xs text-muted-foreground">{l.replace(/^[-*]\s*/, '• ')}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">No overnight report data.</p>
+              )}
+            </div>
+          );
+        })()}
+
+        {!agentMd && !pi5HealthMd && !overnightMd && (
+          <p className="text-sm text-muted-foreground">Operations data not available. Agent system files will appear when Pi5 crons populate them.</p>
         )}
       </SectionCard>
     </div>

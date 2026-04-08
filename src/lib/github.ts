@@ -127,6 +127,26 @@ export async function fetchPortfolioSummary(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'knowledge/PORTFOLIO_SUMMARY.md');
 }
 
+export async function fetchAgentSystem(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/operations/PI5_AGENT_SYSTEM.md');
+}
+
+export async function fetchPi5Health(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'docs/operations/HEALTH.md');
+}
+
+export async function fetchOvernightReport(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'ops/OVERNIGHT_REPORT.md');
+}
+
+export async function fetchAgentOpsIndex(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'knowledge/AGENT_OPS_INDEX.md');
+}
+
+export async function fetchCooInbox(): Promise<string | null> {
+  return fetchRepoFile('the-firm', 'COO_INBOX.md');
+}
+
 export async function fetchPDLCRegistry(): Promise<string | null> {
   // Read from committed data file (synced from bigclaw-ai/knowledge/PDLC_REGISTRY.md)
   try {
