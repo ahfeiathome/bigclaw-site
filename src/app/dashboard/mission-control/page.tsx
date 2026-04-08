@@ -139,7 +139,7 @@ export default async function MissionControlPage() {
       </div>
 
       {/* ── ROW 2: Command Center (collapsed) ───────────────────── */}
-      <MissionCommandCenter radarReserve={radarReserve} hasLive={hasLive} defaultCollapsed={true} />
+      <MissionCommandCenter radarReserve={radarReserve} hasLive={hasLive} defaultCollapsed={false} />
 
       {/* ── ROW 3: Morning Brain Report ──────────────────────────── */}
       {morningLog && (() => {
@@ -191,53 +191,6 @@ export default async function MissionControlPage() {
       {/* ── ROW 4: Action Items ─────────────────────────────────── */}
       <ActionItems todoMd={todoMd} />
 
-      {/* ── ROW 4: PDLC Summary ────────────────────────────────── */}
-      {pdlcRows.length > 0 && (
-        <SectionCard title={`Product Pipeline (${pdlcRows.length})`} className="mt-4">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b border-border bg-muted">
-                  <th className="text-left py-2 pl-3 pr-2">Product</th>
-                  <th className="text-left py-2 px-2">Company</th>
-                  <th className="text-left py-2 px-2">Stage</th>
-                  <th className="text-left py-2 px-2">Next Gate</th>
-                  <th className="text-left py-2 pl-2 pr-3">Blocker</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pdlcRows.map((cells, i) => {
-                  const stage = cells[2] || '';
-                  const blocker = cells[5] || '';
-                  const hasGate = blocker.includes('💳') || blocker.includes('⚖️') || blocker.includes('🧠');
-                  const tone = stage.includes('S1') || stage.includes('S2') || stage.includes('S3') ? 'info' as const
-                    : stage.includes('S4') || stage.includes('S5') ? 'warning' as const
-                    : 'success' as const;
-                  const companyColor = cells[1]?.includes('Forge') ? 'bg-green-500/10 text-green-400'
-                    : cells[1]?.includes('BigClaw') ? 'bg-purple-500/10 text-purple-400'
-                    : cells[1]?.includes('Nexus') ? 'bg-purple-500/10 text-purple-400'
-                    : 'bg-blue-500/10 text-blue-400';
-                  return (
-                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
-                      <td className="py-2 pl-3 pr-2 text-foreground font-medium">{cells[0]}</td>
-                      <td className="py-2 px-2"><span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${companyColor}`}>{cells[1]}</span></td>
-                      <td className="py-2 px-2"><SignalPill label={stage} tone={tone} /></td>
-                      <td className="py-2 px-2 text-muted-foreground">{cells[4]}</td>
-                      <td className={`py-2 pl-2 pr-3 ${hasGate ? 'text-amber-400' : 'text-muted-foreground'}`}>{blocker || 'None'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* ── Aggregate Issues Trend ────────────────────────────── */}
-      <SectionCard title="Issues Trend (all products, 90 days)" className="mt-4">
-        <IssueTrendChart openIssues={allIssues} closedIssues={closedIssues} days={90} />
-      </SectionCard>
-
       {/* ── Awaiting Approval ──────────────────────────────────── */}
       {pendingGates.length > 0 && (
         <SectionCard title={`Awaiting Your Approval (${pendingGates.length})`} className="mt-4">
@@ -262,35 +215,7 @@ export default async function MissionControlPage() {
         <div className="mt-4 text-xs text-muted-foreground px-1">No deployments waiting for approval.</div>
       )}
 
-      {/* ── Production Gates ───────────────────────────────────── */}
-      <SectionCard title="Production Gates" className="mt-4">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted-foreground border-b border-border bg-muted">
-                <th className="text-left py-2 pl-3 pr-2">Product</th>
-                <th className="text-left py-2 px-2">Repo</th>
-                <th className="text-left py-2 pl-2 pr-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gates.map((gate, i) => (
-                <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
-                  <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
-                  <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
-                  <td className="py-1.5 pl-2 pr-3">
-                    {gate.protected
-                      ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
-                      : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-[10px] text-muted-foreground mt-2">To change protection, edit REGISTRY.md and run data sync.</p>
-      </SectionCard>
+      {/* Production Gates + Pipeline + Issues Trend moved to Executive Dashboard */}
     </div>
   );
 }

@@ -129,7 +129,6 @@ export function SidebarNav() {
           <SectionHeader label="Company" />
           <SectionLink label="Mission Control" href="/dashboard/mission-control" />
           <SectionLink label="Executive Dashboard" href="/dashboard/executive" />
-          <SubLink label="Agent Team" href="/dashboard/agent-team" />
 
           {/* Product Lineup */}
           <SectionHeader label="Product Lineup" />
@@ -137,9 +136,9 @@ export function SidebarNav() {
             <SubLink key={p.slug} label={p.name} href={p.href} />
           ))}
 
-          {/* Settings */}
+          {/* Access Control */}
           <div className="pt-4 border-t border-border/30 mt-4">
-            <SectionLink label="Settings" href="/dashboard/settings/users" />
+            <SectionLink label="Access Control" href="/dashboard/settings/users" />
             <SubLink label="Help" href="/dashboard/help" />
           </div>
         </>
