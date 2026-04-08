@@ -52,15 +52,15 @@ function SectionHeader({ label }: { label: string }) {
 
 // ── Product list (all products in REGISTRY.md) ─────────────────────
 const PRODUCTS = [
-  { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
-  { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
-  { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
-  { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
-  { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
-  { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
-  { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
-  { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
-  { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
+  { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid', tag: 'EdTech' },
+  { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio', tag: 'E-Comm' },
+  { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels', tag: 'E-Comm' },
+  { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect', tag: 'SaaS' },
+  { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack', tag: 'Consumer' },
+  { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck', tag: 'Consumer' },
+  { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex', tag: 'Productivity' },
+  { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal', tag: 'EdTech' },
+  { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar', tag: 'FinTech' },
 ];
 
 // ── Role hook ────────────────────────────────────────────────────────
@@ -95,10 +95,10 @@ export function SidebarNav() {
         className="flex flex-col items-center px-3 py-4 mb-2 no-underline gap-2"
       >
         <img
-          src="/images/bigclaw-logo-transparent.jpeg"
+          src="/images/bigclaw-logo.png"
           alt="BigClaw AI"
           className="w-full rounded-lg"
-          style={{ maxHeight: '120px', objectFit: 'contain', mixBlendMode: 'luminosity' }}
+          style={{ maxHeight: '120px', objectFit: 'contain' }}
         />
         <span style={{ fontSize: '22px', fontWeight: 700, color: 'white', letterSpacing: '0.05em' }}>
           BigClaw AI
@@ -133,13 +133,13 @@ export function SidebarNav() {
           {/* Product Lineup */}
           <SectionHeader label="Product Lineup" />
           {PRODUCTS.map(p => (
-            <SubLink key={p.slug} label={p.name} href={p.href} />
+            <SubLink key={p.slug} label={`${p.name} · ${p.tag}`} href={p.href} />
           ))}
 
           {/* Access Control */}
           <div className="pt-4 border-t border-border/30 mt-4">
             <SectionLink label="Access Control" href="/dashboard/settings/users" />
-            <SubLink label="Help" href="/dashboard/help" />
+            <SubLink label="Knowledge" href="/dashboard/help" />
           </div>
         </>
       )}

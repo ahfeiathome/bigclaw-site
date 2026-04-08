@@ -127,19 +127,13 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
 
   return (
     <div className="rounded-xl border border-primary/30 bg-card mb-2">
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 transition-colors rounded-xl border-none bg-transparent cursor-pointer">
-        <span className="text-xs text-primary">{expanded ? '▼' : '▶'}</span>
+      <div className="flex items-center gap-3 p-3">
         <span className="text-xs font-bold text-primary uppercase tracking-wide">Command Center</span>
-        {!expanded && (
-          <span className="text-[10px] font-mono text-muted-foreground truncate">
-            RADAR {controls.radar.frozen ? 'FROZEN' : controls.radar.strategy || 'Auto'} | {deployAllowed}/{deployTotal} deploys | {agentOn}/{agentTotal} agents
-          </span>
-        )}
+        <span className="text-[10px] font-mono text-muted-foreground">{deployAllowed}/{deployTotal} deploys | {agentOn}/{agentTotal} agents</span>
         {reserveWarning && <span className="text-[10px] text-red-400 font-bold ml-auto">Reserve: {radarReserve?.toFixed(1)}% — Below 30%!</span>}
-      </button>
+      </div>
 
-      {expanded && (
-        <div className="px-3 pb-3 pt-0 space-y-2">
+      <div className="px-3 pb-3 pt-0 space-y-2">
 
           {/* RADAR controls removed — lives in RADAR app (radar-bigclaw.vercel.app) */}
 
@@ -190,7 +184,6 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
           {/* User Management moved to Access Control (/dashboard/settings/users) */}
 
         </div>
-      )}
     </div>
   );
 }

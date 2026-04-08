@@ -3,8 +3,8 @@ import { SectionCard } from '@/components/dashboard';
 export default function HelpPage() {
   return (
     <div>
-      <h1 className="mb-1" style={{ fontSize: '28px', fontWeight: 700 }}>Dashboard Help</h1>
-      <p className="text-sm text-muted-foreground mb-6">What each metric means, where it comes from, and how to interpret it</p>
+      <h1 className="mb-1" style={{ fontSize: '28px', fontWeight: 700 }}>Knowledge Base</h1>
+      <p className="text-sm text-muted-foreground mb-6">Dashboard metrics, processes, and how everything works</p>
 
       {/* KPI Cards Explanation */}
       <SectionCard title="Mission Control — KPI Cards" className="mb-6">
@@ -109,7 +109,80 @@ export default function HelpPage() {
         </div>
       </SectionCard>
 
-      {/* RADAR trading controls live in the RADAR app (radar-bigclaw.vercel.app) */}
+      {/* SDLC Process */}
+      <SectionCard title="SDLC — Software Development Lifecycle" className="mb-6">
+        <p className="text-xs text-muted-foreground mb-3">Every code change follows this 8-stage pipeline. No exceptions.</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Stage</th>
+                <th className="text-left py-2 px-2">Who</th>
+                <th className="text-left py-2 px-2">Gate</th>
+                <th className="text-left py-2 pl-2 pr-3">Tool</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['1. Plan', 'Consultant', 'Spec exists in docs/specs/', 'Claude Chat'],
+                ['2. Code', 'Code CLI', 'Feature branch created', 'git branch'],
+                ['3. Test', 'Code CLI', 'All tests pass (lint, types, unit, build, E2E)', 'vitest + playwright'],
+                ['4. Review', 'Code CLI', 'PR created, CI passes', 'GitHub Actions'],
+                ['5. Merge', 'Code CLI', 'CI green, review done', 'gh pr merge'],
+                ['6. Deploy', 'Vercel', 'Preview verified first', 'Vercel auto-deploy'],
+                ['7. Verify', 'Code CLI', 'Live URL checked, screenshot taken', 'Playwright'],
+                ['8. Close', 'Code CLI', 'Issue closed with evidence', 'GitHub Issues'],
+              ].map(([stage, who, gate, tool], i) => (
+                <tr key={stage} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">{stage}</td>
+                  <td className="py-2 px-2 text-muted-foreground">{who}</td>
+                  <td className="py-2 px-2 text-muted-foreground">{gate}</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground font-mono text-[10px]">{tool}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
+      {/* Dashboard Architecture */}
+      <SectionCard title="Dashboard Architecture" className="mb-6">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Section</th>
+                <th className="text-left py-2 px-2">Purpose</th>
+                <th className="text-left py-2 pl-2 pr-3">Data Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['Mission Control', 'Where Michael ACTS — controls, approvals, action items', 'FOUNDER_TODO.md, GitHub PRs API, controls.json'],
+                ['Executive Dashboard', 'Read-only summary — 7 panels covering all domains', 'REGISTRY.md, issues API, DAILY_COSTS.md, PI5_AGENT_SYSTEM.md'],
+                ['Product Pages', 'Everything about one product on one page — 5 sections', 'REGISTRY.md, PRD_CHECKLIST.md, issues API, SDLC_GATES_MATRIX.md'],
+                ['Access Control', 'Manage who can see what', 'config/access.json'],
+                ['Knowledge', 'This page — explains how the dashboard works', 'Static'],
+              ].map(([section, purpose, source], i) => (
+                <tr key={section} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">{section}</td>
+                  <td className="py-2 px-2 text-muted-foreground">{purpose}</td>
+                  <td className="py-2 pl-2 pr-3 text-muted-foreground font-mono text-[10px]">{source}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
+      {/* Production Gates */}
+      <SectionCard title="Production Gates (🔒 PROTECTED)" className="mb-6">
+        <div className="space-y-2 text-xs text-muted-foreground">
+          <p>All products except BigClaw Dashboard require Michael approval before production deployment.</p>
+          <p><span className="text-amber-400">🔒 PROTECTED</span> = Code CLI creates preview, writes to FOUNDER_TODO.md, waits for Michael to merge PR.</p>
+          <p><span className="text-green-400">✅ STANDARD</span> = Code CLI merges and deploys autonomously (BigClaw Dashboard only).</p>
+        </div>
+      </SectionCard>
 
       {/* Data Freshness */}
       <SectionCard title="Data Freshness" className="mb-6">
