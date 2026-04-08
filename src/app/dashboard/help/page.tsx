@@ -109,54 +109,7 @@ export default function HelpPage() {
         </div>
       </SectionCard>
 
-      {/* RADAR Controls */}
-      <SectionCard title="RADAR Trading Controls (Command Center)" className="mb-6">
-        <div className="space-y-3 text-xs">
-          <p className="text-muted-foreground">The Command Center is where you control RADAR trading. Changes you make here are written to <code className="font-mono text-primary">config/controls.json</code> and the RADAR engine on Pi5 reads this file on every cron cycle (every 30 min during market hours).</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b border-border bg-muted">
-                  <th className="text-left py-2 pl-3 pr-2">Control</th>
-                  <th className="text-left py-2 px-2">What It Does</th>
-                  <th className="text-left py-2 pl-2 pr-3">How It Works</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-border/30">
-                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Trading Active toggle</td>
-                  <td className="py-2 px-2 text-muted-foreground">Kill switch. Stops all trading immediately.</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Writes <code className="font-mono text-primary">trading_active: false</code> to controls.json. Engine halts on next cycle.</td>
-                </tr>
-                <tr className="border-b border-border/30 bg-muted/50">
-                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Strategy pills (Auto, Aggressive, Balanced, Conservative)</td>
-                  <td className="py-2 px-2 text-muted-foreground">Sets which trading strategy the engine uses. Affects risk level and position sizing.</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Click a strategy → click Apply → writes to controls.json → engine picks up on next 30-min cycle.</td>
-                </tr>
-                <tr className="border-b border-border/30">
-                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Mode pills (Accelerate, Grow, Build)</td>
-                  <td className="py-2 px-2 text-muted-foreground">Sets the growth mode. Affects how aggressively the engine deploys capital.</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Same as strategy — select mode, click Apply.</td>
-                </tr>
-                <tr className="border-b border-border/30 bg-muted/50">
-                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">Apply button</td>
-                  <td className="py-2 px-2 text-muted-foreground">Saves your strategy + mode selection to the engine config.</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Writes to <code className="font-mono text-primary">config/controls.json</code>. Engine reads this file every 30 min during market hours.</td>
-                </tr>
-                <tr className="border-b border-border/30">
-                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">&quot;Active: options_stocks — auto&quot;</td>
-                  <td className="py-2 px-2 text-muted-foreground">Shows what the engine is currently running. Confirms your last Apply took effect.</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground">Reads current config. &quot;options_stocks&quot; = strategy type, &quot;auto&quot; = execution mode.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 mt-2">
-            <span className="text-amber-400 font-semibold text-xs">Paper trading only.</span>
-            <span className="text-muted-foreground text-xs ml-1">Currently trading with paper (simulated) money. Live trading requires paper account to sustain 40% win rate first, then Michael approval (💳 gate).</span>
-          </div>
-        </div>
-      </SectionCard>
+      {/* RADAR trading controls live in the RADAR app (radar-bigclaw.vercel.app) */}
 
       {/* Data Freshness */}
       <SectionCard title="Data Freshness" className="mb-6">
