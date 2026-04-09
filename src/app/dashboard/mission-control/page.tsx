@@ -160,7 +160,19 @@ export default async function MissionControlPage() {
         <p className="text-xs text-muted-foreground">Building useful AI products across education, commerce, consumer tools, and fintech. 10 products in portfolio, 6 AI agents on Pi5, 3 Code CLI sessions running 24/7. Founded by Michael Liu.</p>
       </div>
 
-      {/* ── KPI Cards (right after intro) ──────────────────────── */}
+      {/* ── Company Health (Cron + Finance, right after intro) ──── */}
+      <SectionCard title="Company Health" className="mb-4">
+        <div className="mb-4">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Cron Jobs</div>
+          <CronHealthLights agentMd={agentMd} />
+        </div>
+        <div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Finance Health</div>
+          <CostTrendChart data={costChartData} />
+        </div>
+      </SectionCard>
+
+      {/* ── KPI Cards ──────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
         <KpiCard label="Company Health" value={`${healthScore}`} semantic={healthSemantic} delta={healthScore >= 80 ? '▲ Healthy' : healthScore >= 60 ? '— Warning' : '▼ Critical'} sparkData={[70, 75, 80, healthScore, healthScore, healthScore, healthScore]} subtitle="/100" />
         <KpiCard label="RADAR Equity" value={radarEquityVal} semantic={radarSemantic} delta={`P/L: ${radarPnlVal}`} sparkData={equitySparkData.length >= 2 ? equitySparkData : undefined} />
@@ -345,15 +357,7 @@ export default async function MissionControlPage() {
         ) : null;
       })()}
 
-      {/* ── Cron Health Lights ─────────────────────────────────── */}
-      <SectionCard title="Cron Health" className="mt-4">
-        <CronHealthLights agentMd={agentMd} />
-      </SectionCard>
-
-      {/* ── Cost Trend ────────────────────────────────────────── */}
-      <SectionCard title="Daily Cost Trend" className="mt-4">
-        <CostTrendChart data={costChartData} />
-      </SectionCard>
+      {/* Cron Health + Cost Trend moved up to Company Health section */}
     </div>
   );
 }

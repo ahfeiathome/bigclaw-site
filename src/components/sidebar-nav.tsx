@@ -142,7 +142,7 @@ export function SidebarNav() {
         <>
           {/* Company */}
           <SectionHeader label="Company" />
-          <SectionLink label="Dashboard" href="/dashboard/mission-control" badge={p0Count} />
+          <SubLink label={`Dashboard${p0Count > 0 ? ` (${p0Count} P0)` : ''}`} href="/dashboard/mission-control" />
           <SubLink label="Organization" href="/dashboard/organization" />
 
           {/* Product Lineup */}
