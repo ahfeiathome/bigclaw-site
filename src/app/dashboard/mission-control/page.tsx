@@ -1,4 +1,4 @@
-import { fetchPatrolReport, fetchAllIssues, fetchRecentClosedIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, fetchSDLCViolations, fetchAgentSystem, fetchPi5Health, fetchOvernightReport, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchRecentClosedIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, fetchSDLCViolations, fetchAgentSystem, fetchPi5Health, fetchOvernightReport, fetchDailyCosts, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
 import { fetchAllProductIntel } from '@/lib/product-intel';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
@@ -7,6 +7,10 @@ import { MissionCommandCenter } from '@/components/mission-command-center';
 import { IssueTrendChart } from '@/components/issues-trend-chart';
 import { ProductIntelSummaryTable } from '@/components/product-intelligence';
 import { ActionItems } from '@/components/action-items';
+import { ProductHealthGrid } from '@/components/product-health-grid';
+import { QuickActions } from '@/components/quick-actions';
+import { CostTrendChart } from '@/components/cost-trend-chart';
+import { CronHealthLights } from '@/components/cron-health-lights';
 import Link from 'next/link';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -52,7 +56,7 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, closedIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts, allIntel, violationsMd, portfolioMd, agentMd, pi5HealthMd, overnightMd] = await Promise.all([
+  const [content, allIssues, closedIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts, allIntel, violationsMd, portfolioMd, agentMd, pi5HealthMd, overnightMd, dailyCostsMd] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
     fetchRecentClosedIssues(90),
@@ -69,6 +73,7 @@ export default async function MissionControlPage() {
     fetchAgentSystem(),
     fetchPi5Health(),
     fetchOvernightReport(),
+    fetchDailyCosts(),
   ]);
 
   // Production Gates
@@ -132,6 +137,20 @@ export default async function MissionControlPage() {
   }
   const burnSemantic = burnFloat < 5 ? 'success' as const : burnFloat < 15 ? 'warning' as const : 'danger' as const;
 
+  // Parse daily cost data for chart
+  const costChartData: { date: string; spend: number }[] = [];
+  if (dailyCostsMd) {
+    for (const line of dailyCostsMd.split('\n')) {
+      if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('Date')) continue;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      const dateMatch = cells[0]?.match(/\d{4}-\d{2}-\d{2}/);
+      const spendMatch = cells[3]?.match(/\$?([\d.]+)/);
+      if (dateMatch && spendMatch) {
+        costChartData.push({ date: dateMatch[0], spend: parseFloat(spendMatch[1]) });
+      }
+    }
+  }
+
   return (
     <div>
       {/* ── Page Title ──────────────────────────────────────────── */}
@@ -140,6 +159,16 @@ export default async function MissionControlPage() {
         <div className="text-sm text-foreground font-medium mb-1">BigClaw AI — AI-Native Venture Studio</div>
         <p className="text-xs text-muted-foreground">Building useful AI products across education, commerce, consumer tools, and fintech. 10 products in portfolio, 6 AI agents on Pi5, 3 Code CLI sessions running 24/7. Founded by Michael Liu.</p>
       </div>
+
+      {/* ── Quick Actions ──────────────────────────────────────── */}
+      <SectionCard title="Quick Actions" className="mb-4">
+        <QuickActions />
+      </SectionCard>
+
+      {/* ── Product Health ──────────────────────────────────────── */}
+      <SectionCard title="Product Health Check" className="mb-4">
+        <ProductHealthGrid />
+      </SectionCard>
 
       {/* ── ROW 1: KPI Cards ────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
@@ -342,6 +371,16 @@ export default async function MissionControlPage() {
           </SectionCard>
         ) : null;
       })()}
+
+      {/* ── Cron Health Lights ─────────────────────────────────── */}
+      <SectionCard title="Cron Health" className="mt-4">
+        <CronHealthLights agentMd={agentMd} />
+      </SectionCard>
+
+      {/* ── Cost Trend ────────────────────────────────────────── */}
+      <SectionCard title="Daily Cost Trend" className="mt-4">
+        <CostTrendChart data={costChartData} />
+      </SectionCard>
     </div>
   );
 }
