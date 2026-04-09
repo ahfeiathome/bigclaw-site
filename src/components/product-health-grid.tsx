@@ -48,12 +48,15 @@ export function ProductHealthGrid() {
 
   const upCount = health.filter(h => h.status === 'up').length;
   const downCount = health.filter(h => h.status === 'down').length;
+  const checking = health.filter(h => h.status === 'checking').length;
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-xs text-muted-foreground">{upCount} up</span>
-        {downCount > 0 && <span className="text-xs text-red-400">{downCount} down</span>}
+        <span className="text-xs text-green-400">{upCount} sites online</span>
+        {downCount > 0 && <span className="text-xs text-red-400">{downCount} sites DOWN</span>}
+        {checking > 0 && <span className="text-xs text-muted-foreground">{checking} checking...</span>}
+        <span className="text-[10px] text-muted-foreground ml-auto">Green = site responds to HTTP request</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {health.map(h => (
