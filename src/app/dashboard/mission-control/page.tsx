@@ -154,7 +154,10 @@ export default async function MissionControlPage() {
   return (
     <div>
       {/* ── Page Title ──────────────────────────────────────────── */}
-      <h1 className="mb-2" style={{ fontSize: '28px', fontWeight: 700 }}>Dashboard</h1>
+      <div className="flex items-center justify-center gap-3 mb-2">
+        <img src="/images/bigclaw-logo.png" alt="BigClaw AI" className="h-10 w-10 rounded-lg object-contain" />
+        <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Dashboard</h1>
+      </div>
       <div className="rounded-xl border border-border bg-card/50 p-4 mb-4">
         <div className="text-sm text-foreground font-medium mb-1">BigClaw AI — AI-Native Venture Studio</div>
         <p className="text-xs text-muted-foreground">Building useful AI products across education, commerce, consumer tools, and fintech. 10 products in portfolio, 6 AI agents on Pi5, 3 Code CLI sessions running 24/7. Founded by Michael Liu.</p>
