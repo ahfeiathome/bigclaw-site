@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-function SectionLink({ label, href }: { label: string; href: string }) {
+function SectionLink({ label, href, badge }: { label: string; href: string; badge?: number }) {
   const pathname = usePathname();
   const isActive = pathname === href || (href === '/dashboard/mission-control' && pathname === '/dashboard');
 
   return (
     <Link
       href={href}
-      className={`block px-3 py-1.5 rounded-md no-underline transition-all duration-150 ${
+      className={`flex items-center justify-between px-3 py-1.5 rounded-md no-underline transition-all duration-150 ${
         isActive
           ? 'bg-primary/10 text-primary font-semibold border-l-2 border-primary -ml-0.5 pl-[10px]'
           : 'text-foreground/80 hover:text-foreground hover:bg-muted/50'
@@ -19,6 +19,9 @@ function SectionLink({ label, href }: { label: string; href: string }) {
       style={{ fontSize: '14px', fontWeight: 600 }}
     >
       {label}
+      {badge !== undefined && badge > 0 && (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">{badge}</span>
+      )}
     </Link>
   );
 }
@@ -81,8 +84,20 @@ function useUserRole(): { role: string; products: string[] } {
 
 // ── Sidebar ──────────────────────────────────────────────────────────
 
+function useP0Count(): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    fetch('/api/status-bar')
+      .then(r => r.json())
+      .then(d => { if (d.p0Count !== undefined) setCount(d.p0Count); })
+      .catch(() => {});
+  }, []);
+  return count;
+}
+
 export function SidebarNav() {
   const { role, products } = useUserRole();
+  const p0Count = useP0Count();
   const isAdmin = role === 'admin';
   const isInvestor = role === 'investor';
   const isProductViewer = role === 'product-viewer';
@@ -127,7 +142,7 @@ export function SidebarNav() {
         <>
           {/* Company */}
           <SectionHeader label="Company" />
-          <SectionLink label="Dashboard" href="/dashboard/mission-control" />
+          <SectionLink label="Dashboard" href="/dashboard/mission-control" badge={p0Count} />
           <SubLink label="Organization" href="/dashboard/organization" />
 
           {/* Product Lineup */}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchBandwidth, fetchRadarDashboard, fetchRecentCommits } from '@/lib/github';
+import { fetchBandwidth, fetchRadarDashboard, fetchRecentCommits, fetchAllIssues } from '@/lib/github';
 
 function parseMarkdownTable(section: string): { cells: string[] }[] {
   const lines = section.split('\n').filter(
@@ -25,11 +25,14 @@ function extractSection(content: string, heading: string): string {
 }
 
 export async function GET() {
-  const [bandwidthMd, radarMd, commits] = await Promise.all([
+  const [bandwidthMd, radarMd, commits, allIssues] = await Promise.all([
     fetchBandwidth(),
     fetchRadarDashboard(),
     fetchRecentCommits(24),
+    fetchAllIssues(),
   ]);
+
+  const p0Count = allIssues.filter(i => i.labels.includes('P0')).length;
 
   // Agent status
   const agentRows = bandwidthMd ? parseMarkdownTable(extractSection(bandwidthMd, 'Current Agent Load')) : [];
@@ -71,5 +74,6 @@ export async function GET() {
     radarEquity: radarMeta['Equity'] || '--',
     radarMode: radarMeta['Phase']?.includes('Live') ? 'Live' : 'Paper',
     commitCount: commits.length,
+    p0Count,
   });
 }
