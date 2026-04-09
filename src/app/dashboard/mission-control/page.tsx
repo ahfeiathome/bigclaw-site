@@ -1,10 +1,13 @@
-import { fetchPatrolReport, fetchAllIssues, fetchRecentClosedIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
+import { fetchPatrolReport, fetchAllIssues, fetchRecentClosedIssues, fetchHealth, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchPDLCRegistry, fetchMorningBrainLog, fetchPortfolioSummary, fetchSDLCViolations, fetchAgentSystem, fetchPi5Health, fetchOvernightReport, FORGE_REPOS, AXIOM_REPOS } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
+import { fetchAllProductIntel } from '@/lib/product-intel';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { MissionCommandCenter } from '@/components/mission-command-center';
 import { IssueTrendChart } from '@/components/issues-trend-chart';
+import { ProductIntelSummaryTable } from '@/components/product-intelligence';
 import { ActionItems } from '@/components/action-items';
+import Link from 'next/link';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -49,7 +52,7 @@ function extractSection(content: string, heading: string): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function MissionControlPage() {
-  const [content, allIssues, closedIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts] = await Promise.all([
+  const [content, allIssues, closedIssues, healthMd, todoMd, bandwidthMd, radarMd, pdlcMd, morningLog, registryProducts, allIntel, violationsMd, portfolioMd, agentMd, pi5HealthMd, overnightMd] = await Promise.all([
     fetchPatrolReport(),
     fetchAllIssues(),
     fetchRecentClosedIssues(90),
@@ -60,6 +63,12 @@ export default async function MissionControlPage() {
     fetchPDLCRegistry(),
     fetchMorningBrainLog(),
     fetchProducts(),
+    fetchAllProductIntel(),
+    fetchSDLCViolations(),
+    fetchPortfolioSummary(),
+    fetchAgentSystem(),
+    fetchPi5Health(),
+    fetchOvernightReport(),
   ]);
 
   // Production Gates
@@ -126,7 +135,11 @@ export default async function MissionControlPage() {
   return (
     <div>
       {/* ── Page Title ──────────────────────────────────────────── */}
-      <h1 className="mb-4" style={{ fontSize: '28px', fontWeight: 700 }}>Mission Control</h1>
+      <h1 className="mb-2" style={{ fontSize: '28px', fontWeight: 700 }}>Dashboard</h1>
+      <div className="rounded-xl border border-border bg-card/50 p-4 mb-4">
+        <div className="text-sm text-foreground font-medium mb-1">BigClaw AI — AI-Native Venture Studio</div>
+        <p className="text-xs text-muted-foreground">Building useful AI products across education, commerce, consumer tools, and fintech. 10 products in portfolio, 6 AI agents on Pi5, 3 Code CLI sessions running 24/7. Founded by Michael Liu.</p>
+      </div>
 
       {/* ── ROW 1: KPI Cards ────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
@@ -215,7 +228,120 @@ export default async function MissionControlPage() {
         <div className="mt-4 text-xs text-muted-foreground px-1">No deployments waiting for approval.</div>
       )}
 
-      {/* Production Gates + Pipeline + Issues Trend moved to Executive Dashboard */}
+      {/* ── Product Pipeline ─────────────────────────────────── */}
+      {registryProducts.length > 0 && (
+        <SectionCard title={`Product Pipeline (${registryProducts.filter(p => p.slug !== 'bigclaw-dashboard').length})`} className="mt-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Product</th>
+                  <th className="text-left py-2 px-2">Stage</th>
+                  <th className="text-left py-2 px-2">Revenue</th>
+                  <th className="text-left py-2 pl-2 pr-3">Live URL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registryProducts.filter(p => p.slug !== 'bigclaw-dashboard').map((p, i) => {
+                  const tone = p.stage.includes('S1') || p.stage.includes('S2') || p.stage.includes('S3') ? 'info' as const : p.stage.includes('S4') || p.stage.includes('S5') ? 'warning' as const : 'success' as const;
+                  return (
+                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                      <td className="py-2 pl-3 pr-2"><Link href={p.href} className="text-foreground font-medium no-underline hover:text-primary">{p.name}</Link></td>
+                      <td className="py-2 px-2"><SignalPill label={p.stage} tone={tone} /></td>
+                      <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{p.revenue}</td>
+                      <td className="py-2 pl-2 pr-3">{p.liveUrl && <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary no-underline hover:underline font-mono">{p.liveUrl.replace('https://', '')}</a>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
+
+      {/* ── Market Intelligence ────────────────────────────── */}
+      {allIntel.length > 0 && (
+        <SectionCard title="Market Intelligence" className="mt-4">
+          <ProductIntelSummaryTable allIntel={allIntel} />
+        </SectionCard>
+      )}
+
+      {/* ── Issues Trend ──────────────────────────────────── */}
+      <SectionCard title="Issues Trend (all products, 90 days)" className="mt-4">
+        <IssueTrendChart openIssues={allIssues} closedIssues={closedIssues} days={90} />
+      </SectionCard>
+
+      {/* ── SDLC Violations ───────────────────────────────── */}
+      {violationsMd && (() => {
+        const rawLines = violationsMd.split('\n').filter(l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/) && !l.includes('| Date '));
+        const violations = rawLines.filter(l => { const c = l.split('|').map(s => s.trim()).filter(Boolean); return c.length >= 4 && c[0].match(/\d{4}/); });
+        return violations.length > 0 ? (
+          <SectionCard title={`SDLC Violations (${violations.length})`} className="mt-4">
+            <div className="space-y-1">
+              {violations.slice(0, 5).map((l, i) => {
+                const c = l.split('|').map(s => s.trim()).filter(Boolean);
+                return (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="font-mono text-muted-foreground">{c[0]}</span>
+                    <span className="text-foreground">{c[1]}</span>
+                    <span className="font-mono text-primary">{c[2]}</span>
+                    <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${c[3] === 'Critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>{c[3]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        ) : null;
+      })()}
+
+      {/* ── Production Gates ──────────────────────────────── */}
+      <SectionCard title="Production Gates" className="mt-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Product</th>
+                <th className="text-left py-2 px-2">Repo</th>
+                <th className="text-left py-2 pl-2 pr-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gates.map((gate, i) => (
+                <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
+                  <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
+                  <td className="py-1.5 pl-2 pr-3">
+                    {gate.protected
+                      ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
+                      : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
+      {/* ── Agent Status ──────────────────────────────────── */}
+      {agentMd && (() => {
+        const agents = agentMd.split('\n')
+          .filter(l => l.startsWith('|') && l.includes('**') && !l.includes('Agent') && !l.match(/^\|[\s-:|]+\|$/))
+          .map(l => { const c = l.split('|').map(s => s.trim()).filter(Boolean); return { name: c[0]?.replace(/\*/g, ''), title: c[1], model: c[2] }; });
+        return agents.length > 0 ? (
+          <SectionCard title={`Agent Team (${agents.length})`} className="mt-4">
+            <div className="flex flex-wrap gap-3">
+              {agents.map(a => (
+                <div key={a.name} className="flex items-center gap-2 rounded-lg border border-border bg-card/50 px-3 py-2">
+                  <StatusDot status="good" size="sm" />
+                  <span className="text-xs font-semibold text-foreground">{a.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{a.title}</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        ) : null;
+      })()}
     </div>
   );
 }
