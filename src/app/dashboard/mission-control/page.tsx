@@ -160,17 +160,7 @@ export default async function MissionControlPage() {
         <p className="text-xs text-muted-foreground">Building useful AI products across education, commerce, consumer tools, and fintech. 10 products in portfolio, 6 AI agents on Pi5, 3 Code CLI sessions running 24/7. Founded by Michael Liu.</p>
       </div>
 
-      {/* ── Quick Actions ──────────────────────────────────────── */}
-      <SectionCard title="Quick Actions" className="mb-4">
-        <QuickActions />
-      </SectionCard>
-
-      {/* ── Product Health ──────────────────────────────────────── */}
-      <SectionCard title="Product Health Check" className="mb-4">
-        <ProductHealthGrid />
-      </SectionCard>
-
-      {/* ── ROW 1: KPI Cards ────────────────────────────────────── */}
+      {/* ── KPI Cards (right after intro) ──────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
         <KpiCard label="Company Health" value={`${healthScore}`} semantic={healthSemantic} delta={healthScore >= 80 ? '▲ Healthy' : healthScore >= 60 ? '— Warning' : '▼ Critical'} sparkData={[70, 75, 80, healthScore, healthScore, healthScore, healthScore]} subtitle="/100" />
         <KpiCard label="RADAR Equity" value={radarEquityVal} semantic={radarSemantic} delta={`P/L: ${radarPnlVal}`} sparkData={equitySparkData.length >= 2 ? equitySparkData : undefined} />
@@ -180,8 +170,54 @@ export default async function MissionControlPage() {
         <KpiCard label="Agents" value={`${activeAgents}/${totalAgents}`} semantic={agentSemantic} delta={`${activeAgents} active`} />
       </div>
 
-      {/* ── ROW 2: Command Center (collapsed) ───────────────────── */}
+      {/* ── Product Health Check ───────────────────────────────── */}
+      <SectionCard title="Product Health Check" className="mb-4">
+        <ProductHealthGrid />
+      </SectionCard>
+
+      {/* ── Market Intelligence (right after health check) ─────── */}
+      {allIntel.length > 0 && (
+        <SectionCard title="Market Intelligence" className="mb-4">
+          <ProductIntelSummaryTable allIntel={allIntel} />
+        </SectionCard>
+      )}
+
+      {/* ── Command Center (contains PDLC) ─────────────────────── */}
       <MissionCommandCenter radarReserve={radarReserve} hasLive={hasLive} defaultCollapsed={false} />
+
+      {/* ── Production Gates (right after PDLC) ──────────────── */}
+      <SectionCard title="Production Gates" className="mt-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Product</th>
+                <th className="text-left py-2 px-2">Repo</th>
+                <th className="text-left py-2 pl-2 pr-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gates.map((gate, i) => (
+                <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
+                  <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
+                  <td className="py-1.5 pl-2 pr-3">
+                    {gate.protected
+                      ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
+                      : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
+      {/* ── Quick Actions ──────────────────────────────────── */}
+      <SectionCard title="Quick Actions" className="mt-4 mb-4">
+        <QuickActions />
+      </SectionCard>
 
       {/* ── ROW 3: Morning Brain Report ──────────────────────────── */}
       {morningLog && (() => {
@@ -257,43 +293,7 @@ export default async function MissionControlPage() {
         <div className="mt-4 text-xs text-muted-foreground px-1">No deployments waiting for approval.</div>
       )}
 
-      {/* ── Product Pipeline ─────────────────────────────────── */}
-      {registryProducts.length > 0 && (
-        <SectionCard title={`Product Pipeline (${registryProducts.filter(p => p.slug !== 'bigclaw-dashboard').length})`} className="mt-4">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b border-border bg-muted">
-                  <th className="text-left py-2 pl-3 pr-2">Product</th>
-                  <th className="text-left py-2 px-2">Stage</th>
-                  <th className="text-left py-2 px-2">Revenue</th>
-                  <th className="text-left py-2 pl-2 pr-3">Live URL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registryProducts.filter(p => p.slug !== 'bigclaw-dashboard').map((p, i) => {
-                  const tone = p.stage.includes('S1') || p.stage.includes('S2') || p.stage.includes('S3') ? 'info' as const : p.stage.includes('S4') || p.stage.includes('S5') ? 'warning' as const : 'success' as const;
-                  return (
-                    <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
-                      <td className="py-2 pl-3 pr-2"><Link href={p.href} className="text-foreground font-medium no-underline hover:text-primary">{p.name}</Link></td>
-                      <td className="py-2 px-2"><SignalPill label={p.stage} tone={tone} /></td>
-                      <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{p.revenue}</td>
-                      <td className="py-2 pl-2 pr-3">{p.liveUrl && <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary no-underline hover:underline font-mono">{p.liveUrl.replace('https://', '')}</a>}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* ── Market Intelligence ────────────────────────────── */}
-      {allIntel.length > 0 && (
-        <SectionCard title="Market Intelligence" className="mt-4">
-          <ProductIntelSummaryTable allIntel={allIntel} />
-        </SectionCard>
-      )}
+      {/* Product Pipeline + Market Intelligence moved up */}
 
       {/* ── Issues Trend ──────────────────────────────────── */}
       <SectionCard title="Issues Trend (all products, 90 days)" className="mt-4">
@@ -323,34 +323,7 @@ export default async function MissionControlPage() {
         ) : null;
       })()}
 
-      {/* ── Production Gates ──────────────────────────────── */}
-      <SectionCard title="Production Gates" className="mt-4">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted-foreground border-b border-border bg-muted">
-                <th className="text-left py-2 pl-3 pr-2">Product</th>
-                <th className="text-left py-2 px-2">Repo</th>
-                <th className="text-left py-2 pl-2 pr-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gates.map((gate, i) => (
-                <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
-                  <td className="py-1.5 pl-3 pr-2 text-foreground">{gate.product}</td>
-                  <td className="py-1.5 px-2 text-muted-foreground font-mono text-[10px]">{gate.repo}</td>
-                  <td className="py-1.5 pl-2 pr-3">
-                    {gate.protected
-                      ? <span className="text-amber-400 text-[10px]">🔒 Protected</span>
-                      : <span className="text-green-400 text-[10px]">✅ Auto-deploy</span>
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
+      {/* Production Gates moved up (after PDLC) */}
 
       {/* ── Agent Status ──────────────────────────────────── */}
       {agentMd && (() => {

@@ -139,7 +139,7 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
 
           {/* ── Product Pipeline ────────────────────────────── */}
           <div className="border border-border/50 rounded-lg p-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Product Pipeline</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Product Development Life Cycle</div>
             <table className="w-full text-[11px]">
               <thead>
                 <tr className="text-muted-foreground border-b border-border/50">
