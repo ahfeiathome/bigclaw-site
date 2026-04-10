@@ -28,7 +28,7 @@ test.describe('Public pages', () => {
   test('projects page loads with product cards', async ({ page }) => {
     await page.goto('/projects')
     await expect(page).toHaveTitle(/Big Claw/)
-    await expect(page.getByText('Learnie AI')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'GrovaKid' })).toBeVisible()
   })
 
   test('dashboard login page loads', async ({ page }) => {
