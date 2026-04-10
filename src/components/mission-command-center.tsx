@@ -20,11 +20,11 @@ const ALL_PRODUCTS: PipelineProduct[] = [
   { slug: 'rehearsal', name: 'REHEARSAL', stage: 'S3 DESIGN', nextGate: 'S4 BUILD' },
   { slug: 'iris-studio', name: 'iris-studio', stage: 'S4 BUILD', nextGate: 'DNS + Stripe (💳)' },
   { slug: 'fatfrogmodels', name: 'fatfrogmodels', stage: 'S7 LAUNCH', nextGate: 'S8 GROW' },
-  { slug: 'fairconnect', name: 'FairConnect', stage: 'S2 DEFINE', nextGate: 'S3 PRD' },
-  { slug: 'keeptrack', name: 'KeepTrack', stage: 'S2 DEFINE', nextGate: 'S3 PRD' },
+  { slug: 'fairconnect', name: 'FairConnect', stage: 'S4 BUILD', nextGate: 'Merge PR #1 (🔒)' },
+  { slug: 'keeptrack', name: 'KeepTrack', stage: 'S5 HARDEN', nextGate: 'Apple Dev (💳)' },
   { slug: 'subcheck', name: 'SubCheck', stage: 'S1 DONE', nextGate: 'S2 DEFINE' },
-  { slug: 'cortex', name: 'CORTEX', stage: 'S1 DISCOVER', nextGate: 'FOUNDRY revenue' },
-  { slug: 'radar', name: 'RADAR', stage: 'S2 DEFINE', nextGate: 'Phase 0 gate (🧠)' },
+  { slug: 'cortex', name: 'CORTEX', stage: 'S4 BUILD', nextGate: 'S5 HARDEN' },
+  { slug: 'radar', name: 'RADAR', stage: 'S4 BUILD', nextGate: 'Phase 0 gate Apr 18 (🧠)' },
   { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', stage: 'S7 LAUNCH', nextGate: 'S8 GROW' },
 ];
 
