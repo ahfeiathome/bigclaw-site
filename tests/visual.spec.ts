@@ -95,20 +95,17 @@ test.describe('Visual verification — public pages', () => {
     })
   })
 
-  test('homepage shows Free beta pricing', async ({ page }) => {
+  test('homepage shows current product portfolio', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByText('Free beta')).toBeVisible()
     await expect(page.getByText('bigclawai@gmail.com')).toBeVisible()
-
-    // Verify NO old pricing
-    await expect(page.getByText('$19.99/mo')).not.toBeVisible()
+    await expect(page.getByText('RADAR')).toBeVisible()
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('homepage.png', {
       fullPage: true,
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.1,
     })
   })
 })

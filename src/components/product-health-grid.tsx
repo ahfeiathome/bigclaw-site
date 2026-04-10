@@ -28,22 +28,24 @@ export function ProductHealthGrid() {
   );
 
   useEffect(() => {
-    PRODUCTS.forEach(async (product, i) => {
-      try {
-        const res = await fetch(product.url, { method: 'HEAD', mode: 'no-cors' });
-        setHealth(prev => {
-          const next = [...prev];
-          next[i] = { ...product, status: 'up' };
-          return next;
-        });
-      } catch {
-        setHealth(prev => {
-          const next = [...prev];
-          next[i] = { ...product, status: 'down' };
-          return next;
-        });
-      }
-    });
+    const urls = PRODUCTS.map(p => p.url);
+
+    fetch('/api/health', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    })
+      .then(res => res.json())
+      .then((data: { results: { url: string; status: 'up' | 'down' }[] }) => {
+        const statusMap = new Map(data.results.map(r => [r.url, r.status]));
+        setHealth(PRODUCTS.map(p => ({
+          ...p,
+          status: statusMap.get(p.url) ?? 'down',
+        })));
+      })
+      .catch(() => {
+        setHealth(PRODUCTS.map(p => ({ ...p, status: 'down' })));
+      });
   }, []);
 
   const upCount = health.filter(h => h.status === 'up').length;
