@@ -37,9 +37,14 @@ function buildIssueTrend(openIssues: GitHubIssue[], closedIssues: GitHubIssue[],
     }
   }
 
-  // Build daily buckets
+  // Build daily buckets — start from the first event date, not from `days` ago
+  const firstEventMs = events.length > 0
+    ? events.reduce((min, e) => Math.min(min, new Date(e.date).getTime()), Infinity)
+    : startMs;
+  const bucketStart = Math.max(firstEventMs, startMs);
+
   const buckets = new Map<string, { opened: number; closed: number }>();
-  for (let d = startMs; d <= now; d += 24 * 60 * 60 * 1000) {
+  for (let d = bucketStart; d <= now; d += 24 * 60 * 60 * 1000) {
     const key = new Date(d).toISOString().slice(0, 10);
     buckets.set(key, { opened: 0, closed: 0 });
   }
