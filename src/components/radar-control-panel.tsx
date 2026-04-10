@@ -33,6 +33,7 @@ export function RadarControlPanel({ currentMode, hasLive }: Props) {
   const [appliesTo, setAppliesTo] = useState(currentMode?.appliesTo || 'Both');
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isIncome = (s: string) => s === 'Income';
 
@@ -44,17 +45,23 @@ export function RadarControlPanel({ currentMode, hasLive }: Props) {
   }
 
   function handleSave() {
+    setError(null);
     startTransition(async () => {
       try {
-        await fetch('/api/radar/mode', {
+        const res = await fetch('/api/radar/mode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ strategy, risk, switchType, appliesTo }),
         });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setError(body.error || `HTTP ${res.status}`);
+          return;
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
-      } catch {
-        // Silently fail — mode not critical path
+      } catch (e) {
+        setError(String(e));
       }
     });
   }
@@ -174,6 +181,9 @@ export function RadarControlPanel({ currentMode, hasLive }: Props) {
           {saved ? 'Saved' : isPending ? 'Saving...' : 'Apply Mode'}
         </button>
       </div>
+      {error && (
+        <p className="text-xs text-red-400 font-mono mt-1">Error: {error}</p>
+      )}
     </div>
   );
 }
