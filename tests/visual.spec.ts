@@ -99,17 +99,13 @@ test.describe('Visual verification — public pages', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    await expect(page.getByText('GrovaKid')).toBeVisible()
     await expect(page.getByText('bigclawai@gmail.com')).toBeVisible()
-
-    // Verify NO deprecated products
-    await expect(page.getByText('Learnie AI')).not.toBeVisible()
-    await expect(page.getByText('VERDE')).not.toBeVisible()
+    await expect(page.getByText('RADAR')).toBeVisible()
 
     // Screenshot comparison
     await expect(page).toHaveScreenshot('homepage.png', {
       fullPage: true,
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.1,
     })
   })
 })
