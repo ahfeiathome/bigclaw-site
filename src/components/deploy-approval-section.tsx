@@ -9,7 +9,6 @@ interface Props {
 
 interface GateState {
   loading: boolean;
-  done: boolean;
   decision: 'approve' | 'reject' | null;
   error: string | null;
   rejectPrompt: boolean;
@@ -21,7 +20,7 @@ export function DeployApprovalSection({ initialGates }: Props) {
   const [states, setStates] = useState<Record<string, GateState>>({});
 
   function getState(product: string): GateState {
-    return states[product] ?? { loading: false, done: false, decision: null, error: null, rejectPrompt: false, rejectReason: '' };
+    return states[product] ?? { loading: false, decision: null, error: null, rejectPrompt: false, rejectReason: '' };
   }
 
   function patchState(product: string, patch: Partial<GateState>) {
@@ -40,7 +39,7 @@ export function DeployApprovalSection({ initialGates }: Props) {
         const data = await res.json() as { error?: string };
         patchState(product, { loading: false, error: data.error || 'Failed' });
       } else {
-        patchState(product, { loading: false, done: true, decision: 'approve' });
+        patchState(product, { loading: false, decision: 'approve' });
         setGates(prev => prev.filter(g => g.product !== product));
       }
     } catch {
@@ -60,7 +59,7 @@ export function DeployApprovalSection({ initialGates }: Props) {
         const data = await res.json() as { error?: string };
         patchState(product, { loading: false, error: data.error || 'Failed' });
       } else {
-        patchState(product, { loading: false, done: true, decision: 'reject', rejectPrompt: false });
+        patchState(product, { loading: false, decision: 'reject', rejectPrompt: false });
         setGates(prev => prev.filter(g => g.product !== product));
       }
     } catch {
@@ -112,7 +111,7 @@ export function DeployApprovalSection({ initialGates }: Props) {
                   disabled={s.loading}
                   className="text-xs px-3 py-2 rounded-lg bg-green-600/20 border border-green-500/40 text-green-400 font-semibold hover:bg-green-600/30 transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {s.loading && s.decision !== 'reject' ? '...' : '✅ APPROVE'}
+                  {s.loading ? '...' : '✅ APPROVE'}
                 </button>
                 <button
                   onClick={() => patchState(gate.product, { rejectPrompt: true })}

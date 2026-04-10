@@ -39,7 +39,7 @@ function buildIssueTrend(openIssues: GitHubIssue[], closedIssues: GitHubIssue[],
 
   // Build daily buckets — start from the first event date, not from `days` ago
   const firstEventMs = events.length > 0
-    ? Math.min(...events.map(e => new Date(e.date).getTime()))
+    ? events.reduce((min, e) => Math.min(min, new Date(e.date).getTime()), Infinity)
     : startMs;
   const bucketStart = Math.max(firstEventMs, startMs);
 

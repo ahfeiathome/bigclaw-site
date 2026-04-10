@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRepoFileSha, writeRepoFile } from '@/lib/github-write';
 
 export async function POST(request: NextRequest) {
+  const authCookie = request.cookies.get('bigclaw-auth');
+  if (authCookie?.value !== 'authenticated') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const body = await request.json() as { product?: string; action?: 'approve' | 'reject'; reason?: string };
   const { product, action, reason } = body;
 
@@ -15,8 +20,11 @@ export async function POST(request: NextRequest) {
   }
 
   // Find the production gate section for this product
+  // Anchor with " — " or newline after product name to avoid prefix matches
   const gateHeading = `## 🔒 PRODUCTION GATE — ${product}`;
-  const gateIdx = file.content.indexOf(gateHeading);
+  const gateIdx = file.content.indexOf(gateHeading + ' —') !== -1
+    ? file.content.indexOf(gateHeading + ' —')
+    : file.content.indexOf(gateHeading + '\n');
   if (gateIdx === -1) {
     return NextResponse.json({ error: `No gate found for product: ${product}` }, { status: 404 });
   }
@@ -61,7 +69,7 @@ export async function POST(request: NextRequest) {
   );
 
   if (!ok) {
-    return NextResponse.json({ error: 'Failed to write to GitHub' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to write to GitHub — if retrying fails, check Vercel logs' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, decision: decisionText });

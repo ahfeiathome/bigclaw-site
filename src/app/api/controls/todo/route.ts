@@ -16,9 +16,9 @@ export function parseMoneyItems(todoMd: string): MoneyItem[] {
   for (const line of todoMd.split('\n')) {
     if (!line.startsWith('|')) continue;
     if (line.match(/^\|[\s-:|]+\|$/)) continue;
-    if (line.includes('| # |') || line.includes('| Item')) continue;
 
     const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+    // First column must be a numeric item number (skips header rows automatically)
     if (cols.length < 3 || !cols[0].match(/^\d+$/)) continue;
 
     const type = cols[2] || '';

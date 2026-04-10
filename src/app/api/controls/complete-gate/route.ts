@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRepoFileSha, writeRepoFile } from '@/lib/github-write';
 
 export async function POST(request: NextRequest) {
+  const authCookie = request.cookies.get('bigclaw-auth');
+  if (authCookie?.value !== 'authenticated') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const body = await request.json() as { item_id?: string };
   const { item_id } = body;
 
@@ -15,8 +20,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Find the table row with this item number and mark as done
-  // Row format: | 8 | Item name | ⚖️ | Pending | ... |
-  // We want to replace "Pending" (or any status col) with "✅ DONE"
+  // Row formats:
+  //   4-col: | # | Item | Type | Status |
+  //   5-col: | # | Item | Type | Time | Unblocks |  (status not present, skip)
+  // Status is always col index 3 (0-based after splitting on |)
   const lines = file.content.split('\n');
   let changed = false;
 
@@ -24,22 +31,16 @@ export async function POST(request: NextRequest) {
     if (!line.startsWith('|')) return line;
     const cols = line.split('|').map(c => c.trim()).filter(Boolean);
     if (cols[0] !== item_id) return line;
-    // Found the row — replace the last column if it's Pending/status
-    // Replace "Pending" or bare status with "✅ DONE"
-    const newLine = line.replace(/\|\s*Pending\s*\|/, '| ✅ DONE |')
-                        .replace(/\|\s*pending\s*\|/i, '| ✅ DONE |');
-    if (newLine !== line) {
-      changed = true;
-      return newLine;
-    }
-    // Try replacing last non-empty col that isn't already done
+    // Found the row — update the Status column (index 3, i.e. 4th | segment)
     const parts = line.split('|');
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (parts[i].trim() && !parts[i].includes('✅') && !parts[i].includes('#') && !parts[i].includes('Item')) {
-        parts[i] = ' ✅ DONE ';
-        changed = true;
-        return parts.join('|');
-      }
+    // parts[0] is empty (before first |), parts[1]=num, parts[2]=item, parts[3]=type, parts[4]=status
+    const statusIdx = 4; // 1-indexed pipe split: | num | item | type | STATUS |
+    if (parts.length > statusIdx) {
+      const current = parts[statusIdx].trim();
+      if (/✅\s*done/i.test(current)) return line; // already done
+      parts[statusIdx] = ' ✅ DONE ';
+      changed = true;
+      return parts.join('|');
     }
     return line;
   });
