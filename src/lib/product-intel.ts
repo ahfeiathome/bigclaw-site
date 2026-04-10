@@ -35,7 +35,9 @@ function parseUpdatedDate(content: string): string | null {
 }
 
 function calcStaleness(dateStr: string | null): ProductIntel['staleness'] {
-  if (!dateStr) return 'missing';
+  // File exists but has no parseable date — treat as stale, not missing
+  // 'missing' is reserved for when the file itself cannot be found
+  if (!dateStr) return 'stale';
   const days = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24);
   if (days < 7) return 'current';
   if (days < 14) return 'stale';
@@ -60,9 +62,10 @@ function parseCompetitiveLog(content: string): { lastDate: string | null; change
 
 function parsePrdCompletion(content: string): { done: number; total: number } | null {
   // Best method: parse the Summary section directly (most reliable)
-  // Format: | Done | 33 | or | Status | Count | ... | Done | 33 |
+  // Format: | Done | 33 | or | **Total** | 61 |
   const doneMatch = content.match(/\|\s*Done\s*\|\s*(\d+)\s*\|/);
-  const totalLine = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
+  // Simplified total regex — matches "| Total | 61 |" or "| **Total** | 61 |"
+  const totalLine = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
   if (doneMatch && totalLine) {
     return { done: parseInt(doneMatch[1]), total: parseInt(totalLine[1]) };
   }

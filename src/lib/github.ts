@@ -92,7 +92,8 @@ export async function fetchKnowledgeHub(): Promise<string | null> {
 }
 
 export async function fetchDevKnowledgeHub(): Promise<string | null> {
-  return fetchRepoFile('bigclaw-ai', 'knowledge/DEV_KNOWLEDGE_HUB.md');
+  // DEV_KNOWLEDGE_HUB.md retired (2026-04-10) — replaced by KNOWLEDGE_HUB.md
+  return fetchKnowledgeHub();
 }
 
 export async function fetchSDLCProcess(): Promise<string | null> {
@@ -148,14 +149,9 @@ export async function fetchCooInbox(): Promise<string | null> {
 }
 
 export async function fetchPDLCRegistry(): Promise<string | null> {
-  // Read from committed data file (synced from bigclaw-ai/knowledge/PDLC_REGISTRY.md)
-  try {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const filePath = path.join(process.cwd(), 'data', 'pdlcRegistry.md');
-    if (fs.existsSync(filePath)) return fs.readFileSync(filePath, 'utf8');
-  } catch { /* fallback to API */ }
-  return fetchRepoFile('bigclaw-ai', 'knowledge/PDLC_REGISTRY.md');
+  // PDLC_REGISTRY.md was deleted (2026-04-10) — replaced by REGISTRY.md
+  // Return null so consumers fall back to fetchProducts() from content.ts
+  return null;
 }
 
 export async function fetchRadarStatus(): Promise<string | null> {

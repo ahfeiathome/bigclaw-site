@@ -250,7 +250,7 @@ const SECTOR_COMPANY: Record<string, string> = {
   'Commerce': 'Axiom',
   'Consumer Tools': 'Axiom',
   'Knowledge': 'Forge',
-  'FinTech': 'BigClaw AI',
+  'FinTech': 'Forge',   // RADAR is owned by lc-forge
   'Operations': 'BigClaw AI',
 };
 
@@ -261,9 +261,10 @@ function parseRegistryProducts(registryMd: string): ProductDef[] {
 
   for (const line of lines) {
     // Track current sector heading (e.g. "### 🎓 Education & Career")
-    const sectorMatch = line.match(/^### .+ (.+)$/);
+    // Capture full name after emoji: "### 📱 Consumer Tools" → "Consumer Tools"
+    const sectorMatch = line.match(/^### \S+\s+(.+)$/);
     if (sectorMatch) {
-      currentCompany = SECTOR_COMPANY[sectorMatch[1]] || '';
+      currentCompany = SECTOR_COMPANY[sectorMatch[1].trim()] || '';
       continue;
     }
 
