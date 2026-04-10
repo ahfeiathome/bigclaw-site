@@ -1,0 +1,445 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e6]:
+        - link "BigClaw AI BigClaw AI" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard/mission-control
+          - img "BigClaw AI" [ref=e8]
+          - generic [ref=e9]: BigClaw AI
+        - generic [ref=e10]: Company
+        - link "Dashboard (5 P0)" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard/mission-control
+        - link "Organization" [ref=e12] [cursor=pointer]:
+          - /url: /dashboard/organization
+        - link "Process" [ref=e13] [cursor=pointer]:
+          - /url: /dashboard/process
+        - link "Knowledge" [ref=e14] [cursor=pointer]:
+          - /url: /dashboard/help
+        - generic [ref=e15]: Product Lineup
+        - link "GrovaKid · EdTech" [ref=e16] [cursor=pointer]:
+          - /url: /dashboard/products/grovakid
+        - link "iris-studio · E-Comm" [ref=e17] [cursor=pointer]:
+          - /url: /dashboard/products/iris-studio
+        - link "fatfrogmodels · E-Comm" [ref=e18] [cursor=pointer]:
+          - /url: /dashboard/products/fatfrogmodels
+        - link "FairConnect · SaaS" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard/products/fairconnect
+        - link "KeepTrack · Consumer" [ref=e20] [cursor=pointer]:
+          - /url: /dashboard/products/keeptrack
+        - link "SubCheck · Consumer" [ref=e21] [cursor=pointer]:
+          - /url: /dashboard/products/subcheck
+        - link "CORTEX · Productivity" [ref=e22] [cursor=pointer]:
+          - /url: /dashboard/products/cortex
+        - link "REHEARSAL · EdTech" [ref=e23] [cursor=pointer]:
+          - /url: /dashboard/products/rehearsal
+        - link "RADAR · FinTech" [ref=e24] [cursor=pointer]:
+          - /url: /dashboard/products/radar
+        - link "Access Control" [ref=e26] [cursor=pointer]:
+          - /url: /dashboard/settings/users
+        - button "Sign out" [ref=e28] [cursor=pointer]
+      - main [ref=e29]:
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - img "BigClaw AI" [ref=e33]
+            - heading "Mission Control" [level=1] [ref=e34]
+          - paragraph [ref=e35]: Michael's control panel — approve deploys, check off money actions
+          - generic [ref=e36]:
+            - generic [ref=e39]: Production Deploy Approvals (2)
+            - generic [ref=e41]:
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]: iris-studio
+                  - generic [ref=e45]: 2026-04-10
+                - paragraph [ref=e46]: "Felix: Merge ALL open PRs (#4, #5, #6, #7) to main YOURSELF. Run tests. Deploy to preview."
+                - generic [ref=e47]:
+                  - button "✅ APPROVE" [ref=e48] [cursor=pointer]
+                  - button "❌ REJECT" [ref=e49] [cursor=pointer]
+              - generic [ref=e50]:
+                - generic [ref=e51]:
+                  - generic [ref=e52]: GrovaKid
+                  - generic [ref=e53]: ✅ 633/633 tests passing
+                  - generic [ref=e54]: 2026-04-10
+                - paragraph [ref=e55]: "PRs merged to main: #82 (UI redesign) + #83 (PRD-023 grace period fix)"
+                - generic [ref=e56]:
+                  - link "📱 Open Preview ↗" [ref=e57] [cursor=pointer]:
+                    - /url: https://learnie-ai-ten.vercel.app
+                  - button "✅ APPROVE" [ref=e58] [cursor=pointer]
+                  - button "❌ REJECT" [ref=e59] [cursor=pointer]
+          - generic [ref=e60]:
+            - generic [ref=e63]: 💳 Money Actions (17 pending)
+            - generic [ref=e65]:
+              - generic [ref=e66]:
+                - button "Mark item 8 done" [ref=e67] [cursor=pointer]
+                - generic [ref=e68]:
+                  - generic [ref=e69]:
+                    - generic [ref=e70]: ⚖️
+                    - generic [ref=e71]: RADAR accountant — tax implications of AI trading
+                    - generic [ref=e72]: ⚖️
+                  - paragraph [ref=e73]: "Unblocks: Pending"
+              - generic [ref=e74]:
+                - button "Mark item 22 done" [ref=e75] [cursor=pointer]
+                - generic [ref=e76]:
+                  - generic [ref=e77]:
+                    - generic [ref=e78]: 💳
+                    - generic [ref=e79]: "Mac Mini M4 32GB for overnight ops + local LLM — always-on: launchd/cron (overnight patrol, spec dispatch, tests) + Gemma 4 27B via Ollama for free local inference (code review, test validation, agent duties). Replaces Pi5 + MacBook Pro sleep workaround. ~$900."
+                    - generic [ref=e80]: 💳
+                  - paragraph [ref=e81]: "Unblocks: Pending"
+              - generic [ref=e82]:
+                - button "Mark item 6 done" [ref=e83] [cursor=pointer]
+                - generic [ref=e84]:
+                  - generic [ref=e85]:
+                    - generic [ref=e86]: 🧠
+                    - generic [ref=e87]: Naming decision — "Grova" leading. Market feedback from Mr. L.
+                    - generic [ref=e88]: 🧠
+                  - paragraph [ref=e89]: "Unblocks: EVERYTHING below ⬇️"
+              - generic [ref=e90]:
+                - button "Mark item 9 done" [ref=e91] [cursor=pointer]
+                - generic [ref=e92]:
+                  - generic [ref=e93]:
+                    - generic [ref=e94]: 💳
+                    - generic [ref=e95]: Buy domain (grovakid.com or final name)
+                    - generic [ref=e96]: 💳
+                  - paragraph [ref=e97]: "Unblocks: Email delivery, branding, AWS applications"
+              - generic [ref=e98]:
+                - button "Mark item 15 done" [ref=e99] [cursor=pointer]
+                - generic [ref=e100]:
+                  - generic [ref=e101]:
+                    - generic [ref=e102]: 💳
+                    - generic [ref=e103]: Sign up for AWS — create account under company name using bigclawai@gmail.com
+                    - generic [ref=e104]: 💳
+                  - paragraph [ref=e105]: "Unblocks: Cortex, RADAR cloud engine"
+              - generic [ref=e106]:
+                - button "Mark item 16 done" [ref=e107] [cursor=pointer]
+                - generic [ref=e108]:
+                  - generic [ref=e109]:
+                    - generic [ref=e110]: 💳
+                    - generic [ref=e111]: Apply AWS Activate Founders — $1,000 credits, 12 months. At aws.amazon.com/startups/credits. Needs live website + business email.
+                    - generic [ref=e112]: 💳
+                  - paragraph [ref=e113]: "Unblocks: Free AWS for 12 months"
+              - generic [ref=e114]:
+                - button "Mark item 17 done" [ref=e115] [cursor=pointer]
+                - generic [ref=e116]:
+                  - generic [ref=e117]:
+                    - generic [ref=e118]: 💳
+                    - generic [ref=e119]: Apply AWS EdStart Innovators — $5,000-$10,000 credits for EdTech. GrovaKid qualifies (K-5 adaptive learning). Can stack with Activate.
+                    - generic [ref=e120]: 💳
+                  - paragraph [ref=e121]: "Unblocks: Up to $11K free AWS credits"
+              - generic [ref=e122]:
+                - button "Mark item 10 done" [ref=e123] [cursor=pointer]
+                - generic [ref=e124]:
+                  - generic [ref=e125]:
+                    - generic [ref=e126]: 💳
+                    - generic [ref=e127]: Verify domain in Resend — add 3 DNS records (DKIM, SPF, MX) at registrar
+                    - generic [ref=e128]: 💳
+                  - paragraph [ref=e129]: "Unblocks: GrovaKid email delivery"
+              - generic [ref=e130]:
+                - button "Mark item 4 done" [ref=e131] [cursor=pointer]
+                - generic [ref=e132]:
+                  - generic [ref=e133]:
+                    - generic [ref=e134]: ⚖️
+                    - generic [ref=e135]: Co-founder agreement with Mr. L — reference BML Research as entity
+                    - generic [ref=e136]: ⚖️
+                  - paragraph [ref=e137]: "Unblocks: GrovaKid revenue (Stripe)"
+              - generic [ref=e138]:
+                - button "Mark item 18 done" [ref=e139] [cursor=pointer]
+                - generic [ref=e140]:
+                  - generic [ref=e141]:
+                    - generic [ref=e142]: 🧠
+                    - generic [ref=e143]: Phase 0 gate review — audit 14-day agent reliability proof. Byte git-sync clean? Rex respecting boundaries? Mika producing real briefs? Felix patrol running daily? Consultant will prepare audit report.
+                    - generic [ref=e144]: 🧠
+                  - paragraph [ref=e145]: "Unblocks: BigClaw AI flips to AGENTS_LED"
+              - generic [ref=e146]:
+                - button "Mark item 19 done" [ref=e147] [cursor=pointer]
+                - generic [ref=e148]:
+                  - generic [ref=e149]:
+                    - generic [ref=e150]: 🧠
+                    - generic [ref=e151]: Confirm RADAR transfer — approve RADAR (Axiom → BigClaw AI parent)
+                    - generic [ref=e152]: 🧠
+                  - paragraph [ref=e153]: "Unblocks: RADAR under parent company"
+              - generic [ref=e154]:
+                - button "Mark item 20 done" [ref=e155] [cursor=pointer]
+                - generic [ref=e156]:
+                  - generic [ref=e157]:
+                    - generic [ref=e158]: 💳
+                    - generic [ref=e159]: Create Telegram bot — @bigclaw_bot via @BotFather on Telegram
+                    - generic [ref=e160]: 💳
+                  - paragraph [ref=e161]: "Unblocks: Agent notifications for parent"
+              - generic [ref=e162]:
+                - button "Mark item 12 done" [ref=e163] [cursor=pointer]
+                - generic [ref=e164]:
+                  - generic [ref=e165]:
+                    - generic [ref=e166]: 💳
+                    - generic [ref=e167]: iris-studio Stripe keys — provide Stripe API keys for checkout
+                    - generic [ref=e168]: 💳
+                  - paragraph [ref=e169]: "Unblocks: Art sales on iris-studio"
+              - generic [ref=e170]:
+                - button "Mark item 13 done" [ref=e171] [cursor=pointer]
+                - generic [ref=e172]:
+                  - generic [ref=e173]:
+                    - generic [ref=e174]: 💳
+                    - generic [ref=e175]: iris-studio DNS — point irischiuart.com to Vercel
+                    - generic [ref=e176]: 💳
+                  - paragraph [ref=e177]: "Unblocks: Go live, cancel Wix"
+              - generic [ref=e178]:
+                - button "Mark item 1 done" [ref=e179] [cursor=pointer]
+                - generic [ref=e180]:
+                  - generic [ref=e181]:
+                    - generic [ref=e182]: 💳
+                    - generic [ref=e183]: Apple Developer ($99/yr) — developer.apple.com
+                    - generic [ref=e184]: 💳
+                  - paragraph [ref=e185]: "Unblocks: ALL FOUNDRY apps (TestFlight)"
+              - generic [ref=e186]:
+                - button "Mark item 3 done" [ref=e187] [cursor=pointer]
+                - generic [ref=e188]:
+                  - generic [ref=e189]:
+                    - generic [ref=e190]: ⚖️
+                    - generic [ref=e191]: Terms of Service template — needed for App Store
+                    - generic [ref=e192]: ⚖️
+                  - paragraph [ref=e193]: "Unblocks: App Store submission"
+              - generic [ref=e194]:
+                - button "Mark item 2 done" [ref=e195] [cursor=pointer]
+                - generic [ref=e196]:
+                  - generic [ref=e197]:
+                    - generic [ref=e198]: 💳
+                    - generic [ref=e199]: Small Business Program — 15% vs 30% commission
+                    - generic [ref=e200]: 💳
+                  - paragraph [ref=e201]: "Unblocks: Better FOUNDRY margins"
+              - group [ref=e202]:
+                - generic "2 completed items" [ref=e203] [cursor=pointer]
+          - generic [ref=e204]:
+            - generic [ref=e207]: Product Status
+            - generic [ref=e208]:
+              - table [ref=e210]:
+                - rowgroup [ref=e211]:
+                  - row "Product Stage Company Revenue Live URL" [ref=e212]:
+                    - columnheader "Product" [ref=e213]
+                    - columnheader "Stage" [ref=e214]
+                    - columnheader "Company" [ref=e215]
+                    - columnheader "Revenue" [ref=e216]
+                    - columnheader "Live URL" [ref=e217]
+                - rowgroup [ref=e218]:
+                  - row "GrovaKid S4 BUILD Forge $19.99/mo (deferred — co-founder) ↗" [ref=e219]:
+                    - cell "GrovaKid" [ref=e220]
+                    - cell "S4 BUILD" [ref=e221]
+                    - cell "Forge" [ref=e222]
+                    - cell "$19.99/mo (deferred — co-founder)" [ref=e223]
+                    - cell "↗" [ref=e224]:
+                      - link "↗" [ref=e225] [cursor=pointer]:
+                        - /url: https://learnie-ai-ten.vercel.app
+                  - row "REHEARSAL S3 DESIGN Forge Apple IAP credits ↗" [ref=e226]:
+                    - cell "REHEARSAL" [ref=e227]
+                    - cell "S3 DESIGN" [ref=e228]
+                    - cell "Forge" [ref=e229]
+                    - cell "Apple IAP credits" [ref=e230]
+                    - cell "↗" [ref=e231]:
+                      - link "↗" [ref=e232] [cursor=pointer]:
+                        - /url: https://rehearsal-bigclaw.vercel.app
+                  - row "iris-studio S4 BUILD Axiom Stripe per-txn ↗" [ref=e233]:
+                    - cell "iris-studio" [ref=e234]
+                    - cell "S4 BUILD" [ref=e235]
+                    - cell "Axiom" [ref=e236]
+                    - cell "Stripe per-txn" [ref=e237]
+                    - cell "↗" [ref=e238]:
+                      - link "↗" [ref=e239] [cursor=pointer]:
+                        - /url: https://iris-studio.vercel.app
+                  - row "fatfrogmodels S7 LAUNCH Axiom Stripe ↗" [ref=e240]:
+                    - cell "fatfrogmodels" [ref=e241]
+                    - cell "S7 LAUNCH" [ref=e242]
+                    - cell "Axiom" [ref=e243]
+                    - cell "Stripe" [ref=e244]
+                    - cell "↗" [ref=e245]:
+                      - link "↗" [ref=e246] [cursor=pointer]:
+                        - /url: https://fatfrogmodels.vercel.app
+                  - row "FairConnect S4 BUILD Axiom Apple IAP ↗" [ref=e247]:
+                    - cell "FairConnect" [ref=e248]
+                    - cell "S4 BUILD" [ref=e249]
+                    - cell "Axiom" [ref=e250]
+                    - cell "Apple IAP" [ref=e251]
+                    - cell "↗" [ref=e252]:
+                      - link "↗" [ref=e253] [cursor=pointer]:
+                        - /url: https://fairconnect.vercel.app
+                  - row "KeepTrack S5 HARDEN Axiom Apple IAP ↗" [ref=e254]:
+                    - cell "KeepTrack" [ref=e255]
+                    - cell "S5 HARDEN" [ref=e256]
+                    - cell "Axiom" [ref=e257]
+                    - cell "Apple IAP" [ref=e258]
+                    - cell "↗" [ref=e259]:
+                      - link "↗" [ref=e260] [cursor=pointer]:
+                        - /url: https://keeptrack-bigclaw.vercel.app
+                  - row "CORTEX S4 BUILD Forge Freemium + Apple IAP ↗" [ref=e261]:
+                    - cell "CORTEX" [ref=e262]
+                    - cell "S4 BUILD" [ref=e263]
+                    - cell "Forge" [ref=e264]
+                    - cell "Freemium + Apple IAP" [ref=e265]
+                    - cell "↗" [ref=e266]:
+                      - link "↗" [ref=e267] [cursor=pointer]:
+                        - /url: https://cortex-bigclaw.vercel.app
+                  - row "RADAR S4 BUILD Forge Personal brokerage ↗" [ref=e268]:
+                    - cell "RADAR" [ref=e269]
+                    - cell "S4 BUILD" [ref=e270]
+                    - cell "Forge" [ref=e271]
+                    - cell "Personal brokerage" [ref=e272]
+                    - cell "↗" [ref=e273]:
+                      - link "↗" [ref=e274] [cursor=pointer]:
+                        - /url: https://radar-bigclaw.vercel.app
+              - generic [ref=e276]:
+                - generic [ref=e277]:
+                  - generic [ref=e278]: 7 sites online
+                  - generic [ref=e279]: 3 sites DOWN
+                  - generic [ref=e280]: Green = site responds to HTTP request
+                - generic [ref=e281]:
+                  - link "GrovaKid" [ref=e282] [cursor=pointer]:
+                    - /url: https://learnie-ai-ten.vercel.app
+                    - generic [ref=e284]: GrovaKid
+                  - link "iris-studio" [ref=e285] [cursor=pointer]:
+                    - /url: https://iris-studio.vercel.app
+                    - generic [ref=e287]: iris-studio
+                  - link "fatfrogmodels" [ref=e288] [cursor=pointer]:
+                    - /url: https://fatfrogmodels.vercel.app
+                    - generic [ref=e290]: fatfrogmodels
+                  - link "FairConnect" [ref=e291] [cursor=pointer]:
+                    - /url: https://fairconnect.vercel.app
+                    - generic [ref=e293]: FairConnect
+                  - link "KeepTrack" [ref=e294] [cursor=pointer]:
+                    - /url: https://keeptrack-bigclaw.vercel.app
+                    - generic [ref=e296]: KeepTrack
+                  - link "SubCheck" [ref=e297] [cursor=pointer]:
+                    - /url: https://subcheck-bigclaw.vercel.app
+                    - generic [ref=e299]: SubCheck
+                  - link "CORTEX" [ref=e300] [cursor=pointer]:
+                    - /url: https://cortex-bigclaw.vercel.app
+                    - generic [ref=e302]: CORTEX
+                  - link "REHEARSAL" [ref=e303] [cursor=pointer]:
+                    - /url: https://rehearsal-bigclaw.vercel.app
+                    - generic [ref=e305]: REHEARSAL
+                  - link "RADAR" [ref=e306] [cursor=pointer]:
+                    - /url: https://radar-bigclaw.vercel.app
+                    - generic [ref=e308]: RADAR
+                  - link "Dashboard" [ref=e309] [cursor=pointer]:
+                    - /url: https://bigclaw-site.vercel.app
+                    - generic [ref=e311]: Dashboard
+          - generic [ref=e312]:
+            - generic [ref=e315]: System Health
+            - generic [ref=e316]:
+              - generic [ref=e317]:
+                - generic [ref=e318]: Cron Jobs
+                - paragraph [ref=e319]: Agent system data not available.
+              - generic [ref=e320]:
+                - generic [ref=e321]: Daily Spend
+                - paragraph [ref=e322]: No cost data yet. Rex (CFO) populates ops/DAILY_COSTS.md daily.
+              - generic [ref=e323]:
+                - generic [ref=e324]: Agents — 1 active
+                - generic [ref=e325]:
+                  - generic [ref=e328]: Mika
+                  - generic [ref=e331]: Koda
+                  - generic [ref=e334]: Rex
+                  - generic [ref=e337]: Sage
+                  - generic [ref=e340]: Byte
+                  - generic [ref=e343]: Lumina
+              - generic [ref=e344]:
+                - generic [ref=e345]: Active Sessions
+                - paragraph [ref=e346]: No active sessions
+              - generic [ref=e347]:
+                - generic [ref=e348]: Nightly Sanity Check
+                - paragraph [ref=e349]: No sanity check results yet
+          - generic [ref=e350]:
+            - generic [ref=e353]: Intelligence
+            - generic [ref=e354]:
+              - generic [ref=e355]:
+                - generic [ref=e356]: RADAR Portfolio
+                - generic [ref=e357]:
+                  - generic [ref=e358]:
+                    - generic [ref=e359]: Equity
+                    - generic [ref=e360]: $96,953.52
+                  - generic [ref=e361]:
+                    - generic [ref=e362]: Cash
+                    - generic [ref=e363]: $72,752.99
+                  - generic [ref=e364]:
+                    - generic [ref=e365]: Daily P/L
+                    - generic [ref=e366]: $-169.03
+                  - generic [ref=e367]:
+                    - generic [ref=e368]: Positions
+                    - generic [ref=e369]: "5"
+              - generic [ref=e370]:
+                - generic [ref=e371]: Issues Trend (all products, 90 days)
+                - generic [ref=e374]:
+                  - list [ref=e376]:
+                    - listitem [ref=e377]:
+                      - img "Currently Open legend icon" [ref=e378]
+                      - text: Currently Open
+                    - listitem [ref=e380]:
+                      - img "Total Created legend icon" [ref=e381]
+                      - text: Total Created
+                    - listitem [ref=e383]:
+                      - img "Total Resolved legend icon" [ref=e384]
+                      - text: Total Resolved
+                  - application [ref=e386]:
+                    - generic [ref=e407]:
+                      - generic [ref=e408]:
+                        - generic [ref=e410]: 3/27
+                        - generic [ref=e412]: 3/28
+                        - generic [ref=e414]: 3/29
+                        - generic [ref=e416]: 3/30
+                        - generic [ref=e418]: 3/31
+                        - generic [ref=e420]: 4/1
+                        - generic [ref=e422]: 4/2
+                        - generic [ref=e424]: 4/3
+                        - generic [ref=e426]: 4/4
+                        - generic [ref=e428]: 4/5
+                        - generic [ref=e430]: 4/6
+                        - generic [ref=e432]: 4/7
+                        - generic [ref=e434]: 4/8
+                        - generic [ref=e436]: 4/9
+                      - generic [ref=e437]:
+                        - generic [ref=e439]: "0"
+                        - generic [ref=e441]: "20"
+                        - generic [ref=e443]: "40"
+                        - generic [ref=e445]: "60"
+                        - generic [ref=e447]: "80"
+          - generic [ref=e448]:
+            - generic [ref=e451]: Quick Actions
+            - generic [ref=e453]:
+              - 'link "📱 Preview: GrovaKid ↗" [ref=e454] [cursor=pointer]':
+                - /url: https://learnie-ai-ten.vercel.app
+                - generic [ref=e455]: 📱
+                - generic [ref=e456]: "Preview: GrovaKid"
+                - generic [ref=e457]: ↗
+              - 'link "📱 Preview: FairConnect ↗" [ref=e458] [cursor=pointer]':
+                - /url: https://fairconnect-xi.vercel.app
+                - generic [ref=e459]: 📱
+                - generic [ref=e460]: "Preview: FairConnect"
+                - generic [ref=e461]: ↗
+              - 'link "📱 Preview: iris-studio ↗" [ref=e462] [cursor=pointer]':
+                - /url: https://iris-studio.vercel.app
+                - generic [ref=e463]: 📱
+                - generic [ref=e464]: "Preview: iris-studio"
+                - generic [ref=e465]: ↗
+              - link "📊 RADAR Dashboard ↗" [ref=e466] [cursor=pointer]:
+                - /url: https://radar-bigclaw.vercel.app
+                - generic [ref=e467]: 📊
+                - generic [ref=e468]: RADAR Dashboard
+                - generic [ref=e469]: ↗
+              - link "📋 Morning Report" [ref=e470] [cursor=pointer]:
+                - /url: /dashboard/knowledge/ops/morning-brain
+                - generic [ref=e471]: 📋
+                - generic [ref=e472]: Morning Report
+              - link "💳 Sponsor Gates" [ref=e473] [cursor=pointer]:
+                - /url: /dashboard/sponsor/todo
+                - generic [ref=e474]: 💳
+                - generic [ref=e475]: Sponsor Gates
+    - generic [ref=e476]:
+      - generic [ref=e477]: "Market: CLOSED"
+      - generic [ref=e478]: "|"
+      - generic [ref=e479]: "Agents: 1/6 active"
+      - generic [ref=e480]: "|"
+      - generic [ref=e481]: "Last sync: 2m ago"
+      - generic [ref=e482]: "|"
+      - generic [ref=e483]: "RADAR: Paper $96,953.52"
+      - generic [ref=e484]: "|"
+      - generic [ref=e485]: "Git: 43 commits today"
+  - generic [ref=e486]: "0"
+```
