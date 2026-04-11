@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchAllIssues, fetchRecentClosedIssues, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchMorningBrainLog, fetchDailyCosts, fetchAgentSystem, fetchRepoFile } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
 import { SectionCard } from '@/components/dashboard';

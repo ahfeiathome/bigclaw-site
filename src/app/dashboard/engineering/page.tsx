@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchSDLCGatesMatrix, fetchSDLCViolations, fetchAllIssues, fetchRecentClosedIssues, fetchLatestCiRun, fetchPrdTestMatrixForRepo, fetchRepoFile } from '@/lib/github';
 import { parsePrdItems } from '@/lib/prd-parser';
 import { SectionCard, SignalPill } from '@/components/dashboard';

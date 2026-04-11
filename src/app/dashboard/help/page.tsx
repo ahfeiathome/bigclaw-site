@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchKnowledgeHub, fetchLearnings, fetchLessonsLearned } from '@/lib/github';
 import { listKnowledgeEntries } from '@/lib/content';
 import { SignalPill } from '@/components/dashboard';

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchAgentsMd, fetchProjects, fetchBandwidth, fetchIssuesSnapshot, fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
 import type { GitHubIssue } from '@/lib/github';
 import { MetricCard, SectionCard, SignalPill, StatusDot, TaskFlowWidget, EventStreamWidget } from '@/components/dashboard';
