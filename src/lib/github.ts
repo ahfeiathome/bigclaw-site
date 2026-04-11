@@ -77,6 +77,10 @@ export async function fetchReleasePlan(repo: string): Promise<string | null> {
   return fetchRepoFile(repo, 'docs/product/RELEASE_PLAN.md');
 }
 
+export async function fetchTestHealth(repo: string): Promise<string | null> {
+  return fetchRepoFile(repo, 'docs/status/test-health.md');
+}
+
 export async function fetchVerificationReport(repo: string): Promise<string | null> {
   return fetchRepoFile(repo, 'ops/gemini/VERIFICATION_REPORT.md');
 }
