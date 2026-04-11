@@ -5,6 +5,8 @@ import { StatusDot } from './dashboard';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export type VerifyValue = '✅' | '❌' | 'N/A';
+
 export interface PrdItem {
   id: string;
   item: string;
@@ -13,8 +15,12 @@ export interface PrdItem {
   status: 'Done' | 'In Progress' | 'Not Started' | 'Deferred';
   owner: string;
   github?: string;
+  // Verification columns: V-G (Gemini), V-C (Consultant), V-M (Michael)
+  verifyG?: VerifyValue;
+  verifyC?: VerifyValue;
+  verifyM?: VerifyValue;
+  // Legacy single-column support
   verified?: boolean;
-  verifiedBy?: string;
 }
 
 interface Props {
@@ -58,16 +64,21 @@ export function PrdChecklist({ items, repoSlug }: Props) {
   const [sortKey, setSortKey] = useState<'id' | 'category' | 'priority' | 'status'>('id');
   const [sortAsc, setSortAsc] = useState(true);
 
+  // Detect whether using 3-column V-G/V-C/V-M schema
+  const hasTripleVerify = items.some(i => i.verifyG !== undefined);
+
   // Category summary
   const categories = useMemo(() => {
-    const map = new Map<string, { done: number; verified: number; total: number }>();
+    const map = new Map<string, { done: number; vG: number; vC: number; vM: number; total: number }>();
     for (const item of items) {
       const cat = item.category;
-      if (!map.has(cat)) map.set(cat, { done: 0, verified: 0, total: 0 });
+      if (!map.has(cat)) map.set(cat, { done: 0, vG: 0, vC: 0, vM: 0, total: 0 });
       const entry = map.get(cat)!;
       entry.total++;
       if (item.status === 'Done') entry.done++;
-      if (item.verified) entry.verified++;
+      if (item.verifyG === '✅') entry.vG++;
+      if (item.verifyC === '✅') entry.vC++;
+      if (item.verifyM === '✅') entry.vM++;
     }
     return Array.from(map.entries()).sort((a, b) => {
       const pctA = a[1].total > 0 ? a[1].done / a[1].total : 0;
@@ -78,13 +89,15 @@ export function PrdChecklist({ items, repoSlug }: Props) {
 
   // Overall counts
   const counts = useMemo(() => {
-    const c = { done: 0, verified: 0, inProgress: 0, notStarted: 0, deferred: 0 };
+    const c = { done: 0, vG: 0, vC: 0, vM: 0, inProgress: 0, notStarted: 0, deferred: 0 };
     for (const item of items) {
       if (item.status === 'Done') c.done++;
       else if (item.status === 'In Progress') c.inProgress++;
       else if (item.status === 'Deferred') c.deferred++;
       else c.notStarted++;
-      if (item.verified) c.verified++;
+      if (item.verifyG === '✅') c.vG++;
+      if (item.verifyC === '✅') c.vC++;
+      if (item.verifyM === '✅') c.vM++;
     }
     return c;
   }, [items]);
@@ -115,9 +128,8 @@ export function PrdChecklist({ items, repoSlug }: Props) {
     <div>
       {/* ── Category Summary Bars ──────────────────────────────── */}
       <div className="space-y-2 mb-6">
-        {categories.map(([cat, { done, verified, total }]) => {
+        {categories.map(([cat, { done, vG, vC, vM, total }]) => {
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-          const verifiedPct = total > 0 ? Math.round((verified / total) * 100) : 0;
           const isActive = filterCategory === cat;
           const barColor = CATEGORY_COLORS[cat] || 'bg-gray-500';
           return (
@@ -131,7 +143,8 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                 <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
               <span className="text-[10px] font-mono text-muted-foreground text-right shrink-0">
-                {done}/{total} Done ({pct}%) · {verified}/{total} Verified ({verifiedPct}%)
+                {done}/{total} Done ({pct}%)
+                {hasTripleVerify && <> · G:{vG} C:{vC} M:{vM}</>}
               </span>
             </button>
           );
@@ -141,8 +154,10 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       {/* ── Counters ───────────────────────────────────────────── */}
       <div className="flex gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
         <span className="font-mono">{counts.done} of {items.length} Done</span>
-        <span>·</span>
-        <span className={counts.verified > 0 ? 'text-green-400 font-mono' : 'font-mono'}>{counts.verified} Verified</span>
+        {hasTripleVerify && <>
+          <span>·</span>
+          <span className="font-mono">G:{counts.vG} C:{counts.vC} M:{counts.vM} Verified</span>
+        </>}
         <span>·</span>
         <span>{counts.inProgress} in progress</span>
         <span>·</span>
@@ -206,7 +221,15 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               </th>
               <th className="text-left py-2.5 px-2">Owner</th>
               <th className="text-left py-2.5 px-2">PR</th>
-              <th className="text-left py-2.5 pl-2 pr-3">Verified</th>
+              {hasTripleVerify ? (
+                <>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Gemini automated test">V-G</th>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Consultant audit">V-C</th>
+                  <th className="text-center py-2.5 pl-1 pr-3 text-[10px]" title="Michael review">V-M</th>
+                </>
+              ) : (
+                <th className="text-left py-2.5 pl-2 pr-3">Verified</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -229,11 +252,17 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                 <td className="py-2 px-2 font-mono text-muted-foreground">
                   {item.github && item.github !== '—' ? item.github : '—'}
                 </td>
-                <td className="py-2 pl-2 pr-3">
-                  {item.verified
-                    ? <span className="text-green-400">✅</span>
-                    : <span className="text-muted-foreground/40">❌</span>}
-                </td>
+                {hasTripleVerify ? (
+                  <>
+                    <td className="py-2 px-1 text-center text-sm">{item.verifyG === '✅' ? '✅' : item.verifyG === 'N/A' ? <span className="text-muted-foreground/40 text-[10px]">N/A</span> : <span className="text-muted-foreground/40">❌</span>}</td>
+                    <td className="py-2 px-1 text-center text-sm">{item.verifyC === '✅' ? '✅' : item.verifyC === 'N/A' ? <span className="text-muted-foreground/40 text-[10px]">N/A</span> : <span className="text-muted-foreground/40">❌</span>}</td>
+                    <td className="py-2 pl-1 pr-3 text-center text-sm">{item.verifyM === '✅' ? '✅' : item.verifyM === 'N/A' ? <span className="text-muted-foreground/40 text-[10px]">N/A</span> : <span className="text-muted-foreground/40">❌</span>}</td>
+                  </>
+                ) : (
+                  <td className="py-2 pl-2 pr-3">
+                    <span className="text-muted-foreground/40">—</span>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -193,19 +193,23 @@ export async function ProductPage(props: ProductPageProps) {
   }
 
   // Compute per-category verification stats from prdItems
-  interface CategoryStat { done: number; verified: number; total: number; }
+  interface CategoryStat { done: number; vG: number; vC: number; vM: number; total: number; }
   const categoryStats = new Map<string, CategoryStat>();
   if (prdItems) {
     for (const item of prdItems) {
-      if (!categoryStats.has(item.category)) categoryStats.set(item.category, { done: 0, verified: 0, total: 0 });
+      if (!categoryStats.has(item.category)) categoryStats.set(item.category, { done: 0, vG: 0, vC: 0, vM: 0, total: 0 });
       const stat = categoryStats.get(item.category)!;
       stat.total++;
       if (item.status === 'Done') stat.done++;
-      if (item.verified) stat.verified++;
+      if (item.verifyG === '✅') stat.vG++;
+      if (item.verifyC === '✅') stat.vC++;
+      if (item.verifyM === '✅') stat.vM++;
     }
   }
+  const hasTripleVerify = prdItems ? prdItems.some(i => i.verifyG !== undefined) : false;
   const totalDone = prdItems ? prdItems.filter(i => i.status === 'Done').length : 0;
-  const totalVerified = prdItems ? prdItems.filter(i => i.verified).length : 0;
+  const totalVerifyM = prdItems ? prdItems.filter(i => i.verifyM === '✅').length : 0;
+  const totalVerified = hasTripleVerify ? totalVerifyM : (prdItems ? prdItems.filter(i => i.verified).length : 0);
   const hasVerificationData = prdItems && prdItems.length > 0 && totalDone > 0;
 
   const productIssues = repoSlug ? allIssues.filter(i => i.repo === repoSlug) : [];
@@ -356,8 +360,18 @@ export async function ProductPage(props: ProductPageProps) {
                   <tr className="text-muted-foreground border-b border-border bg-muted">
                     <th className="text-left py-2 pl-3 pr-2">Category</th>
                     <th className="text-right py-2 px-2">Done</th>
-                    <th className="text-right py-2 px-2">Verified</th>
-                    <th className="text-right py-2 pl-2 pr-3">Gap</th>
+                    {hasTripleVerify ? (
+                      <>
+                        <th className="text-right py-2 px-2 text-[10px]" title="Gemini automated">V-G</th>
+                        <th className="text-right py-2 px-2 text-[10px]" title="Consultant audit">V-C</th>
+                        <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael review">V-M</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="text-right py-2 px-2">Verified</th>
+                        <th className="text-right py-2 pl-2 pr-3">Gap</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -365,10 +379,20 @@ export async function ProductPage(props: ProductPageProps) {
                     <tr key={cat} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
                       <td className="py-1.5 pl-3 pr-2 text-foreground">{cat}</td>
                       <td className="py-1.5 px-2 text-right font-mono text-muted-foreground">{stat.done}</td>
-                      <td className="py-1.5 px-2 text-right font-mono text-green-400">{stat.verified}</td>
-                      <td className={`py-1.5 pl-2 pr-3 text-right font-mono ${stat.done - stat.verified > 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>
-                        {stat.done - stat.verified}
-                      </td>
+                      {hasTripleVerify ? (
+                        <>
+                          <td className="py-1.5 px-2 text-right font-mono text-purple-400">{stat.vG}</td>
+                          <td className="py-1.5 px-2 text-right font-mono text-blue-400">{stat.vC}</td>
+                          <td className="py-1.5 pl-2 pr-3 text-right font-mono text-green-400">{stat.vM}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="py-1.5 px-2 text-right font-mono text-green-400">{stat.vM}</td>
+                          <td className={`py-1.5 pl-2 pr-3 text-right font-mono ${stat.done - stat.vM > 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                            {stat.done - stat.vM}
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>

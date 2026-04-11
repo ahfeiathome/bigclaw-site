@@ -72,13 +72,6 @@ export async function fetchPrdChecklist(
   return fetchRepoFile(repo, path);
 }
 
-export async function fetchTestMatrix(): Promise<string | null> {
-  return fetchRepoFile('learnie-ai', 'docs/product/TEST_MATRIX.md');
-}
-
-export async function fetchGrovakidTracker(): Promise<string | null> {
-  return fetchRepoFile('learnie-ai', 'docs/product/GROVAKID_TRACKER.md');
-}
 
 export async function fetchReleasePlan(repo: string): Promise<string | null> {
   return fetchRepoFile(repo, 'docs/product/RELEASE_PLAN.md');
