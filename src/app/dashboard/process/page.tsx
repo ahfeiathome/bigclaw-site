@@ -218,6 +218,59 @@ export default function ProcessPage() {
           </table>
         </div>
       </SectionCard>
+
+      {/* Dashboard Reference */}
+      <SectionCard title="Dashboard Reference" className="mb-6">
+        <p className="text-xs text-muted-foreground mb-4">How the dashboard works — data sources, color codes, and architecture.</p>
+
+        {/* KPI Cards */}
+        <div className="mb-4">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Mission Control KPIs</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Card</th>
+                  <th className="text-left py-2 px-2">What It Shows</th>
+                  <th className="text-left py-2 px-2">Data Source</th>
+                  <th className="text-left py-2 pl-2 pr-3">When to Worry</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Company Health', 'Overall health score (0–100)', 'REGISTRY.md + GitHub Issues API', 'Below 60 = Critical'],
+                  ['RADAR Equity', 'Paper trading portfolio + daily P/L', 'RADAR_DASHBOARD.md (Rex, 3× daily)', 'Equity < $90K or P/L consistently negative'],
+                  ['Open P0s', 'Critical bugs across ALL repos', 'GitHub Issues API (label: P0)', 'Any P0 > 0 needs attention'],
+                  ['Monthly Burn', 'Estimated monthly spend across all services', 'FINANCE.md + DAILY_COSTS.md', 'Above $100/mo → review costs'],
+                  ['Revenue', 'Total MRR across all products', 'Hardcoded ($0 until launch)', 'Expected $0 during Phase 0'],
+                  ['Agents', 'Pi5 agents: active / total', 'BANDWIDTH.md', '0/6 = all idle (Pi5 may be down)'],
+                ].map(([card, what, source, worry], i) => (
+                  <tr key={card} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 text-foreground font-medium">{card}</td>
+                    <td className="py-2 px-2 text-muted-foreground">{what}</td>
+                    <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{source}</td>
+                    <td className="py-2 pl-2 pr-3 text-amber-400 text-[10px]">{worry}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Color Coding */}
+        <div className="mb-4 flex flex-wrap gap-4 text-xs">
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /><span className="text-foreground font-medium">Green</span><span className="text-muted-foreground">— Healthy</span></div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /><span className="text-foreground font-medium">Amber</span><span className="text-muted-foreground">— Warning, needs attention</span></div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /><span className="text-foreground font-medium">Red</span><span className="text-muted-foreground">— Critical, action required</span></div>
+        </div>
+
+        {/* Production Gates */}
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p><span className="text-amber-400 font-mono">🔒 PROTECTED</span> — Code CLI creates preview, writes to FOUNDER_TODO.md, waits for Michael to merge PR.</p>
+          <p><span className="text-green-400 font-mono">✅ STANDARD</span> — Code CLI merges and deploys autonomously (BigClaw Dashboard only).</p>
+          <p className="text-[10px] pt-1">Data freshness: pages cache 5 min (Next.js revalidation). Hard-refresh forces a re-fetch.</p>
+        </div>
+      </SectionCard>
     </div>
   );
 }
