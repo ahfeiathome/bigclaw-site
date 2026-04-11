@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchAllIssues, fetchPDLCRegistry, fetchPortfolioSummary } from '@/lib/github';
 import { StatusDot, SignalPill, SectionCard } from '@/components/dashboard';
 import { ProductIntelSummaryTable } from '@/components/product-intelligence';
