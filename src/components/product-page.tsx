@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
@@ -69,7 +69,7 @@ export async function ProductPage(props: ProductPageProps) {
   const shelvedReason = props.shelvedReason;
   const revivalCondition = props.revivalCondition;
 
-  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd] = await Promise.all([
+  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),
     repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
     fetchProductIntel(name),
@@ -77,6 +77,8 @@ export async function ProductPage(props: ProductPageProps) {
     fetchDailyCosts(),
     fetchSDLCViolations(),
     fetchSDLCGatesMatrix(),
+    repoSlug ? fetchReleasePlan(repoSlug) : Promise.resolve(null),
+    repoSlug ? fetchVerificationReport(repoSlug) : Promise.resolve(null),
   ]);
 
   // Parse MRD for market positioning
@@ -127,6 +129,41 @@ export async function ProductPage(props: ProductPageProps) {
         productCost = cells[cells.length - 1] || null;
         break;
       }
+    }
+  }
+
+  // Parse Release Plan: extract version blocks + their PR tables
+  interface ReleaseRow { pr: string; what: string; prds: string; status: string; }
+  interface Release { version: string; subtitle: string; rows: ReleaseRow[]; }
+  const releases: Release[] = [];
+  if (releasePlanMd) {
+    const versionBlocks = releasePlanMd.split(/\n(?=### v)/);
+    for (const block of versionBlocks) {
+      const headerMatch = block.match(/^### (v[\d.]+[^\n]*)/);
+      if (!headerMatch) continue;
+      const [versionPart, ...subtitleParts] = headerMatch[1].split(' — ');
+      const rows: ReleaseRow[] = [];
+      for (const line of block.split('\n')) {
+        if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| PR ')) continue;
+        const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+        if (cells.length < 3) continue;
+        rows.push({ pr: cells[0], what: cells[1], prds: cells[2], status: cells[3] || '' });
+      }
+      if (rows.length > 0) {
+        releases.push({ version: versionPart.trim(), subtitle: subtitleParts.join(' — ').trim(), rows });
+      }
+    }
+  }
+
+  // Parse Verification Report rows
+  interface VerificationRow { date: string; prdId: string; test: string; result: string; notes: string; }
+  const verificationRows: VerificationRow[] = [];
+  if (verificationMd) {
+    for (const line of verificationMd.split('\n')) {
+      if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| Date ')) continue;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cells.length < 4) continue;
+      verificationRows.push({ date: cells[0], prdId: cells[1], test: cells[2], result: cells[3], notes: cells[4] || '' });
     }
   }
 
@@ -255,6 +292,93 @@ export async function ProductPage(props: ProductPageProps) {
           </div>
         )}
       </SectionCard>
+
+      {/* ── SECTION C2: Release Pipeline ────────────────────── */}
+      {repoSlug && (
+        <SectionCard title="Release Pipeline" className="mb-6">
+          {releases.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No release plan found at <code className="font-mono text-primary">docs/product/RELEASE_PLAN.md</code>.</p>
+          ) : (
+            <div className="space-y-5">
+              {releases.map((rel) => (
+                <div key={rel.version}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
+                    {rel.subtitle && <span className="text-xs text-muted-foreground">{rel.subtitle}</span>}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-border bg-muted">
+                          <th className="text-left py-2 pl-3 pr-2">PR</th>
+                          <th className="text-left py-2 px-2">What</th>
+                          <th className="text-left py-2 px-2">PRDs</th>
+                          <th className="text-left py-2 pl-2 pr-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rel.rows.map((row, i) => (
+                          <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
+                            <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
+                            <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
+                            <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
+                            <td className="py-1.5 pl-2 pr-3">
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                                {row.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      )}
+
+      {/* ── SECTION C3: Verification Report ─────────────────── */}
+      {repoSlug && (
+        <SectionCard title="Verification Report" className="mb-6">
+          <p className="text-[10px] text-muted-foreground mb-3">
+            Independent verification by Gemini QA. Only PASS results update the Verified column in the PRD checklist.
+          </p>
+          {verificationRows.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">Awaiting first verification run.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-muted-foreground border-b border-border bg-muted">
+                    <th className="text-left py-2 pl-3 pr-2">Date</th>
+                    <th className="text-left py-2 px-2">PRD</th>
+                    <th className="text-left py-2 px-2">Test</th>
+                    <th className="text-left py-2 px-2">Result</th>
+                    <th className="text-left py-2 pl-2 pr-3">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {verificationRows.map((row, i) => (
+                    <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
+                      <td className="py-1.5 pl-3 pr-2 font-mono text-muted-foreground whitespace-nowrap">{row.date}</td>
+                      <td className="py-1.5 px-2 font-mono text-primary">{row.prdId}</td>
+                      <td className="py-1.5 px-2 text-foreground">{row.test}</td>
+                      <td className="py-1.5 px-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.result.includes('PASS') || row.result.includes('✅') ? 'bg-green-500/20 text-green-400' : row.result.includes('FAIL') || row.result.includes('❌') ? 'bg-red-500/20 text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                          {row.result}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pl-2 pr-3 text-muted-foreground max-w-[200px] truncate">{row.notes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SectionCard>
+      )}
 
       {/* ── SECTION D: SDLC Gates + Violations ────────────── */}
       <SectionCard title="SDLC Gates & Violations" className="mb-6">
