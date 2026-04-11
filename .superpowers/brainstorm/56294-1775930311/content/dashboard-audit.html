@@ -1,0 +1,146 @@
+<h2>BigClaw Dashboard — Improvement Areas</h2>
+<p class="subtitle">Mapped against Linear, Vercel, Stripe, and best-in-class ops dashboards. Click all areas you want to improve.</p>
+
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+  <span style="background:#f85149;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;">HIGH IMPACT</span>
+  <span style="background:#d29922;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;">MEDIUM IMPACT</span>
+  <span style="background:#3fb950;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;">QUICK WIN</span>
+</div>
+
+<div class="options" data-multiselect style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+  <div class="option" data-choice="radar-charts" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#f85149;border-color:#f85149;color:#fff;">H</div>
+    <div class="content">
+      <h3>RADAR — Equity Curve Chart</h3>
+      <p>Paper account now has trade history. Right now it's 4 static text cards. It should show an equity curve (portfolio value over time), win/loss bar chart, and open positions table. Vercel/Stripe show time-series prominently. This is your most dynamic data.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#f85149;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">HIGH IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Currently: 4 text cards</span>
+        <span style="font-size:10px;color:#8b949e;">→ Equity curve + positions table</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="mission-control-hierarchy" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#f85149;border-color:#f85149;color:#fff;">H</div>
+    <div class="content">
+      <h3>Mission Control — Visual Hierarchy</h3>
+      <p>6 equal-weight sections. Nothing screams "look here first." Best dashboards (Linear, Vercel) put the critical action at the top in a visually distinct zone — everything else is secondary. Your "Deploy Approvals" and "Money Actions" should dominate the top fold, everything else recedes.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#f85149;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">HIGH IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Currently: 6 equal sections</span>
+        <span style="font-size:10px;color:#8b949e;">→ Action zone + monitoring zone</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="skeleton-loading" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#f85149;border-color:#f85149;color:#fff;">H</div>
+    <div class="content">
+      <h3>Skeleton Loading States</h3>
+      <p>Pages currently show nothing until GitHub API responds. Stripe, Linear, and Vercel all use shimmer skeleton screens — content-shaped placeholders that pulse while data loads. Reduces perceived load time 20-30% and stops the "blank page flash" on every navigation.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#f85149;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">HIGH IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Currently: blank until loaded</span>
+        <span style="font-size:10px;color:#8b949e;">→ shimmer placeholder shapes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="product-sparklines" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#d29922;border-color:#d29922;color:#fff;">M</div>
+    <div class="content">
+      <h3>Product Cards — Sparklines + Health Score</h3>
+      <p>Product status is a flat table with text stages. Best-in-class dashboards (Datadog, PlanetScale) show mini trend lines per product. Replace the text table with product cards that have: stage badge, a 7-day issue sparkline, uptime dot, and test count. Scannable in 2 seconds.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#d29922;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">MEDIUM IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Currently: flat text table</span>
+        <span style="font-size:10px;color:#8b949e;">→ cards with mini sparklines</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="command-palette" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#d29922;border-color:#d29922;color:#fff;">M</div>
+    <div class="content">
+      <h3>⌘K Command Palette</h3>
+      <p>Linear, Vercel, GitHub, Raycast — all have a command palette. You navigate between 20+ pages. Right now you click through the sidebar. With ⌘K you type "radar" and jump there, type "approve" and jump to deploy gates, type "fatfrog" and jump to that product. Power user speed.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#d29922;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">MEDIUM IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Currently: sidebar click-only</span>
+        <span style="font-size:10px;color:#8b949e;">→ ⌘K instant navigation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="dark-theme-landing" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#d29922;border-color:#d29922;color:#fff;">M</div>
+    <div class="content">
+      <h3>Public Landing Pages — Dark Theme</h3>
+      <p>The spec <code>dark-theme-landing-pages.md</code> is already in your queue. This is the public-facing upgrade — matches the dashboard dark aesthetic across all product landing pages. Vercel's own site is the gold standard: dark, minimal, brand-colored CTAs, no fluff.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#d29922;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">MEDIUM IMPACT</span>
+        <span style="font-size:10px;color:#8b949e;">Spec already written</span>
+        <span style="font-size:10px;color:#8b949e;">→ ready to implement</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="status-bar-upgrade" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#3fb950;border-color:#3fb950;color:#fff;">Q</div>
+    <div class="content">
+      <h3>Status Bar — Live Ticker Upgrade</h3>
+      <p>The bottom status bar already shows Market status, RADAR balance, Git commits, Agents. But it's static text. Make it a live ticker: RADAR balance should pulse green/red based on daily P/L direction, market open/close should auto-update, agent count should link to agent team page.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#3fb950;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">QUICK WIN</span>
+        <span style="font-size:10px;color:#8b949e;">Already there</span>
+        <span style="font-size:10px;color:#8b949e;">→ add color logic + links</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="finance-runway" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#3fb950;border-color:#3fb950;color:#fff;">Q</div>
+    <div class="content">
+      <h3>Finance — Runway Countdown</h3>
+      <p>Finance page has cost rows but no runway number. Stripe-style: one big number at the top — "Est. Runway: 14 months at current burn." Below it, the cost breakdown. Founders obsess over runway; it should be the first thing you see, not buried in the expandable table.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#3fb950;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">QUICK WIN</span>
+        <span style="font-size:10px;color:#8b949e;">Data already exists</span>
+        <span style="font-size:10px;color:#8b949e;">→ compute + display at top</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="product-health-latency" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#3fb950;border-color:#3fb950;color:#fff;">Q</div>
+    <div class="content">
+      <h3>Site Health — Latency + Last Checked</h3>
+      <p>ProductHealthGrid shows green/red dots (up/down). Vercel's status page shows ms latency alongside the dot. Add the response time next to each dot and a "checked Xs ago" timestamp. One line of extra data, much more useful when something is slow vs down.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#3fb950;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">QUICK WIN</span>
+        <span style="font-size:10px;color:#8b949e;">API already pings</span>
+        <span style="font-size:10px;color:#8b949e;">→ return + display ms</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="sdlc-violations-chart" onclick="toggleSelect(this)" style="align-items:flex-start;">
+    <div class="letter" style="background:#3fb950;border-color:#3fb950;color:#fff;">Q</div>
+    <div class="content">
+      <h3>Engineering — Violations Trend Chart</h3>
+      <p>The violations log is a table. Add a 30-day bar chart above it: violations per day, colored by severity (red = critical, orange = high). One glance tells you if the team is improving. Linear's "resolved vs opened" chart is the reference — same concept for SDLC compliance.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#3fb950;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;">QUICK WIN</span>
+        <span style="font-size:10px;color:#8b949e;">Data exists in violations log</span>
+        <span style="font-size:10px;color:#8b949e;">→ parse + chart</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+  <p style="font-size:11px;color:#8b949e;margin:0;">Click all that apply — this tells me what to prioritize. We'll go deeper on each one visually. You can select as many as you want.</p>
+</div>

@@ -2,7 +2,7 @@ import type { PrdItem } from '@/components/prd-checklist';
 
 /**
  * Parse PRD_CHECKLIST.md content into PrdItem array.
- * Expects table rows: | ID | Item | Category | Status | Owner | Target | GitHub |
+ * Expects table rows: | ID | Item | Category | Status | Owner | Target | GitHub | Verified | Verified By |
  * Tracks P0/P1/P2 section headers for priority assignment.
  */
 export function parsePrdItems(content: string): PrdItem[] {
@@ -30,6 +30,9 @@ export function parsePrdItems(content: string): PrdItem[] {
     const githubRaw = cells[6]?.trim() || '';
     const github = githubRaw.match(/#\d+/) ? githubRaw : undefined;
 
+    const verified = cells[7]?.includes('✅') ?? false;
+    const verifiedBy = cells[8]?.trim() || '';
+
     items.push({
       id: cells[0],
       item: cells[1],
@@ -38,6 +41,8 @@ export function parsePrdItems(content: string): PrdItem[] {
       owner: cells[4],
       priority: currentPriority,
       github,
+      verified,
+      verifiedBy: verifiedBy === '—' ? '' : verifiedBy,
     });
   }
 

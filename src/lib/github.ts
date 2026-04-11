@@ -80,6 +80,14 @@ export async function fetchGrovakidTracker(): Promise<string | null> {
   return fetchRepoFile('learnie-ai', 'docs/product/GROVAKID_TRACKER.md');
 }
 
+export async function fetchReleasePlan(repo: string): Promise<string | null> {
+  return fetchRepoFile(repo, 'docs/product/RELEASE_PLAN.md');
+}
+
+export async function fetchVerificationReport(repo: string): Promise<string | null> {
+  return fetchRepoFile(repo, 'ops/gemini/VERIFICATION_REPORT.md');
+}
+
 export async function fetchMichaelTodo(): Promise<string | null> {
   // Try new path first, fall back to old for backwards compat
   const result = await fetchRepoFile('bigclaw-ai', 'founder/FOUNDER_TODO.md');
