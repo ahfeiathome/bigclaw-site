@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport, fetchLatestCiRun, fetchPrdTestMatrixForRepo } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
@@ -238,7 +239,12 @@ export async function ProductPage(props: ProductPageProps) {
             </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        <p className="text-sm text-muted-foreground mb-2">{description}</p>
+        <div className="mb-4">
+          <Link href="/dashboard/development-flow" className="text-[10px] text-muted-foreground hover:text-primary no-underline">
+            View development flow →
+          </Link>
+        </div>
 
         {status === 'shelved' && (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 mb-4 text-sm">

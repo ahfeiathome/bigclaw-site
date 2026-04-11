@@ -146,6 +146,7 @@ export function SidebarNav() {
           <SubLink label="Organization" href="/dashboard/organization" />
           <SubLink label="Process" href="/dashboard/process" />
           <SubLink label="Knowledge" href="/dashboard/help" />
+          <SubLink label="Dev Flow" href="/dashboard/development-flow" />
 
           {/* Product Lineup */}
           <SectionHeader label="Product Lineup" />
