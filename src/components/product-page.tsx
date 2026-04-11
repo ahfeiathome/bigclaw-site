@@ -80,17 +80,17 @@ export async function ProductPage(props: ProductPageProps) {
   const revivalCondition = props.revivalCondition;
 
   const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd, ciRun, testMatrixMd] = await Promise.all([
-    repoSlug ? fetchRepoIssues(repoSlug) : Promise.resolve([]),
-    repoSlug ? fetchRepoClosedIssues(repoSlug, 90) : Promise.resolve([]),
-    fetchProductIntel(name),
-    repoSlug ? fetchRepoFile(repoSlug, 'docs/product/S2_MRD.md') : Promise.resolve(null),
-    fetchDailyCosts(),
-    fetchSDLCViolations(),
-    fetchSDLCGatesMatrix(),
-    repoSlug ? fetchReleasePlan(repoSlug) : Promise.resolve(null),
-    repoSlug ? fetchVerificationReport(repoSlug) : Promise.resolve(null),
-    repoSlug ? fetchLatestCiRun(repoSlug) : Promise.resolve(null),
-    repoSlug ? fetchPrdTestMatrixForRepo(repoSlug) : Promise.resolve(null),
+    repoSlug ? fetchRepoIssues(repoSlug).catch(() => []) : Promise.resolve([]),
+    repoSlug ? fetchRepoClosedIssues(repoSlug, 90).catch(() => []) : Promise.resolve([]),
+    fetchProductIntel(name).catch(() => null),
+    repoSlug ? fetchRepoFile(repoSlug, 'docs/product/S2_MRD.md').catch(() => null) : Promise.resolve(null),
+    fetchDailyCosts().catch(() => null),
+    fetchSDLCViolations().catch(() => null),
+    fetchSDLCGatesMatrix().catch(() => null),
+    repoSlug ? fetchReleasePlan(repoSlug).catch(() => null) : Promise.resolve(null),
+    repoSlug ? fetchVerificationReport(repoSlug).catch(() => null) : Promise.resolve(null),
+    repoSlug ? fetchLatestCiRun(repoSlug).catch(() => null) : Promise.resolve(null),
+    repoSlug ? fetchPrdTestMatrixForRepo(repoSlug).catch(() => null) : Promise.resolve(null),
   ]);
 
   // Parse MRD for market positioning
