@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues, fetchSDLCViolations } from '@/lib/github';
+import { fetchRepoIssues, fetchRepoClosedIssues, fetchSDLCViolations } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 import { IssueTrendChart } from '@/components/issues-trend-chart';
@@ -24,14 +24,11 @@ export default async function EngineeringProductPage({ params }: { params: Promi
   if (!product) return notFound();
 
   const repo = SLUG_TO_REPO[slug] || product.repo;
-  const [allIssues, closedIssues, violationsMd] = await Promise.all([
-    fetchAllIssues(),
-    fetchRecentClosedIssues(90),
+  const [productIssues, productClosed, violationsMd] = await Promise.all([
+    fetchRepoIssues(repo),
+    fetchRepoClosedIssues(repo, 90),
     fetchSDLCViolations(),
   ]);
-
-  const productIssues = allIssues.filter(i => i.repo === repo);
-  const productClosed = closedIssues.filter(i => i.repo === repo);
   const p0Count = productIssues.filter(i => i.labels.includes('P0')).length;
   const p1Count = productIssues.filter(i => i.labels.includes('P1')).length;
 

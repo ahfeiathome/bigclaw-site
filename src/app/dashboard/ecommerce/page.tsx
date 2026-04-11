@@ -1,4 +1,4 @@
-import { fetchAllIssues } from '@/lib/github';
+import { fetchRepoIssues } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 
 interface ProductSection {
@@ -50,7 +50,14 @@ function hasGate(text: string): boolean {
 }
 
 export default async function EcommercePage() {
-  const allIssues = await fetchAllIssues();
+  const [irisIssues, fatfrogIssues] = await Promise.all([
+    fetchRepoIssues('iris-studio'),
+    fetchRepoIssues('fatfrogmodels'),
+  ]);
+  const issuesByRepo: Record<string, typeof irisIssues> = {
+    'iris-studio': irisIssues,
+    'fatfrogmodels': fatfrogIssues,
+  };
 
   return (
     <div>
@@ -59,7 +66,7 @@ export default async function EcommercePage() {
 
       <div className="space-y-8">
         {PRODUCTS.map((product) => {
-          const issues = allIssues.filter(i => i.repo === product.repoSlug);
+          const issues = issuesByRepo[product.repoSlug] || [];
           const p0Count = issues.filter(i => i.labels.includes('P0')).length;
 
           return (
