@@ -1,4 +1,4 @@
-import { fetchAllIssues } from '@/lib/github';
+import { fetchRepoIssues } from '@/lib/github';
 import { SectionCard, SignalPill } from '@/components/dashboard';
 
 interface FoundryApp {
@@ -64,7 +64,16 @@ function hasGate(text: string): boolean {
 }
 
 export default async function FoundryPage() {
-  const allIssues = await fetchAllIssues();
+  const [fcIssues, ktIssues, scIssues] = await Promise.all([
+    fetchRepoIssues('fairconnect'),
+    fetchRepoIssues('keeptrack'),
+    fetchRepoIssues('subcheck'),
+  ]);
+  const issuesByRepo: Record<string, typeof fcIssues> = {
+    'fairconnect': fcIssues,
+    'keeptrack': ktIssues,
+    'subcheck': scIssues,
+  };
 
   // Group apps by stage
   const groups = new Map<string, FoundryApp[]>();
@@ -96,7 +105,7 @@ export default async function FoundryPage() {
 
             <div className="space-y-3">
               {apps.map((app) => {
-                const issues = allIssues.filter(i => i.repo === app.repoSlug);
+                const issues = issuesByRepo[app.repoSlug] || [];
                 const p0Count = issues.filter(i => i.labels.includes('P0')).length;
 
                 return (
