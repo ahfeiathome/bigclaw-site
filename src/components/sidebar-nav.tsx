@@ -53,17 +53,25 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-// ── Product list (all products in REGISTRY.md) ─────────────────────
+// ── Product vertical nav (v3 architecture) ──────────────────────────
+const VERTICALS = [
+  { label: 'Education', href: '/dashboard/education', desc: 'GrovaKid' },
+  { label: 'FinTech', href: '/dashboard/fintech', desc: 'RADAR' },
+  { label: 'E-Commerce', href: '/dashboard/ecommerce', desc: 'iris-studio · fatfrogmodels' },
+  { label: 'Foundry', href: '/dashboard/foundry', desc: 'FC · KT · SC · CX · REHEARSAL' },
+];
+
+// ── Product list for product-viewer role ─────────────────────────────
 const PRODUCTS = [
-  { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid', tag: 'EdTech' },
-  { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio', tag: 'E-Comm' },
-  { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels', tag: 'E-Comm' },
-  { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect', tag: 'SaaS' },
-  { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack', tag: 'Consumer' },
-  { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck', tag: 'Consumer' },
-  { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex', tag: 'Productivity' },
-  { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal', tag: 'EdTech' },
-  { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar', tag: 'FinTech' },
+  { name: 'GrovaKid', href: '/dashboard/products/grovakid', slug: 'grovakid' },
+  { name: 'iris-studio', href: '/dashboard/products/iris-studio', slug: 'iris-studio' },
+  { name: 'fatfrogmodels', href: '/dashboard/products/fatfrogmodels', slug: 'fatfrogmodels' },
+  { name: 'FairConnect', href: '/dashboard/products/fairconnect', slug: 'fairconnect' },
+  { name: 'KeepTrack', href: '/dashboard/products/keeptrack', slug: 'keeptrack' },
+  { name: 'SubCheck', href: '/dashboard/products/subcheck', slug: 'subcheck' },
+  { name: 'CORTEX', href: '/dashboard/products/cortex', slug: 'cortex' },
+  { name: 'REHEARSAL', href: '/dashboard/products/rehearsal', slug: 'rehearsal' },
+  { name: 'RADAR', href: '/dashboard/products/radar', slug: 'radar' },
 ];
 
 // ── Role hook ────────────────────────────────────────────────────────
@@ -140,19 +148,23 @@ export function SidebarNav() {
       {/* ── Admin view ────────────────────────────────────── */}
       {isAdmin && (
         <>
-          {/* Company */}
+          {/* Top-level */}
+          <SectionLink label={`Mission Control${p0Count > 0 ? ` · ${p0Count} P0` : ''}`} href="/dashboard/mission-control" badge={p0Count} />
+
+          {/* Product Verticals */}
+          <SectionHeader label="Products" />
+          {VERTICALS.map(v => (
+            <SubLink key={v.href} label={v.label} href={v.href} />
+          ))}
+
+          {/* Company ops */}
           <SectionHeader label="Company" />
-          <SubLink label={`Dashboard${p0Count > 0 ? ` (${p0Count} P0)` : ''}`} href="/dashboard/mission-control" />
           <SubLink label="Organization" href="/dashboard/organization" />
+          <SubLink label="Finance" href="/dashboard/finance" />
+          <SubLink label="Engineering" href="/dashboard/engineering" />
           <SubLink label="Process" href="/dashboard/process" />
           <SubLink label="Knowledge" href="/dashboard/help" />
           <SubLink label="Dev Flow" href="/dashboard/development-flow" />
-
-          {/* Product Lineup */}
-          <SectionHeader label="Product Lineup" />
-          {PRODUCTS.map(p => (
-            <SubLink key={p.slug} label={`${p.name} · ${p.tag}`} href={p.href} />
-          ))}
 
           {/* Access Control */}
           <div className="pt-4 border-t border-border/30 mt-4">
