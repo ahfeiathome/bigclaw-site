@@ -55,10 +55,10 @@ function SectionHeader({ label }: { label: string }) {
 
 // ── Product vertical nav (v3 architecture) ──────────────────────────
 const VERTICALS = [
-  { label: 'Education', href: '/dashboard/education', desc: 'GrovaKid' },
-  { label: 'FinTech', href: '/dashboard/fintech', desc: 'RADAR' },
-  { label: 'E-Commerce', href: '/dashboard/ecommerce', desc: 'iris-studio · fatfrogmodels' },
-  { label: 'Foundry', href: '/dashboard/foundry', desc: 'FC · KT · SC · CX · REHEARSAL' },
+  { label: 'Education: GrovaKid', href: '/dashboard/education' },
+  { label: 'FinTech: RADAR', href: '/dashboard/fintech' },
+  { label: 'E-Commerce: iris-studio', href: '/dashboard/ecommerce' },
+  { label: 'Foundry: FC · KT · SC', href: '/dashboard/foundry' },
 ];
 
 // ── Product list for product-viewer role ─────────────────────────────
@@ -153,6 +153,7 @@ export function SidebarNav() {
 
           {/* Product Verticals */}
           <SectionHeader label="Products" />
+          <SubLink label="Engineering" href="/dashboard/engineering" />
           {VERTICALS.map(v => (
             <SubLink key={v.href} label={v.label} href={v.href} />
           ))}
@@ -161,10 +162,8 @@ export function SidebarNav() {
           <SectionHeader label="Company" />
           <SubLink label="Organization" href="/dashboard/organization" />
           <SubLink label="Finance" href="/dashboard/finance" />
-          <SubLink label="Engineering" href="/dashboard/engineering" />
           <SubLink label="Process" href="/dashboard/process" />
           <SubLink label="Knowledge" href="/dashboard/help" />
-          <SubLink label="Dev Flow" href="/dashboard/development-flow" />
 
           {/* Access Control */}
           <div className="pt-4 border-t border-border/30 mt-4">
