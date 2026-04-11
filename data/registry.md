@@ -1,116 +1,127 @@
 ---
-title: BigClaw AI — Company Registry
+title: BigClaw AI — Product Registry
 type: governance
 status: active
-created: 2026-04-03
-updated: 2026-04-05
+updated: 2026-04-07
+note: Corrected stages from 3-session audit. This file is THE source of truth for all stages.
 ---
 
-# Company Registry
+# BigClaw AI — Product Registry
 
-Single source of truth for all companies under BigClaw AI.
-
-| Company | Architecture | Entry Point | Claude Project | Hardware | Products | Status |
-|---------|-------------|-------------|----------------|----------|----------|--------|
-| **BigClaw AI** (parent) | CODE_ONLY → AGENTS_LED | `lc-bigclaw` | Shared: "BigClaw AI" | MCPro now, +Pi5 after Phase 0 | Shared services | Active |
-| **Forge** | AGENTS | `lc-forge` | Shared: "BigClaw AI" | MCPro + Pi5 | GrovaKid, CORTEX | Active |
-| **Axiom** | CODE_ONLY | `lc-axiom` | Shared: "BigClaw AI" | MCPro only | FairConnect, KeepTrack, SubCheck, iris-studio, fatfrogmodels, REHEARSAL | Active |
-| **Nexus** | AGENTS_LED | `lc-nexus` | Shared: "BigClaw AI" | Pi5 + MCPro | BigClaw Dashboard (pending), RADAR (pending) | Setup — Phase 0 gate April 18 |
-
-### Architecture Types
-- **AGENTS:** Code CLI is CEO, dispatches Pi5 agents as subordinates
-- **CODE_ONLY:** Code CLI does everything, no agents
-- **AGENTS_LED:** Pi5 agents hold decision authority, Code CLI dispatched as a tool
-- **CODE_ONLY → AGENTS_LED:** Starts CODE_ONLY for build phase, flips to AGENTS_LED after Phase 0 gate
-
-**Claude Chat:** One session, one Project ("BigClaw AI") covers all companies.
-**Code CLI:** Separate sessions per company (`lc-forge`, `lc-axiom`, `lc-openclaw`).
+One company. Products organized by sector.
+No sub-companies. No separate entities.
 
 ---
 
-## Product Ownership
+## Production Gates
 
-Every product belongs to exactly one company. No shared projects.
+Products marked `🔒 PROTECTED` require Michael approval before PRODUCTION DEPLOYMENT.
+This means approval to deploy to the live production URL — NOT approval for every PR.
 
-| Product | Company | Repo | Revenue Model | Status |
-|---------|---------|------|---------------|--------|
-| GrovaKid | Forge | learnie-ai | Deferred (co-founder agreement) | Active |
-| CORTEX | Forge | cortex | Freemium (visual/OCR lane) | Shelved — pivoted 2026-04-05 |
-| FairConnect | Axiom | fairconnect | Apple IAP | S2 DEFINE |
-| KeepTrack | Axiom | keeptrack | Apple IAP | S2 DEFINE |
-| SubCheck | Axiom | subcheck | Apple IAP | S1 DONE — queued |
-| iris-studio | Axiom | iris-studio | Stripe (art sales) | Pre-launch |
-| fatfrogmodels | Axiom | fatfrogmodels | Stripe (physical goods) | Active |
-| REHEARSAL | Axiom | rehearsal (TBD) | Apple IAP (freemium + credits) | Shelved — queued after FOUNDRY top 3 |
-| BigClaw Dashboard | OpenClaw | bigclaw-site | Internal portal | Active build |
-| RADAR | OpenClaw (post-Phase 0) | radar (extract from Forge) | Personal brokerage (Alpaca) | Paper phase |
+**What PROTECTED means:**
+- Felix CAN merge PRs to main on his own (after CI + code review pass)
+- Felix CANNOT deploy to production without Michael's approval
+- Felix writes a PRODUCTION GATE entry in FOUNDER_TODO.md when ready
+- Michael reviews the preview URL on his phone and says "approved" or "rejected"
+- Felix then deploys to production and verifies the live site
 
----
+**What PROTECTED does NOT mean:**
+- Michael does NOT review individual PRs
+- Michael does NOT merge PRs on GitHub
+- Michael does NOT do code review
+- Michael does NOT touch GitHub at all
 
-## Product Notes
+| Product | Gate | Rule |
+|---------|------|------|
+| fatfrogmodels | 🔒 PROTECTED | Michael approves all production deploys |
+| iris-studio | 🔒 PROTECTED | Michael approves all production deploys |
+| GrovaKid | 🔒 PROTECTED | Michael approves all production deploys |
+| REHEARSAL | 🔒 PROTECTED | Michael approves all production deploys |
+| FairConnect | 🔒 PROTECTED | Michael approves all production deploys |
+| KeepTrack | 🔒 PROTECTED | Michael approves all production deploys |
+| SubCheck | ARCHIVED | Frozen — no production deploys needed |
+| CORTEX | 🔒 PROTECTED | Michael approves all production deploys |
+| RADAR | 🔒 PROTECTED | Michael approves all production deploys |
+| BigClaw Dashboard | ✅ STANDARD | Code deploys autonomously (internal tool) |
 
-### CORTEX (Forge) — Pivoted 2026-04-05
-Text/URL capture lane is now covered by Readwise Reader (74K users, MCP, Ghostreader AI,
-Obsidian plugin). CORTEX pivots to the remaining genuine gap: **photo/visual/OCR capture**.
-Whiteboards, handwritten notes, camera roll bulk import, screenshots — Readwise cannot
-do this. Agent write API (POST /captures) remains a differentiator — Readwise MCP is read-only.
-See: `forge/cortex/CHECKPOINT.md`
-
-### REHEARSAL (Axiom) — New 2026-04-05
-AI career assist: voice-first mock interview + delivery feedback + resume targeting.
-Emerged from Michael's personal job search pain points. Voice/verbal feedback is the
-gap in existing tools. B2C credits model, potential B2B (bootcamps, outplacement).
-Michael is first user. Shelved until FOUNDRY top 3 reach revenue.
-See: `axiom/docs/specs/rehearsal-product-brief.md`
-
-### RADAR (OpenClaw) — Formalized 2026-04-05
-Personal AI trading engine. Dual-account (paper $100K + live <$5K). Rex (CFO) holds
-trading authority within constitution. 24/7 ops via OpenClaw AGENTS_LED architecture.
-Code extracted from Forge post-Phase 0 gate (April 18).
-See: `docs/specs/radar-product-brief.md`
+**Enforcement:** GitHub branch protection (main requires PR) + Vercel manual production trigger.
+**Sessions:** Any spec touching deployment of a 🔒 product must write to FOUNDER_TODO.md instead.
 
 ---
 
-## RADAR Transfer Timeline
+## Products by Sector
 
-| Date | Event |
-|---|---|
-| Now → April 18 | RADAR under Axiom operationally, agents running in Forge |
-| April 18 | Phase 0 gate review (Michael + Consultant) |
-| April 18–25 | RADAR code extracted to `ahfeiathome/radar`, transferred to OpenClaw |
-| Post-transfer | Rex holds full trading authority per RADAR constitution |
+### 🎓 Education & Career
+
+| Product | Repo | Revenue | Stage | Live | Evidence |
+|---------|------|---------|-------|------|----------|
+| GrovaKid | learnie-ai | $19.99/mo (deferred — co-founder) | S4 BUILD (advanced) | learnie-ai-ten.vercel.app | 437+ tests, 32 test files, 10 overnight features (onboarding, emails, charts, milestones, adaptive difficulty, standards, recommendations, history, goals). Production slug bug fixed. Open PR #58 (Auth0→Better Auth). |
+| REHEARSAL | rehearsal | Apple IAP credits | S3 DESIGN (shelved) | rehearsal-bigclaw.vercel.app | PRD complete, Expo/RN scaffold built, 4 screens + 80 questions. Shelved pending FOUNDRY revenue. |
+
+### 🛍️ Commerce
+
+| Product | Repo | Revenue | Stage | Live | Evidence |
+|---------|------|---------|-------|------|----------|
+| iris-studio | iris-studio | Stripe per-txn | S4 BUILD (code-complete, gated) | iris-studio.vercel.app | All 8 pages built + QA'd. 34 tests. PRs #4/#5/#6 awaiting 🔒 Michael merge. Blocked: 💳 Stripe keys, 💳 DNS cutover, 💳 Sanity project. |
+| fatfrogmodels | fatfrogmodels | Stripe | S7 LAUNCH | fatfrogmodels.vercel.app | Live. 9/9 products in Neon. Open bug #48 (bulk import image re-upload). |
+
+### 📱 Consumer Tools
+
+| Product | Repo | Revenue | Stage | Live | Evidence |
+|---------|------|---------|-------|------|----------|
+| FairConnect | fairconnect | Apple IAP | S4 BUILD (E2E added) | fairconnect.vercel.app | P0 API routes on main (PR #1 merged). 25 unit tests + 10 Playwright E2E tests (4 booth flows: capture, customers, sales, follow-ups). S1 competitive research done — partial blue ocean confirmed. PRD gaps: customer edit/delete, name search UI, revenue trigger verify. |
+| KeepTrack | keeptrack | Apple IAP | S5 HARDEN (archive ready) | keeptrack-bigclaw.vercel.app | All S7 features built (OCR, iCloud, push, StoreKit 2 Pro). Archive built. Blocked: 💳 Apple Developer $99 for TestFlight. |
+| SubCheck | subcheck | Apple IAP | ARCHIVED — merged into KeepTrack | subcheck-bigclaw.vercel.app | Subscription tracking absorbed into KeepTrack Lane 3 (P1). Repo frozen. No new development. |
+
+### 🧠 Knowledge
+
+| Product | Repo | Revenue | Stage | Live | Evidence |
+|---------|------|---------|-------|------|----------|
+| CORTEX | cortex | Freemium + Apple IAP | S4 BUILD (visual/OCR pivot) | cortex-bigclaw.vercel.app | Pivoted from text/URL to Visual Capture lane. Readwise covers text. Active development. |
+
+### 📈 FinTech
+
+| Product | Repo | Revenue | Stage | Live | Evidence |
+|---------|------|---------|-------|------|----------|
+| RADAR | radar-site | Personal brokerage | S4 BUILD (gate blocked) | radar-bigclaw.vercel.app | 314 tests, 50% coverage, kill switch active. Paper trading: 30% win rate (below 40% threshold). Phase 0 gate Apr 18 — will NOT pass at current win rate. Next: improve signal quality or extend gate to May 2. |
+
+### ⚙️ Operations
+
+| Product | Repo | Revenue | Stage | Live |
+|---------|------|---------|-------|------|
+| BigClaw Dashboard | bigclaw-site | Internal | Active | bigclaw-site.vercel.app |
 
 ---
 
-## BigClaw AI Shared Services (after Phase 0)
+## Shared Gates
 
-Not products — operational capabilities consumed by all companies.
-
-| Service | Agent | Output Location |
-|---------|-------|----------------|
-| Market Intelligence | Sage | bigclaw-ai/knowledge/ |
-| Content Pipeline | Lumina | Per-product marketing specs |
-| Infra Monitoring | Byte | Cross-company Pi5 health reports |
-| Investment Research | Sage + Rex | bigclaw-ai/knowledge/INVESTMENT_PORTFOLIO.md |
+- Apple Developer $99 (💳 Michael) — all mobile apps at S6 PILOT
+- Co-founder agreement (⚖️) — GrovaKid only
+- RADAR live capital <$5K (💳 Michael) — RADAR only
 
 ---
 
-## Transferring a Product
+## Execution Sessions
 
-1. Update this table (change Company column)
-2. Update source company's COMPANY.md (remove product)
-3. Update target company's COMPANY.md (add product)
-4. Move product-specific specs to target company's docs/specs/
-5. Product repo, GitHub Issues, git history — all stay in place
+**RULE: Each session reports ONLY products listed in its row. No overlap.**
+**RULE: After completing ANY spec that advances a product, update the Stage + Evidence columns in this file.**
+
+| Alias | Working Dir | Products |
+|-------|------------|---------|
+| `lc-bigclaw` | `~/Projects/bigclaw-ai/bigclaw-site` | BigClaw Dashboard, orchestration, governance |
+| `lc-forge` | `~/Projects/bigclaw-ai/forge` | GrovaKid, REHEARSAL, RADAR |
+| `lc-axiom` | `~/Projects/bigclaw-ai/axiom` | iris-studio, fatfrogmodels, FairConnect, KeepTrack, SubCheck, CORTEX |
+
+**Reporting boundary:** lc-forge does NOT report on iris-studio. lc-axiom does NOT report on GrovaKid. lc-bigclaw aggregates the dashboard view but does NOT report product-level status — that's each owning session's job. If a session's report mentions a product it doesn't own, the report is wrong.
 
 ---
 
-## Shared Resources (bigclaw-ai/)
+## Shared Resources
 
-All companies read from and contribute to:
-- `knowledge/` — market intel, competitor research
-- `growth/LEARNINGS.md` — pitfalls and wins (tagged by company)
-- `skills/` — shared Claude skills
-- `credentials/` — shared API keys
-- `founder/FOUNDER_TODO.md` — single place for all 💳/⚖️ requests
-- `docs/specs/` — cross-company specs (e.g. RADAR, shared infra)
+All sessions read from and contribute to ~/Projects/bigclaw-ai/:
+- `knowledge/` — market intel
+- `ops/` — COMPLETIONS.md, PENDING_CONSULTANT.md, Pi5 outputs
+- `growth/LEARNINGS.md` — pitfalls and wins
+- `credentials/CREDENTIALS.md` — shared API keys
+- `founder/FOUNDER_TODO.md` — 💳/⚖️ requests
+- `docs/WORKFLOW.md` — unified workflow
