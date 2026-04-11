@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport, fetchLatestCiRun, fetchPrdTestMatrixForRepo } from '@/lib/github';
+import { fetchRepoIssues, fetchRepoClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport, fetchLatestCiRun, fetchPrdTestMatrixForRepo } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
@@ -80,8 +80,8 @@ export async function ProductPage(props: ProductPageProps) {
   const revivalCondition = props.revivalCondition;
 
   const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd, ciRun, testMatrixMd] = await Promise.all([
-    repoSlug ? fetchAllIssues() : Promise.resolve([]),
-    repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
+    repoSlug ? fetchRepoIssues(repoSlug) : Promise.resolve([]),
+    repoSlug ? fetchRepoClosedIssues(repoSlug, 90) : Promise.resolve([]),
     fetchProductIntel(name),
     repoSlug ? fetchRepoFile(repoSlug, 'docs/product/S2_MRD.md') : Promise.resolve(null),
     fetchDailyCosts(),
@@ -212,8 +212,9 @@ export async function ProductPage(props: ProductPageProps) {
   const totalVerified = hasTripleVerify ? totalVerifyM : (prdItems ? prdItems.filter(i => i.verified).length : 0);
   const hasVerificationData = prdItems && prdItems.length > 0 && totalDone > 0;
 
-  const productIssues = repoSlug ? allIssues.filter(i => i.repo === repoSlug) : [];
-  const productClosed = repoSlug ? closedIssues.filter(i => i.repo === repoSlug) : [];
+  // allIssues and closedIssues are already repo-scoped (fetchRepoIssues/fetchRepoClosedIssues)
+  const productIssues = allIssues;
+  const productClosed = closedIssues;
   const p0Count = productIssues.filter(i => i.labels.includes('P0')).length;
   const p1Count = productIssues.filter(i => i.labels.includes('P1')).length;
 

@@ -232,48 +232,61 @@ export interface GitHubRelease {
   url: string;
 }
 
-export async function fetchAllIssues(): Promise<GitHubIssue[]> {
+async function fetchIssuesForRepo(repo: string, state: 'open' | 'closed' = 'open', since?: string): Promise<GitHubIssue[]> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
   };
   if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
 
-  const results: GitHubIssue[] = [];
+  const params = new URLSearchParams({ state, per_page: '50', sort: 'updated' });
+  if (since) params.set('since', since);
 
-  await Promise.all(
-    ALL_REPOS.map(async (repo) => {
-      try {
-        const res = await fetch(
-          `https://api.github.com/repos/${OWNER}/${repo}/issues?state=open&per_page=50&sort=updated`,
-          { headers, next: { revalidate: 300 } },
-        );
-        if (!res.ok) return;
-        const data = await res.json() as Array<{
-          number: number;
-          title: string;
-          state: string;
-          labels: Array<{ name: string }>;
-          created_at: string;
-          updated_at: string;
-          html_url: string;
-          pull_request?: unknown;
-        }>;
-        for (const issue of data) {
-          if (issue.pull_request) continue; // skip PRs
-          results.push({
-            repo,
-            number: issue.number,
-            title: issue.title,
-            state: issue.state,
-            labels: issue.labels.map((l) => l.name),
-            createdAt: issue.created_at,
-            updatedAt: issue.updated_at,
-            url: issue.html_url,
-          });
-        }
-      } catch { /* skip repo on error */ }
-    }),
-  );
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${repo}/issues?${params}`,
+      { headers, next: { revalidate: 300 } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json() as Array<{
+      number: number; title: string; state: string;
+      labels: Array<{ name: string }>; created_at: string;
+      updated_at: string; closed_at?: string; html_url: string; pull_request?: unknown;
+    }>;
+    return data
+      .filter(i => !i.pull_request)
+      .map(i => ({
+        repo,
+        number: i.number,
+        title: i.title,
+        state: i.state,
+        labels: i.labels.map(l => l.name),
+        createdAt: i.created_at,
+        updatedAt: i.updated_at,
+        closedAt: i.closed_at,
+        url: i.html_url,
+      }));
+  } catch { return []; }
+}
+
+/** Fetch issues for a single repo — use this in product pages to avoid exhausting rate limits */
+export async function fetchRepoIssues(repo: string): Promise<GitHubIssue[]> {
+  return fetchIssuesForRepo(repo, 'open');
+}
+
+/** Fetch recently closed issues for a single repo */
+export async function fetchRepoClosedIssues(repo: string, days = 90): Promise<GitHubIssue[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const issues = await fetchIssuesForRepo(repo, 'closed', since);
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return issues.filter(i => i.closedAt && new Date(i.closedAt).getTime() >= cutoff);
+}
+
+export async function fetchAllIssues(): Promise<GitHubIssue[]> {
+  const results: GitHubIssue[] = [];
+  await Promise.all(ALL_REPOS.map(async repo => {
+    const issues = await fetchIssuesForRepo(repo, 'open');
+    results.push(...issues);
+  }));
 
   return results.sort((a, b) => {
     const priority = (labels: string[]) => labels.includes('P0') ? 0 : labels.includes('P1') ? 1 : labels.includes('P2') ? 2 : 3;
