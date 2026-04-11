@@ -1,8 +1,53 @@
-import { fetchAgentSystem } from '@/lib/github';
+import { fetchAgentSystem, fetchTestHealth, fetchLatestCiRun } from '@/lib/github';
 import { SectionCard, StatusDot } from '@/components/dashboard';
 
+// Projects for test health table
+const TEST_PROJECTS = [
+  { name: 'GrovaKid', repo: 'learnie-ai' },
+  { name: 'fatfrogmodels', repo: 'fatfrogmodels' },
+  { name: 'iris-studio', repo: 'iris-studio' },
+  { name: 'bigclaw-site', repo: 'bigclaw-site' },
+];
+
+function parseTestHealthRow(md: string | null, check: string): '✅' | '❌' | '⚠️' | '—' {
+  if (!md) return '—';
+  const line = md.split('\n').find(l => l.toLowerCase().includes(check.toLowerCase()));
+  if (!line) return '—';
+  if (line.includes('pass') || line.includes('✅')) return '✅';
+  if (line.includes('FAIL') || line.includes('❌')) return '❌';
+  if (line.includes('warn') || line.includes('⚠')) return '⚠️';
+  return '—';
+}
+
+function cellColor(v: string) {
+  if (v === '✅') return 'text-green-400';
+  if (v === '❌') return 'text-red-400';
+  if (v === '⚠️') return 'text-amber-400';
+  return 'text-muted-foreground';
+}
+
 export default async function OrganizationPage() {
-  const agentMd = await fetchAgentSystem();
+  const [agentMd, ...testHealthResults] = await Promise.all([
+    fetchAgentSystem(),
+    ...TEST_PROJECTS.map(p => Promise.all([fetchTestHealth(p.repo), fetchLatestCiRun(p.repo)])),
+  ]);
+
+  const testHealthData = TEST_PROJECTS.map((p, i) => {
+    const [healthMd, ciRun] = testHealthResults[i] as [string | null, import('@/lib/github').GitHubCiRun | null];
+    const ciStatus: '✅' | '❌' | '⚠️' | '—' = ciRun
+      ? ciRun.conclusion === 'success' ? '✅' : ciRun.conclusion === 'failure' ? '❌' : '⚠️'
+      : '—';
+    return {
+      name: p.name,
+      lint: parseTestHealthRow(healthMd, 'lint'),
+      types: parseTestHealthRow(healthMd, 'typescript'),
+      unit: parseTestHealthRow(healthMd, 'unit'),
+      build: parseTestHealthRow(healthMd, 'build'),
+      e2e: parseTestHealthRow(healthMd, 'e2e'),
+      ci: ciStatus,
+      hasData: !!healthMd,
+    };
+  });
 
   const agents = agentMd ? agentMd.split('\n')
     .filter(l => l.startsWith('|') && l.includes('**') && !l.includes('Agent') && !l.match(/^\|[\s-:|]+\|$/))
@@ -65,6 +110,41 @@ export default async function OrganizationPage() {
             </div>
           </div>
         </div>
+      </SectionCard>
+
+      {/* Test Health */}
+      <SectionCard title="Test Health — All Projects" className="mb-6">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2.5 pl-3 pr-2">Project</th>
+                <th className="text-center py-2.5 px-2">Lint</th>
+                <th className="text-center py-2.5 px-2">Types</th>
+                <th className="text-center py-2.5 px-2">Unit</th>
+                <th className="text-center py-2.5 px-2">Build</th>
+                <th className="text-center py-2.5 px-2">E2E</th>
+                <th className="text-center py-2.5 pl-2 pr-3">CI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {testHealthData.map((p, i) => (
+                <tr key={p.name} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                  <td className="py-2 pl-3 pr-2 text-foreground font-medium">
+                    {p.name}
+                    {!p.hasData && <span className="ml-1 text-[9px] text-muted-foreground/50">(no health file)</span>}
+                  </td>
+                  {(['lint', 'types', 'unit', 'build', 'e2e', 'ci'] as const).map(key => (
+                    <td key={key} className={`py-2 px-2 text-center font-mono ${cellColor(p[key])}`}>{p[key]}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2 px-1">
+          ✅ Passing · ❌ Failing · ⚠️ Stale/partial · — No data. Health files written by each session to <code>docs/status/test-health.md</code>.
+        </p>
       </SectionCard>
 
       {/* Roles & Responsibilities */}
