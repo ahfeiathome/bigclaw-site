@@ -1,4 +1,5 @@
-import { fetchSDLCGatesMatrix, fetchSDLCViolations, fetchAllIssues, fetchRecentClosedIssues } from '@/lib/github';
+import { fetchSDLCGatesMatrix, fetchSDLCViolations, fetchAllIssues, fetchRecentClosedIssues, fetchLatestCiRun, fetchPrdTestMatrixForRepo, fetchRepoFile } from '@/lib/github';
+import { parsePrdItems } from '@/lib/prd-parser';
 import { SectionCard, SignalPill } from '@/components/dashboard';
 import { IssueTrendChart } from '@/components/issues-trend-chart';
 import { parseMarkdownTable, extractSection } from '@/app/dashboard/sdlc/helpers';
@@ -15,13 +16,71 @@ function statusCell(text: string) {
   return <span className={`${color} font-mono`}>{text}</span>;
 }
 
+// Products with PRD_CHECKLIST.md (repo → display name)
+const PRD_REPOS: Array<{ repo: string; name: string }> = [
+  { repo: 'learnie-ai', name: 'GrovaKid' },
+];
+
 export default async function EngineeringOverviewPage() {
-  const [gatesMd, violationsMd, allIssues, closedIssues] = await Promise.all([
+  const [gatesMd, violationsMd, allIssues, closedIssues, ...prdData] = await Promise.all([
     fetchSDLCGatesMatrix(),
     fetchSDLCViolations(),
     fetchAllIssues(),
     fetchRecentClosedIssues(90),
+    ...PRD_REPOS.flatMap(({ repo }) => [
+      fetchRepoFile(repo, 'docs/product/PRD_CHECKLIST.md'),
+      fetchLatestCiRun(repo),
+      fetchPrdTestMatrixForRepo(repo),
+    ]),
   ]);
+
+  // Build per-product verification rows
+  interface VerificationSummary {
+    name: string;
+    repo: string;
+    totalItems: number;
+    done: number;
+    verified: number;
+    verifiedRate: number;
+    ciConclusion: string | null;
+    ciUpdatedAt: string | null;
+    testMatrixTotal: number;
+    testMatrixVerified: number;
+  }
+  const verificationSummary: VerificationSummary[] = PRD_REPOS.map(({ repo, name }, i) => {
+    const prdMd = prdData[i * 3] as string | null;
+    const ci = prdData[i * 3 + 1] as { name: string; status: string; conclusion: string | null; updatedAt: string } | null;
+    const matrixMd = prdData[i * 3 + 2] as string | null;
+
+    const items = prdMd ? parsePrdItems(prdMd) : [];
+    const done = items.filter(it => it.status === 'Done').length;
+    const verified = items.filter(it => it.verified).length;
+
+    let matrixTotal = 0;
+    let matrixVerified = 0;
+    if (matrixMd) {
+      for (const line of matrixMd.split('\n')) {
+        if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| ID ') || line.includes('| PRD ID ')) continue;
+        const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+        if (!cells[0]?.startsWith('PRD-')) continue;
+        matrixTotal++;
+        if (cells[cells.length - 1]?.includes('✅')) matrixVerified++;
+      }
+    }
+
+    return {
+      name,
+      repo,
+      totalItems: items.length,
+      done,
+      verified,
+      verifiedRate: done > 0 ? Math.round((verified / done) * 100) : 0,
+      ciConclusion: ci?.conclusion ?? null,
+      ciUpdatedAt: ci?.updatedAt ?? null,
+      testMatrixTotal: matrixTotal,
+      testMatrixVerified: matrixVerified,
+    };
+  });
 
   const p0Count = allIssues.filter(i => i.labels.includes('P0')).length;
   const p1Count = allIssues.filter(i => i.labels.includes('P1')).length;
@@ -58,6 +117,60 @@ export default async function EngineeringOverviewPage() {
           <div className="text-2xl font-bold font-mono text-foreground mt-1">{gate4Rows.length} gates</div>
         </div>
       </div>
+
+      {/* PRD Verification Summary */}
+      {verificationSummary.length > 0 && (
+        <SectionCard title="PRD Verification Summary" className="mb-6">
+          <p className="text-xs text-muted-foreground mb-3">Items marked Done in PRD Checklist that have been independently verified (Gemini + CI). Products without a PRD checklist are omitted.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Product</th>
+                  <th className="text-right py-2 px-2">Total</th>
+                  <th className="text-right py-2 px-2">Done</th>
+                  <th className="text-right py-2 px-2">Verified</th>
+                  <th className="text-right py-2 px-2">Rate</th>
+                  <th className="text-right py-2 px-2">Test Matrix</th>
+                  <th className="text-right py-2 pl-2 pr-3">CI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {verificationSummary.map((row, i) => (
+                  <tr key={row.repo} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 text-foreground font-medium">{row.name}</td>
+                    <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.totalItems}</td>
+                    <td className="py-2 px-2 text-right font-mono text-muted-foreground">{row.done}</td>
+                    <td className="py-2 px-2 text-right font-mono text-green-400">{row.verified}</td>
+                    <td className="py-2 px-2 text-right">
+                      <span className={`font-mono ${row.verifiedRate >= 80 ? 'text-green-400' : row.verifiedRate >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {row.verifiedRate}%
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-right font-mono text-muted-foreground">
+                      {row.testMatrixTotal > 0 ? `${row.testMatrixVerified}/${row.testMatrixTotal}` : '—'}
+                    </td>
+                    <td className="py-2 pl-2 pr-3 text-right">
+                      {row.ciConclusion === 'success' ? (
+                        <span className="text-green-400">✅</span>
+                      ) : row.ciConclusion === 'failure' ? (
+                        <span className="text-red-400">❌</span>
+                      ) : row.ciConclusion ? (
+                        <span className="text-amber-400">⏳</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Untested Done items: {verificationSummary.reduce((sum, r) => sum + (r.done - r.verified), 0)} (Done but not yet verified)
+          </p>
+        </SectionCard>
+      )}
 
       {/* Aggregate Issues Trend */}
       <SectionCard title="Issues Trend (all products, 90 days)" className="mb-6">

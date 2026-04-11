@@ -1,4 +1,4 @@
-import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchRepoFile, fetchDailyCosts, fetchSDLCViolations, fetchSDLCGatesMatrix, fetchReleasePlan, fetchVerificationReport, fetchLatestCiRun, fetchPrdTestMatrixForRepo } from '@/lib/github';
 import { fetchProductBySlug } from '@/lib/content';
 import { SectionCard, SignalPill, StatusDot } from './dashboard';
 import { PrdChecklist, type PrdItem } from './prd-checklist';
@@ -23,6 +23,15 @@ interface ProductPageProps {
   revenueModel?: string;
   shelvedReason?: string;
   revivalCondition?: string;
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 const COMPANY_COLORS: Record<string, string> = {
@@ -69,7 +78,7 @@ export async function ProductPage(props: ProductPageProps) {
   const shelvedReason = props.shelvedReason;
   const revivalCondition = props.revivalCondition;
 
-  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd] = await Promise.all([
+  const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd, ciRun, testMatrixMd] = await Promise.all([
     repoSlug ? fetchAllIssues() : Promise.resolve([]),
     repoSlug ? fetchRecentClosedIssues(90) : Promise.resolve([]),
     fetchProductIntel(name),
@@ -79,6 +88,8 @@ export async function ProductPage(props: ProductPageProps) {
     fetchSDLCGatesMatrix(),
     repoSlug ? fetchReleasePlan(repoSlug) : Promise.resolve(null),
     repoSlug ? fetchVerificationReport(repoSlug) : Promise.resolve(null),
+    repoSlug ? fetchLatestCiRun(repoSlug) : Promise.resolve(null),
+    repoSlug ? fetchPrdTestMatrixForRepo(repoSlug) : Promise.resolve(null),
   ]);
 
   // Parse MRD for market positioning
@@ -166,6 +177,35 @@ export async function ProductPage(props: ProductPageProps) {
       verificationRows.push({ date: cells[0], prdId: cells[1], test: cells[2], result: cells[3], notes: cells[4] || '' });
     }
   }
+
+  // Parse PRD Test Matrix — count total rows and verified rows
+  let testMatrixTotal = 0;
+  let testMatrixVerified = 0;
+  if (testMatrixMd) {
+    for (const line of testMatrixMd.split('\n')) {
+      if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| ID ') || line.includes('| PRD ID ')) continue;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (!cells[0]?.startsWith('PRD-')) continue;
+      testMatrixTotal++;
+      if (cells[cells.length - 1]?.includes('✅')) testMatrixVerified++;
+    }
+  }
+
+  // Compute per-category verification stats from prdItems
+  interface CategoryStat { done: number; verified: number; total: number; }
+  const categoryStats = new Map<string, CategoryStat>();
+  if (prdItems) {
+    for (const item of prdItems) {
+      if (!categoryStats.has(item.category)) categoryStats.set(item.category, { done: 0, verified: 0, total: 0 });
+      const stat = categoryStats.get(item.category)!;
+      stat.total++;
+      if (item.status === 'Done') stat.done++;
+      if (item.verified) stat.verified++;
+    }
+  }
+  const totalDone = prdItems ? prdItems.filter(i => i.status === 'Done').length : 0;
+  const totalVerified = prdItems ? prdItems.filter(i => i.verified).length : 0;
+  const hasVerificationData = prdItems && prdItems.length > 0 && totalDone > 0;
 
   const productIssues = repoSlug ? allIssues.filter(i => i.repo === repoSlug) : [];
   const productClosed = repoSlug ? closedIssues.filter(i => i.repo === repoSlug) : [];
@@ -284,6 +324,126 @@ export async function ProductPage(props: ProductPageProps) {
             })}
           </div>
         </div>
+
+        {/* PRD Verification Summary */}
+        {hasVerificationData && (
+          <div className="mt-5 border-t border-border/30 pt-4">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-3">PRD Verification</div>
+
+            {/* Overall progress bar */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-green-500/70"
+                  style={{ width: `${totalDone > 0 ? Math.round((totalVerified / totalDone) * 100) : 0}%` }}
+                />
+              </div>
+              <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                {totalVerified}/{totalDone} Done items verified ({totalDone > 0 ? Math.round((totalVerified / totalDone) * 100) : 0}%)
+              </span>
+            </div>
+
+            {/* Per-category table */}
+            <div className="overflow-x-auto mb-4">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-muted-foreground border-b border-border bg-muted">
+                    <th className="text-left py-2 pl-3 pr-2">Category</th>
+                    <th className="text-right py-2 px-2">Done</th>
+                    <th className="text-right py-2 px-2">Verified</th>
+                    <th className="text-right py-2 pl-2 pr-3">Gap</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from(categoryStats.entries()).map(([cat, stat], i) => (
+                    <tr key={cat} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
+                      <td className="py-1.5 pl-3 pr-2 text-foreground">{cat}</td>
+                      <td className="py-1.5 px-2 text-right font-mono text-muted-foreground">{stat.done}</td>
+                      <td className="py-1.5 px-2 text-right font-mono text-green-400">{stat.verified}</td>
+                      <td className={`py-1.5 pl-2 pr-3 text-right font-mono ${stat.done - stat.verified > 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                        {stat.done - stat.verified}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* CI + Gemini status */}
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Last CI run:</span>
+                {ciRun ? (
+                  <span className={ciRun.conclusion === 'success' ? 'text-green-400' : ciRun.conclusion === 'failure' ? 'text-red-400' : 'text-amber-400'}>
+                    {ciRun.conclusion === 'success' ? '✅' : ciRun.conclusion === 'failure' ? '❌' : '⏳'} {ciRun.name} · {relativeTime(ciRun.updatedAt)}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">No data</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Test matrix:</span>
+                <span className="font-mono text-foreground">
+                  {testMatrixMd ? `${testMatrixVerified}/${testMatrixTotal} verified` : 'No matrix'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Testing Pipeline Visual */}
+        {repoSlug && prdItems && prdItems.length > 0 && (
+          <div className="mt-5 border-t border-border/30 pt-4">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-3">Testing Pipeline</div>
+            <div className="overflow-x-auto">
+              <div className="flex items-start gap-1 min-w-max">
+                {[
+                  {
+                    label: 'PRD Checklist',
+                    sub1: `${prdItems.length} items`,
+                    sub2: `${totalDone} Done`,
+                    status: totalDone > 0 ? 'good' : 'neutral',
+                  },
+                  {
+                    label: 'Test Matrix',
+                    sub1: testMatrixMd ? `${testMatrixTotal} mapped` : 'No matrix',
+                    sub2: testMatrixMd ? `${testMatrixVerified} verified` : '—',
+                    status: testMatrixMd ? (testMatrixVerified > 0 ? 'good' : 'neutral') : 'neutral',
+                  },
+                  {
+                    label: 'CI (per PR)',
+                    sub1: ciRun ? ciRun.name : 'No CI data',
+                    sub2: ciRun ? (ciRun.conclusion === 'success' ? '✅ Passing' : ciRun.conclusion === 'failure' ? '❌ Failed' : '⏳ Running') : '—',
+                    status: ciRun?.conclusion === 'success' ? 'good' : ciRun?.conclusion === 'failure' ? 'bad' : 'neutral',
+                  },
+                  {
+                    label: 'Gemini (daily)',
+                    sub1: verificationRows.length > 0 ? `${verificationRows.length} checks` : 'Not yet run',
+                    sub2: verificationRows.length > 0 ? `${verificationRows.filter(r => r.result.includes('PASS') || r.result.includes('✅')).length} passed` : '—',
+                    status: verificationRows.length > 0 ? 'good' : 'neutral',
+                  },
+                  {
+                    label: 'Michael Review',
+                    sub1: totalVerified > 0 ? `${totalVerified} verified` : 'Pending',
+                    sub2: totalDone > 0 ? `${Math.round((totalVerified / totalDone) * 100)}% of Done` : '—',
+                    status: totalVerified > 0 ? 'good' : 'neutral',
+                  },
+                ].map((step, i, arr) => (
+                  <div key={step.label} className="flex items-start gap-1">
+                    <div className={`rounded-lg border p-2.5 min-w-[110px] ${step.status === 'good' ? 'border-green-500/40 bg-green-500/5' : step.status === 'bad' ? 'border-red-500/40 bg-red-500/5' : 'border-border bg-card/50'}`}>
+                      <div className={`text-[10px] font-semibold mb-1 ${step.status === 'good' ? 'text-green-400' : step.status === 'bad' ? 'text-red-400' : 'text-muted-foreground'}`}>{step.label}</div>
+                      <div className="text-[10px] font-mono text-foreground">{step.sub1}</div>
+                      <div className="text-[10px] text-muted-foreground">{step.sub2}</div>
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className="mt-5 text-muted-foreground text-xs">→</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* PRD Checklist */}
         {prdItems && prdItems.length > 0 && (

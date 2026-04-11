@@ -424,6 +424,40 @@ export async function fetchRecentCommits(hours = 24): Promise<GitHubCommit[]> {
   return results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+// --- CI Runs ---
+
+export interface GitHubCiRun {
+  name: string;
+  status: string;
+  conclusion: string | null;
+  updatedAt: string;
+}
+
+export async function fetchLatestCiRun(repo: string): Promise<GitHubCiRun | null> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${repo}/actions/runs?per_page=1`,
+      { headers, next: { revalidate: 300 } },
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as { workflow_runs: Array<{ name: string; status: string; conclusion: string | null; updated_at: string }> };
+    const run = data.workflow_runs?.[0];
+    if (!run) return null;
+    return { name: run.name, status: run.status, conclusion: run.conclusion, updatedAt: run.updated_at };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPrdTestMatrixForRepo(repo: string): Promise<string | null> {
+  return fetchRepoFile(repo, 'docs/product/PRD_TEST_MATRIX.md');
+}
+
 export function extractMichaelBlockers(
   ...sources: (string | null)[]
 ): string[] {
