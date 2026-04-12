@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { ProductPage } from '@/components/product-page';
 
 export default async function SubCheckProductPage() {

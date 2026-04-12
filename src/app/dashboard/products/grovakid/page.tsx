@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { ProductPage } from '@/components/product-page';
 import { fetchPrdChecklist } from '@/lib/github';
 import { parsePrdItems } from '@/lib/prd-parser';
