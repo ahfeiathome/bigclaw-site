@@ -72,23 +72,19 @@ function parseCompetitiveLog(content: string): { lastDate: string | null; change
 }
 
 function parsePrdCompletion(content: string): { done: number; total: number } | null {
-  // Best method: parse the Summary section directly (most reliable)
-  // Format: | Done | 33 | or | **Total** | 61 |
-  const doneMatch = content.match(/\|\s*Done\s*\|\s*(\d+)\s*\|/);
-  // Simplified total regex — matches "| Total | 61 |" or "| **Total** | 61 |"
-  const totalLine = content.match(/\|\s*\*?\*?Total\*?\*?\s*\|\s*\*?\*?(\d+)\*?\*?\s*\|/);
-  if (doneMatch && totalLine) {
-    return { done: parseInt(doneMatch[1]), total: parseInt(totalLine[1]) };
-  }
-
-  // Fallback: count PRD-### rows with "Done" status
+  // Count item rows directly — more reliable than parsing the Summary table
+  // (summary table Total row has multiple numbers; regex would grab the wrong column)
   const lines = content.split('\n');
   let done = 0;
   let total = 0;
+  const idPattern = /^[A-Z]+-\d+$/;
   for (const line of lines) {
     if (!line.includes('|') || line.match(/^\|[\s-:|]+\|$/)) continue;
-    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-    if (!cells[0]?.startsWith('PRD-')) continue;
+    const raw = line.split('|').map(c => c.trim());
+    if (raw[0] === '') raw.shift();
+    if (raw.length > 0 && raw[raw.length - 1] === '') raw.pop();
+    const cells = raw;
+    if (!idPattern.test(cells[0])) continue;
     total++;
     const status = cells[3]?.replace(/\*\*/g, '').trim().toLowerCase() || '';
     if (status === 'done') done++;
