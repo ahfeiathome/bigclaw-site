@@ -51,25 +51,33 @@ export default function ProcessPage() {
                 <th className="text-left py-2 pl-3 pr-2">Stage</th>
                 <th className="text-left py-2 px-2">Who</th>
                 <th className="text-left py-2 px-2">Gate</th>
-                <th className="text-left py-2 pl-2 pr-3">Tool</th>
+                <th className="text-left py-2 px-2">Tool</th>
+                <th className="text-left py-2 pl-2 pr-3 text-[10px]">PRD Column</th>
               </tr>
             </thead>
             <tbody>
               {[
-                ['1. Plan', 'Consultant', 'Spec exists in docs/specs/', 'Claude Chat'],
-                ['2. Code', 'Code CLI', 'Feature branch created', 'git branch'],
-                ['3. Test', 'Code CLI', 'All tests pass (lint, types, unit, build, E2E)', 'vitest + playwright'],
-                ['4. Review', 'Code CLI', 'PR created, CI passes', 'GitHub Actions'],
-                ['5. Merge', 'Code CLI', 'CI green, review done', 'gh pr merge'],
-                ['6. Deploy', 'Vercel', 'Preview verified first', 'Vercel auto-deploy'],
-                ['7. Verify', 'Code CLI', 'Live URL checked, screenshot taken', 'Playwright'],
-                ['8. Close', 'Code CLI', 'Issue closed with evidence', 'GitHub Issues'],
-              ].map(([stage, who, gate, tool], i) => (
+                ['1. Plan', 'Consultant', 'Spec exists in docs/specs/', 'Claude Chat', 'Develop'],
+                ['2. Code', 'Code CLI', 'Feature branch created', 'git branch', 'Develop'],
+                ['3. Test', 'Code CLI', 'All tests pass (lint, types, unit, build, E2E)', 'vitest + playwright', 'CI Test'],
+                ['4. Review', 'Code CLI', 'PR created, CI passes', 'GitHub Actions', 'CI Test'],
+                ['5. Merge', 'Code CLI', 'CI green, review done', 'gh pr merge', 'CI Test'],
+                ['6. Deploy', 'Vercel', 'Preview verified first', 'Vercel auto-deploy', 'Flow Test'],
+                ['7. Verify (Gemini)', 'Gemini CLI', 'Browser flows pass on live site', 'Playwright MCP', 'Flow Test'],
+                ['7. Verify (Audit)', 'Consultant', 'Code/file audit confirms features exist', 'Monthly review', 'Code Review'],
+                ['7. Verify (Accept)', 'Michael', 'Acceptance test on real device', 'Phone walkthrough', 'User Test'],
+                ['8. Close', 'Code CLI', 'Issue closed with evidence', 'GitHub Issues', '—'],
+              ].map(([stage, who, gate, tool, col], i) => (
                 <tr key={stage} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
                   <td className="py-2 pl-3 pr-2 text-foreground font-medium">{stage}</td>
                   <td className="py-2 px-2 text-muted-foreground">{who}</td>
                   <td className="py-2 px-2 text-muted-foreground">{gate}</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground font-mono text-[10px]">{tool}</td>
+                  <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{tool}</td>
+                  <td className="py-2 pl-2 pr-3">
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${col === 'Develop' ? 'bg-amber-500/15 text-amber-400' : col === 'CI Test' ? 'bg-blue-500/15 text-blue-400' : col === 'Flow Test' ? 'bg-green-500/15 text-green-400' : col === 'Code Review' ? 'bg-purple-500/15 text-purple-400' : col === 'User Test' ? 'bg-pink-500/15 text-pink-400' : 'text-muted-foreground'}`}>
+                      {col}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -80,6 +88,10 @@ export default function ProcessPage() {
       {/* Test Flow */}
       <SectionCard title="Test Flow" className="mb-6">
         <p className="text-xs text-muted-foreground mb-3">Quality gate before every merge. Runs locally and in CI.</p>
+        <div className="flex gap-3 mb-3 text-[10px]">
+          <span className="px-2 py-1 rounded bg-blue-500/15 text-blue-400 font-mono">Steps 1–5 → CI Test column</span>
+          <span className="px-2 py-1 rounded bg-green-500/15 text-green-400 font-mono">Step 6 → Flow Test column</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -97,7 +109,7 @@ export default function ProcessPage() {
                 ['3. Unit Tests', 'npx vitest run', 'Component + utility tests', 'Yes'],
                 ['4. Build', 'npx next build', 'Full production build succeeds', 'Yes'],
                 ['5. E2E', 'npx playwright test', 'Browser tests on preview URL', 'Yes (when configured)'],
-                ['6. Gemini Review', 'GitHub Actions', 'AI code review on PR diff', 'Advisory'],
+                ['6. Flow Test (Gemini)', 'GitHub Actions', 'AI code review on PR diff; daily Gemini live-site flows', 'Advisory'],
               ].map(([step, cmd, checks, blocks], i) => (
                 <tr key={step} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
                   <td className="py-2 pl-3 pr-2 text-foreground font-medium">{step}</td>
@@ -125,22 +137,28 @@ export default function ProcessPage() {
                 <th className="text-left py-2 pl-3 pr-2">Schedule</th>
                 <th className="text-left py-2 px-2">Task</th>
                 <th className="text-left py-2 px-2">Agent</th>
-                <th className="text-left py-2 pl-2 pr-3">Output</th>
+                <th className="text-left py-2 px-2">Output</th>
+                <th className="text-left py-2 pl-2 pr-3 text-[10px]">PRD Column</th>
               </tr>
             </thead>
             <tbody>
               {[
-                ['Every PR', 'CI Pipeline (lint + types + test + build)', 'GitHub Actions', 'PR status check'],
-                ['Every PR', 'Gemini Code Review', 'GitHub Actions', 'PR comment with findings'],
-                ['6:00 AM', 'Gemini E2E Validation', 'Gemini + Playwright', 'ops/gemini/VALIDATION_REPORT.md'],
-                ['Overnight', 'Agent Patrol (spec sweep, issue triage)', 'lc-forge / lc-axiom', 'ACTIVE_SESSIONS.md'],
-                ['On deploy', 'Vercel auto-deploy from main', 'Vercel', 'Production URL live'],
-              ].map(([schedule, task, agent, output], i) => (
+                ['Every PR', 'CI Pipeline (lint + types + test + build)', 'GitHub Actions', 'PR status check', 'CI Test'],
+                ['Every PR', 'Flow Test (Gemini code review on PR diff)', 'GitHub Actions', 'PR comment with findings', 'Flow Test'],
+                ['6:00 AM', 'Flow Test — Gemini E2E live-site validation', 'Gemini + Playwright', 'ops/gemini/VALIDATION_REPORT.md', 'Flow Test'],
+                ['Overnight', 'Agent Patrol (spec sweep, issue triage)', 'lc-forge / lc-axiom', 'ACTIVE_SESSIONS.md', '—'],
+                ['On deploy', 'Vercel auto-deploy from main', 'Vercel', 'Production URL live', '—'],
+              ].map(([schedule, task, agent, output, col], i) => (
                 <tr key={i} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
                   <td className="py-2 pl-3 pr-2 text-foreground font-medium">{schedule}</td>
                   <td className="py-2 px-2 text-muted-foreground">{task}</td>
                   <td className="py-2 px-2 text-muted-foreground">{agent}</td>
-                  <td className="py-2 pl-2 pr-3 text-muted-foreground font-mono text-[10px]">{output}</td>
+                  <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{output}</td>
+                  <td className="py-2 pl-2 pr-3">
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${col === 'CI Test' ? 'bg-blue-500/15 text-blue-400' : col === 'Flow Test' ? 'bg-green-500/15 text-green-400' : 'text-muted-foreground'}`}>
+                      {col}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -167,7 +185,7 @@ export default function ProcessPage() {
           </div>
           <div>
             <div className="font-semibold text-foreground mb-2">Verification Phase</div>
-            <p>CI on every PR. Gemini browser-tests the live site at 6am daily. Michael reviews on phone. All three must pass before an item is marked ✅ Verified in the Test Matrix.</p>
+            <p><strong>CI Test</strong> runs on every PR (lint, types, unit, build, E2E). <strong>Flow Test</strong> runs daily at 6am — Gemini navigates the live site and tests user flows. <strong>Code Review</strong> is a monthly audit confirming features exist as claimed. <strong>User Test</strong> is the final acceptance test on a real device before production approval.</p>
           </div>
           <div>
             <div className="font-semibold text-foreground mb-2">Bug Loop</div>
