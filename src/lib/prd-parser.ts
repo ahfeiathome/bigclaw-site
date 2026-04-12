@@ -40,7 +40,12 @@ export function parsePrdItems(content: string): PrdItem[] {
 
     if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| ID ')) continue;
 
-    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+    // Strip outer empty strings from leading/trailing | but preserve empty interior cells
+    // so column positions stay fixed regardless of whether GitHub or other fields are blank.
+    const raw = line.split('|').map(c => c.trim());
+    if (raw[0] === '') raw.shift();
+    if (raw.length > 0 && raw[raw.length - 1] === '') raw.pop();
+    const cells = raw;
     if (cells.length < 5 || !cells[0].match(/^[A-Z]+-\d+$/)) continue;
 
     const statusRaw = cells[3].replace(/\*\*/g, '').trim();
