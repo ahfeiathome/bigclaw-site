@@ -75,7 +75,7 @@ export default async function OrganizationPage() {
               <div className="flex gap-3">
                 {[
                   { name: 'lc-forge', products: 'GrovaKid, REHEARSAL' },
-                  { name: 'lc-axiom', products: 'iris, fatfrog, FC, KT, SC, CX' },
+                  { name: 'lc-axiom', products: 'iris, fatfrog, FC, KT, SC' },
                   { name: 'lc-bigclaw', products: 'Dashboard' },
                 ].map(s => (
                   <div key={s.name} className="rounded border border-border bg-card px-2 py-1 text-center">
@@ -163,7 +163,7 @@ export default async function OrganizationPage() {
               {[
                 ['CEO', 'Michael Liu', 'Product vision, 💳 credit card gates, ⚖️ legal, 🧠 judgment calls', '💳 ⚖️ 🧠 ONLY'],
                 ['Code CLI (lc-forge)', 'Felix', 'GrovaKid + REHEARSAL: code, tests, deploy', 'All engineering'],
-                ['Code CLI (lc-axiom)', 'Axiom session', '6 products: code, tests, deploy', 'All engineering'],
+                ['Code CLI (lc-axiom)', 'Axiom session', '5 products: code, tests, deploy', 'All engineering'],
                 ['Code CLI (lc-bigclaw)', 'BigClaw session', 'Dashboard: specs, code, deploy, governance', 'Dashboard architecture'],
                 ['Consultant', 'Claude Chat', 'Strategy, specs, audits, PRD/MRD writing', 'Spec prioritization'],
                 ['Mika (COO)', 'Pi5 agent', 'Ops orchestrator, message routing, escalation', 'Agent coordination'],
