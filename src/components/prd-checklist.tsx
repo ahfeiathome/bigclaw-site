@@ -67,8 +67,11 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       if (item.verifyM === '✅') entry.vM++;
     }
     return Array.from(map.entries()).sort((a, b) => {
-      const pctA = a[1].total > 0 ? a[1].vM / a[1].total : 0;
-      const pctB = b[1].total > 0 ? b[1].vM / b[1].total : 0;
+      // Sort by active verified count (lowest layer with data)
+      const activeA = a[1].vM > 0 ? a[1].vM : a[1].vC > 0 ? a[1].vC : a[1].vG > 0 ? a[1].vG : a[1].done;
+      const activeB = b[1].vM > 0 ? b[1].vM : b[1].vC > 0 ? b[1].vC : b[1].vG > 0 ? b[1].vG : b[1].done;
+      const pctA = a[1].total > 0 ? activeA / a[1].total : 0;
+      const pctB = b[1].total > 0 ? activeB / b[1].total : 0;
       return pctB - pctA;
     });
   }, [items]);
@@ -115,7 +118,11 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       {/* ── Category Summary Bars ──────────────────────────────── */}
       <div className="space-y-2 mb-6">
         {categories.map(([cat, { done, vG, vC, vM, total }]) => {
-          const pct = total > 0 ? Math.round((vM / total) * 100) : 0;
+          // Lowest verified layer with data
+          const verified = vM > 0 ? vM : vC > 0 ? vC : vG > 0 ? vG : done;
+          const verifyLayer = vM > 0 ? 'V-M' : vC > 0 ? 'V-C' : vG > 0 ? 'V-G' : 'Done';
+          const pct = total > 0 ? Math.round((verified / total) * 100) : 0;
+          const donePct = total > 0 ? Math.round((done / total) * 100) : 0;
           const isActive = filterCategory === cat;
           const barColor = pct < 50 ? 'bg-red-500' : pct <= 70 ? 'bg-blue-500' : 'bg-green-500';
           return (
@@ -125,12 +132,20 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               className={`w-full flex items-center gap-3 text-left rounded-lg p-2 transition-all ${isActive ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted'}`}
             >
               <span className="text-xs text-foreground w-28 shrink-0 font-medium">{cat}</span>
-              <div className="flex-1 h-2.5 rounded-full overflow-hidden bg-muted">
-                <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+              {/* Bar track with ghost Done bar + active verified bar */}
+              <div className="flex-1 h-2.5 rounded-full relative bg-muted overflow-hidden">
+                {/* Ghost bar: Done % as faint white outline */}
+                {donePct > pct && (
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{ width: `${donePct}%`, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}
+                  />
+                )}
+                {/* Main bar: verified % */}
+                <div className={`absolute inset-y-0 left-0 rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
               <span className="text-[10px] font-mono text-muted-foreground text-right shrink-0">
-                {vM}/{total} V-M ({pct}%) · Done:{done}
-                {hasTripleVerify && <> · G:{vG} C:{vC}</>}
+                {verified}/{total} {verifyLayer} ({pct}%) · Done: {done}/{total}
               </span>
             </button>
           );
@@ -138,18 +153,27 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       </div>
 
       {/* ── Counters ───────────────────────────────────────────── */}
-      <div className="flex gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
-        <span className="font-mono">{counts.done} of {items.length} Done</span>
-        {hasTripleVerify && <>
-          <span>·</span>
-          <span className="font-mono">G:{counts.vG} C:{counts.vC} M:{counts.vM} Verified</span>
-        </>}
-        <span>·</span>
-        <span>{counts.inProgress} in progress</span>
-        <span>·</span>
-        <span>{counts.notStarted} not started</span>
-        {counts.deferred > 0 && <><span>·</span><span>{counts.deferred} deferred</span></>}
-      </div>
+      {(() => {
+        const activeVerified = counts.vM > 0 ? counts.vM : counts.vC > 0 ? counts.vC : counts.vG > 0 ? counts.vG : counts.done;
+        const activeLayer = counts.vM > 0 ? 'V-M' : counts.vC > 0 ? 'V-C' : counts.vG > 0 ? 'V-G' : 'Done';
+        const verifiedPct = items.length > 0 ? Math.round((activeVerified / items.length) * 100) : 0;
+        return (
+          <div className="flex gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
+            <span className="font-mono">{activeVerified}/{items.length} {activeLayer} Verified ({verifiedPct}%)</span>
+            <span>·</span>
+            <span className="font-mono">{counts.done} Done</span>
+            {hasTripleVerify && counts.vM === 0 && (counts.vC > 0 || counts.vG > 0) && <>
+              <span>·</span>
+              <span className="font-mono text-[10px]">G:{counts.vG} C:{counts.vC} M:{counts.vM}</span>
+            </>}
+            <span>·</span>
+            <span>{counts.inProgress} in progress</span>
+            <span>·</span>
+            <span>{counts.notStarted} not started</span>
+            {counts.deferred > 0 && <><span>·</span><span>{counts.deferred} deferred</span></>}
+          </div>
+        );
+      })()}
 
       {/* ── Filters ────────────────────────────────────────────── */}
       <div className="flex gap-2 mb-4 flex-wrap">
