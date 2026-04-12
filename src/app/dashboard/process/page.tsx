@@ -1,5 +1,6 @@
 import { SectionCard } from '@/components/dashboard';
 import { DevFlowChart } from '@/components/dev-flow-chart';
+import { KnowledgeFlowChart } from '@/components/knowledge-flow-chart';
 import Link from 'next/link';
 
 export default function ProcessPage() {
@@ -200,6 +201,136 @@ export default function ProcessPage() {
             className="text-xs text-primary hover:underline"
           >
             View documentation (UNIFIED_DEV_FLOW.md) →
+          </Link>
+        </div>
+      </SectionCard>
+
+      {/* Knowledge Flow */}
+      <SectionCard title="Knowledge Flow" className="mb-6">
+        <p className="text-xs text-muted-foreground mb-4">How intelligence enters the system, gets processed, and surfaces for decisions.</p>
+        <KnowledgeFlowChart />
+
+        {/* Two Input Channels */}
+        <div className="mt-6 mb-1">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Input Channels</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Channel</th>
+                  <th className="text-left py-2 px-2">Source</th>
+                  <th className="text-left py-2 px-2">What It Captures</th>
+                  <th className="text-left py-2 px-2">When</th>
+                  <th className="text-left py-2 pl-2 pr-3">Output Location</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Michael Capture', 'Telegram/WhatsApp bot', 'Articles, screenshots, posts, PDFs, notes from phone', 'Real-time (on share)', 'capture/'],
+                  ['Sage Intelligence', 'Pi5 agent (automated)', 'Competitor moves, trending tools, market opportunities', 'Monday 6am', 'knowledge/ + COMPETITIVE_LOG.md'],
+                ].map(([channel, source, what, when, output], i) => (
+                  <tr key={channel} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 text-foreground font-semibold">{channel}</td>
+                    <td className="py-2 px-2 text-muted-foreground">{source}</td>
+                    <td className="py-2 px-2 text-muted-foreground">{what}</td>
+                    <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{when}</td>
+                    <td className="py-2 pl-2 pr-3 text-muted-foreground font-mono text-[10px]">{output}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Sage's Three Intelligence Lanes */}
+        <div className="mt-5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Sage&apos;s Three Intelligence Lanes</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Lane</th>
+                  <th className="text-left py-2 px-2">What It Scouts</th>
+                  <th className="text-left py-2 px-2">Output File</th>
+                  <th className="text-left py-2 pl-2 pr-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  [
+                    'Product Competitors',
+                    'Direct competitors per product (Khanmigo, Frizzle, IXL)',
+                    '<repo>/docs/product/COMPETITIVE_LOG.md',
+                    'active',
+                    '✅ Active (Monday 6am)',
+                  ],
+                  [
+                    'Tools & Infrastructure',
+                    'GitHub Trending tools for operations (agent frameworks, dev tools, knowledge mgmt)',
+                    'knowledge/TOOL_INTELLIGENCE.md',
+                    'locked',
+                    '🔒 Locked — unlocks after 3 clean Monday runs',
+                  ],
+                  [
+                    'Market Opportunities',
+                    'Industry trends, unserved niches, partnership signals',
+                    'knowledge/MARKET_OPPORTUNITIES.md',
+                    'locked',
+                    '🔒 Locked — unlocks after 3 clean Monday runs',
+                  ],
+                ].map(([lane, scouts, output, status, badge]) => (
+                  <tr key={lane} className={`border-b border-border/30 ${status === 'locked' ? 'opacity-60' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 text-foreground font-medium">{lane}</td>
+                    <td className="py-2 px-2 text-muted-foreground">{scouts}</td>
+                    <td className="py-2 px-2 text-muted-foreground font-mono text-[10px]">{output}</td>
+                    <td className="py-2 pl-2 pr-3">
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                        status === 'active'
+                          ? 'bg-green-500/15 text-green-400'
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {badge}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* What Surfaces */}
+        <div className="mt-5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">What Surfaces on the Knowledge Page</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Section</th>
+                  <th className="text-left py-2 pl-2 pr-3">What It Shows</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['God Nodes', 'Most connected concepts — what ties your knowledge together'],
+                  ['Surprising Connections', 'Cross-product, cross-source links you didn\'t expect'],
+                  ['Suggested Questions', 'Auto-generated prompts from graph structure'],
+                  ['Knowledge by Product', 'Which captures relate to which product'],
+                  ['Capture Activity', 'Items captured, trend chart, last capture timestamp'],
+                ].map(([section, what], i) => (
+                  <tr key={section} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 text-foreground font-medium">{section}</td>
+                    <td className="py-2 pl-2 pr-3 text-muted-foreground">{what}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Link href="/dashboard/knowledge" className="text-xs text-primary hover:underline">
+            View Knowledge Hub →
           </Link>
         </div>
       </SectionCard>
