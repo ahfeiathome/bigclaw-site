@@ -163,7 +163,7 @@ export function SidebarNav() {
           <SubLink label="Organization" href="/dashboard/organization" />
           <SubLink label="Finance" href="/dashboard/finance" />
           <SubLink label="Process" href="/dashboard/process" />
-          <SubLink label="Knowledge" href="/dashboard/help" />
+          <SubLink label="Knowledge" href="/dashboard/knowledge" />
 
           {/* Access Control */}
           <div className="pt-4 border-t border-border/30 mt-4">

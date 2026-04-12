@@ -101,6 +101,10 @@ export async function fetchDevKnowledgeHub(): Promise<string | null> {
   return fetchKnowledgeHub();
 }
 
+export async function fetchGraphReport(): Promise<string | null> {
+  return fetchRepoFile('bigclaw-ai', 'graphify-out/GRAPH_REPORT.md');
+}
+
 export async function fetchSDLCProcess(): Promise<string | null> {
   return fetchRepoFile('bigclaw-ai', 'knowledge/SDLC_PROCESS.md');
 }
