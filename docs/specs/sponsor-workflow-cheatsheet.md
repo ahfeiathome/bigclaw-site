@@ -71,6 +71,27 @@ Open Dashboard → [Product] page
   → Consultant writes the gate entry
 ```
 
+### Ending a Session
+
+```
+"Update the briefing and wrap up."
+  → Consultant writes SESSION_BRIEFING.md
+  → Next Consultant session reads it on "read the briefing"
+
+"Update CLAUDE.md and wrap up."
+  → Code CLI writes repo's CLAUDE.md
+  → Next Code session reads it automatically on startup
+```
+
+| Session | You Say | What Gets Updated |
+|---------|---------|------------------|
+| Consultant (Claude Chat) | "Update the briefing and wrap up." | `founder/SESSION_BRIEFING.md` |
+| lc-forge | "Update CLAUDE.md and wrap up." | `learnie-ai/CLAUDE.md` + touched repos |
+| lc-axiom | "Update CLAUDE.md and wrap up." | Each Axiom repo's CLAUDE.md |
+| lc-bigclaw | "Update CLAUDE.md and wrap up." | `bigclaw-site/CLAUDE.md` |
+
+**If you don't say this, the next session starts cold.**
+
 ### Never Say
 
 | Don't Say | Why | Say Instead |

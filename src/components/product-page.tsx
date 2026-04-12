@@ -167,6 +167,48 @@ export async function ProductPage(props: ProductPageProps) {
     }
   }
 
+  // Compute per-release verification pipeline level
+  type ReleaseLevel = 'planned' | 'merged' | 'flow-tested' | 'code-reviewed' | 'michael-approved' | 'live';
+  interface ReleaseMeta { level: ReleaseLevel; prSummary: string; prdCount: number; }
+
+  function computeReleaseMeta(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseMeta {
+    const prNums = rel.rows.map(r => r.pr).filter(p => /^#\d+$/.test(p.trim()));
+    const prSummary = prNums.length === 0 ? '' :
+      prNums.length === 1 ? prNums[0] :
+      `${prNums[0]}–${prNums[prNums.length - 1]}`;
+    const prdMatches = rel.rows.flatMap(r => r.prds.match(/PRD-\d+/g) || []);
+    const prdCount = new Set(prdMatches).size;
+
+    // Determine level
+    const hasUnstarted = rel.rows.some(r => r.status.includes('🔲') || r.status.toLowerCase().includes('not started'));
+    if (hasUnstarted) return { level: 'planned', prSummary, prdCount };
+
+    const allMerged = rel.rows.every(r => r.status.includes('✅') || r.status.includes('⚠️'));
+    if (!allMerged) return { level: 'planned', prSummary, prdCount };
+
+    const uniqueIds = [...new Set(prdMatches)];
+    const matched = items ? items.filter(i => uniqueIds.includes(i.id)) : [];
+    if (matched.length > 0) {
+      if (matched.every(i => i.verifyM === '✅')) return { level: 'michael-approved', prSummary, prdCount };
+      if (matched.every(i => i.verifyC === '✅')) return { level: 'code-reviewed', prSummary, prdCount };
+      if (matched.every(i => i.verifyG === '✅')) return { level: 'flow-tested', prSummary, prdCount };
+    }
+    return { level: 'merged', prSummary, prdCount };
+  }
+
+  const releasesMeta = releases.map(rel => computeReleaseMeta(rel, prdItems));
+
+  function releaseLevelBadge(level: ReleaseLevel): { label: string; className: string } {
+    switch (level) {
+      case 'planned':       return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
+      case 'merged':        return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
+      case 'flow-tested':   return { label: '🟡 Flow Tested', className: 'bg-amber-500/15 text-amber-400' };
+      case 'code-reviewed': return { label: '🟡 Code Reviewed', className: 'bg-amber-500/15 text-amber-400' };
+      case 'michael-approved': return { label: '✅ Michael Approved', className: 'bg-green-500/15 text-green-400' };
+      case 'live':          return { label: '🟢 Live', className: 'bg-green-500/20 text-green-300 font-bold' };
+    }
+  }
+
   // Parse Verification Report rows
   interface VerificationRow { date: string; prdId: string; test: string; result: string; notes: string; }
   const verificationRows: VerificationRow[] = [];
@@ -420,41 +462,64 @@ export async function ProductPage(props: ProductPageProps) {
           {releases.length === 0 ? (
             <p className="text-xs text-muted-foreground">No release plan found at <code className="font-mono text-primary">docs/product/RELEASE_PLAN.md</code>.</p>
           ) : (
-            <div className="space-y-5">
-              {releases.map((rel) => (
-                <div key={rel.version}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
-                    {rel.subtitle && <span className="text-xs text-muted-foreground">{rel.subtitle}</span>}
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="text-muted-foreground border-b border-border bg-muted">
-                          <th className="text-left py-2 pl-3 pr-2">PR</th>
-                          <th className="text-left py-2 px-2">What</th>
-                          <th className="text-left py-2 px-2">PRDs</th>
-                          <th className="text-left py-2 pl-2 pr-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rel.rows.map((row, i) => (
-                          <tr key={i} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
-                            <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
-                            <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
-                            <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
-                            <td className="py-1.5 pl-2 pr-3">
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
-                                {row.status}
-                              </span>
-                            </td>
+            <div className="space-y-1">
+              {releases.map((rel, ri) => {
+                const meta = releasesMeta[ri];
+                const badge = releaseLevelBadge(meta.level);
+                return (
+                  <details key={rel.version} className="group rounded-lg border border-border/50 overflow-hidden">
+                    <summary className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none hover:bg-muted/60 list-none [&::-webkit-details-marker]:hidden">
+                      {/* Chevron icon */}
+                      <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                      {/* Version */}
+                      <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
+                      {/* Subtitle (stripped outer quotes) */}
+                      {rel.subtitle && (
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                          {rel.subtitle.replace(/^[""]|[""]$/g, '')}
+                        </span>
+                      )}
+                      {/* PR + PRD summary */}
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        {[meta.prSummary && `PRs ${meta.prSummary}`, meta.prdCount > 0 && `${meta.prdCount} PRDs`].filter(Boolean).join(', ')}
+                      </span>
+                      {/* Verification level badge */}
+                      <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </summary>
+                    {/* Expanded PR table */}
+                    <div className="border-t border-border/50 overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-muted-foreground border-b border-border bg-muted/50">
+                            <th className="text-left py-2 pl-3 pr-2">PR</th>
+                            <th className="text-left py-2 px-2">What</th>
+                            <th className="text-left py-2 px-2">PRDs</th>
+                            <th className="text-left py-2 pl-2 pr-3">Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+                        </thead>
+                        <tbody>
+                          {rel.rows.map((row, i) => (
+                            <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
+                              <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
+                              <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
+                              <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
+                              <td className="py-1.5 pl-2 pr-3">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                );
+              })}
             </div>
           )}
         </SectionCard>
