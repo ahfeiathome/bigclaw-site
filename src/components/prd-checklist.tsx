@@ -67,9 +67,10 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       if (item.verifyM === '✅') entry.vM++;
     }
     return Array.from(map.entries()).sort((a, b) => {
-      // Sort by active verified count (lowest layer with data)
-      const activeA = a[1].vM > 0 ? a[1].vM : a[1].vC > 0 ? a[1].vC : a[1].vG > 0 ? a[1].vG : a[1].done;
-      const activeB = b[1].vM > 0 ? b[1].vM : b[1].vC > 0 ? b[1].vC : b[1].vG > 0 ? b[1].vG : b[1].done;
+      // Sort by active verified count (lowest layer with data; 0 if triple-verify but no data yet)
+      const hasTV = items.some(i => i.verifyG !== undefined);
+      const activeA = hasTV ? (a[1].vM > 0 ? a[1].vM : a[1].vC > 0 ? a[1].vC : a[1].vG > 0 ? a[1].vG : 0) : a[1].done;
+      const activeB = hasTV ? (b[1].vM > 0 ? b[1].vM : b[1].vC > 0 ? b[1].vC : b[1].vG > 0 ? b[1].vG : 0) : b[1].done;
       const pctA = a[1].total > 0 ? activeA / a[1].total : 0;
       const pctB = b[1].total > 0 ? activeB / b[1].total : 0;
       return pctB - pctA;
@@ -118,9 +119,13 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       {/* ── Category Summary Bars ──────────────────────────────── */}
       <div className="space-y-2 mb-6">
         {categories.map(([cat, { done, vG, vC, vM, total }]) => {
-          // Lowest verified layer with data
-          const verified = vM > 0 ? vM : vC > 0 ? vC : vG > 0 ? vG : done;
-          const verifyLayer = vM > 0 ? 'V-M' : vC > 0 ? 'V-C' : vG > 0 ? 'V-G' : 'Done';
+          // Lowest verified layer with data.
+          // When hasTripleVerify and all layers are 0 → show 0% (no fallback to Done).
+          // When no triple-verify schema → Done is the source of truth.
+          const verified = hasTripleVerify
+            ? (vM > 0 ? vM : vC > 0 ? vC : vG > 0 ? vG : 0)
+            : done;
+          const verifyLayer = !hasTripleVerify ? 'Done' : vM > 0 ? 'V-M' : vC > 0 ? 'V-C' : vG > 0 ? 'V-G' : 'V-M';
           const pct = total > 0 ? Math.round((verified / total) * 100) : 0;
           const donePct = total > 0 ? Math.round((done / total) * 100) : 0;
           const isActive = filterCategory === cat;
@@ -154,8 +159,10 @@ export function PrdChecklist({ items, repoSlug }: Props) {
 
       {/* ── Counters ───────────────────────────────────────────── */}
       {(() => {
-        const activeVerified = counts.vM > 0 ? counts.vM : counts.vC > 0 ? counts.vC : counts.vG > 0 ? counts.vG : counts.done;
-        const activeLayer = counts.vM > 0 ? 'V-M' : counts.vC > 0 ? 'V-C' : counts.vG > 0 ? 'V-G' : 'Done';
+        const activeVerified = hasTripleVerify
+          ? (counts.vM > 0 ? counts.vM : counts.vC > 0 ? counts.vC : counts.vG > 0 ? counts.vG : 0)
+          : counts.done;
+        const activeLayer = !hasTripleVerify ? 'Done' : counts.vM > 0 ? 'V-M' : counts.vC > 0 ? 'V-C' : counts.vG > 0 ? 'V-G' : 'V-M';
         const verifiedPct = items.length > 0 ? Math.round((activeVerified / items.length) * 100) : 0;
         return (
           <div className="flex gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
