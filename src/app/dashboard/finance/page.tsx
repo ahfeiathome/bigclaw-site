@@ -38,7 +38,7 @@ interface CostRow {
   children?: { label: string; value: string; detail?: string }[];
 }
 
-function buildCostRows(content: string): CostRow[] {
+function buildCostRows(content: string, dailyCostsMd: string | null): CostRow[] {
   const rows: CostRow[] = [];
 
   // Parse budget section for total budget
@@ -46,6 +46,22 @@ function buildCostRows(content: string): CostRow[] {
   const anthropicBudget = budgetRows.find(r => r.cells[0]?.toLowerCase().includes('anthropic'));
   const budgetTotal = anthropicBudget?.cells[1] || '$127.00';
   const budgetSpend = anthropicBudget?.cells[2] || '~$5.00';
+
+  // Detect exhausted balance from DAILY_COSTS.md latest remaining
+  let anthropicExhausted = false;
+  if (dailyCostsMd) {
+    const costLines = dailyCostsMd.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/) && !/Date|date/.test(l));
+    const lastRow = costLines[costLines.length - 1];
+    if (lastRow) {
+      const cells = lastRow.split('|').map(c => c.trim()).filter(Boolean);
+      const remainingCell = cells[2]; // "Remaining" is 3rd column
+      if (remainingCell) {
+        const m = remainingCell.match(/\$?([\d.]+)/);
+        const remaining = m ? parseFloat(m[1]) : -1;
+        if (remaining <= 0.5) anthropicExhausted = true;
+      }
+    }
+  }
 
   // Parse per-project costs
   const projectSection = extractSection(content, 'Per-Project Breakdown') || extractSection(content, 'App Factory');
@@ -79,8 +95,8 @@ function buildCostRows(content: string): CostRow[] {
     category: 'Anthropic API (Claude)',
     monthly: clean(budgetSpend),
     pctOfTotal: '100%',
-    status: `Within budget (${clean(budgetTotal)})`,
-    statusTone: 'success',
+    status: anthropicExhausted ? 'CRITICAL — balance exhausted' : `Within budget (${clean(budgetTotal)})`,
+    statusTone: anthropicExhausted ? 'error' : 'success',
     children: [
       ...(appChildren.length > 0 ? [{ label: `App products (${appChildren.length} projects)`, value: '$1.07', detail: undefined }] : []),
       ...appChildren.map(c => ({ ...c, label: `  └ ${c.label}` })),
@@ -190,7 +206,7 @@ export default async function FinancePage() {
     );
   }
 
-  const costRows = buildCostRows(finance);
+  const costRows = buildCostRows(finance, dailyCostsMd);
   const alerts = extractAlerts(finance);
 
   // Daily costs
@@ -218,6 +234,33 @@ export default async function FinancePage() {
   const budgetTotal = clean(anthropicRow?.cells[1] || '$127');
 
   const allFreeSafe = freeTierItems.every(i => i.percent < 20);
+
+  // Check Anthropic balance exhausted for hero card
+  let anthropicBalanceExhausted = false;
+  if (dailyCostsMd) {
+    const costLines = dailyCostsMd.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/) && !/Date|date/.test(l));
+    const lastRow = costLines[costLines.length - 1];
+    if (lastRow) {
+      const cells = lastRow.split('|').map(c => c.trim()).filter(Boolean);
+      const remainingCell = cells[2];
+      if (remainingCell) {
+        const m = remainingCell.match(/\$?([\d.]+)/);
+        const remaining = m ? parseFloat(m[1]) : -1;
+        if (remaining <= 0.5) anthropicBalanceExhausted = true;
+      }
+    }
+  }
+
+  // RADAR paper vs live from Performance Comparison table
+  const radarPerfRows = radarMd ? parseMarkdownTable(extractSection(radarMd, 'Performance Comparison')) : [];
+  const radarPerfMeta: Record<string, [string, string]> = {};
+  for (const row of radarPerfRows) {
+    if (row.cells.length >= 3) radarPerfMeta[row.cells[0]] = [row.cells[1], row.cells[2]];
+  }
+  const radarPaperEquity = radarPerfMeta['Equity']?.[0] || radarEquity;
+  const radarLiveEquity = radarPerfMeta['Equity']?.[1] || '--';
+  const radarPaperReturn = radarPerfMeta['Total Return']?.[0] || '--';
+  const radarLiveReturn = radarPerfMeta['Total Return']?.[1] || '--';
 
   return (
     <div>
@@ -247,11 +290,14 @@ export default async function FinancePage() {
           <div className="text-2xl font-bold font-mono text-foreground mt-1">{burn}</div>
           <div className="flex items-center gap-1 mt-1"><StatusDot status="good" size="sm" /><span className="text-xs text-green-400">Low</span></div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-xs text-muted-foreground uppercase tracking-wide">Budget</div>
-          <div className="text-2xl font-bold font-mono text-foreground mt-1">{budgetSpend}</div>
+        <div className={`rounded-xl border p-4 ${anthropicBalanceExhausted ? 'border-red-500/50 bg-red-500/5' : 'border-border bg-card'}`}>
+          <div className="text-xs text-muted-foreground uppercase tracking-wide">Anthropic Budget</div>
+          <div className={`text-2xl font-bold font-mono mt-1 ${anthropicBalanceExhausted ? 'text-red-400' : 'text-foreground'}`}>{anthropicBalanceExhausted ? '$0' : budgetSpend}</div>
           <div className="text-xs text-muted-foreground mt-1">of {budgetTotal}</div>
-          <div className="flex items-center gap-1 mt-1"><StatusDot status="good" size="sm" /><span className="text-xs text-green-400">96% free</span></div>
+          <div className="flex items-center gap-1 mt-1">
+            <StatusDot status={anthropicBalanceExhausted ? 'bad' : 'good'} size="sm" />
+            <span className={`text-xs ${anthropicBalanceExhausted ? 'text-red-400 font-bold' : 'text-green-400'}`}>{anthropicBalanceExhausted ? 'CRITICAL — exhausted' : '96% free'}</span>
+          </div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="text-xs text-muted-foreground uppercase tracking-wide">Free Tiers</div>
@@ -408,17 +454,23 @@ export default async function FinancePage() {
         <div className="mb-4">
           <CollapsibleSection title="RADAR P/L" defaultOpen={false} badge={<SignalPill label={radarPnl.includes('-') ? 'Loss' : 'Gain'} tone={radarPnl.includes('-') ? 'warning' : 'success'} />}>
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4 mb-3">
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Equity</div>
-                  <div className="text-xl font-bold font-mono text-foreground">{radarEquity}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Paper Equity</div>
+                  <div className="text-lg font-bold font-mono text-foreground">{radarPaperEquity}</div>
+                  <div className="text-[10px] text-muted-foreground">{radarPaperReturn !== '--' ? `Return: ${radarPaperReturn}` : ''}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Daily P/L</div>
-                  <div className={`text-xl font-bold font-mono ${radarPnl.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnl}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Live Equity</div>
+                  <div className="text-lg font-bold font-mono text-amber-400">{radarLiveEquity}</div>
+                  <div className="text-[10px] text-muted-foreground">{radarLiveReturn !== '--' ? `Return: ${radarLiveReturn}` : ''}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Daily P/L</div>
+                  <div className={`text-lg font-bold font-mono ${radarPnl.includes('-') ? 'text-red-400' : 'text-green-400'}`}>{radarPnl}</div>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+              <div className="pt-3 border-t border-border text-xs text-muted-foreground">
                 <a href="/dashboard/fintech" className="text-primary hover:underline">View full RADAR dashboard →</a>
               </div>
             </div>

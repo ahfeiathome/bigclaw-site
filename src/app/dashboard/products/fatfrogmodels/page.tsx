@@ -14,7 +14,7 @@ export default async function FatfrogmodelsProductPage() {
     company: 'Axiom',
     pdlcStage: 'S7 LAUNCH',
     status: 'launched',
-    productionUrl: 'https://fatfrogmodels.vercel.app',
+    productionUrl: 'https://fatfrogmodels.com',
     repoSlug: 'fatfrogmodels',
     description: "Scale model e-commerce for a friend's brand.",
     nextGate: "S8 GROW — DNS cutover pending friend's decision",
