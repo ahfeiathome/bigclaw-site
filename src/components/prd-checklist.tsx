@@ -116,8 +116,48 @@ export function PrdChecklist({ items, repoSlug }: Props) {
 
   return (
     <div>
-      {/* ── Category Summary Bars ──────────────────────────────── */}
-      <div className="space-y-2 mb-6">
+      {/* ── Per-category count table (header) + bars (visualization) — one unified section ── */}
+      <div className="mb-6">
+        {/* Count table */}
+        <div className="overflow-x-auto mb-0">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b border-border bg-muted">
+                <th className="text-left py-2 pl-3 pr-2">Category</th>
+                <th className="text-right py-2 px-2">Done</th>
+                {hasTripleVerify ? (
+                  <>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Gemini automated">V-G</th>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Consultant audit">V-C</th>
+                    <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael review">V-M</th>
+                  </>
+                ) : (
+                  <th className="text-right py-2 pl-2 pr-3">Verified</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map(([cat, { done, vG, vC, vM, total }], i) => (
+                <tr key={cat} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
+                  <td className="py-1.5 pl-3 pr-2 text-foreground">{cat}</td>
+                  <td className="py-1.5 px-2 text-right font-mono text-muted-foreground">{done}/{total}</td>
+                  {hasTripleVerify ? (
+                    <>
+                      <td className="py-1.5 px-2 text-right font-mono text-purple-400">{vG}</td>
+                      <td className="py-1.5 px-2 text-right font-mono text-blue-400">{vC}</td>
+                      <td className="py-1.5 pl-2 pr-3 text-right font-mono text-green-400">{vM}</td>
+                    </>
+                  ) : (
+                    <td className="py-1.5 pl-2 pr-3 text-right font-mono text-green-400">{done}</td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Bars — directly below, no gap */}
+        <div className="space-y-2 mt-3 border-t border-border/30 pt-3">
         {categories.map(([cat, { done, vG, vC, vM, total }]) => {
           // Lowest verified layer with data.
           // When hasTripleVerify and all layers are 0 → show 0% (no fallback to Done).
@@ -155,7 +195,8 @@ export function PrdChecklist({ items, repoSlug }: Props) {
             </button>
           );
         })}
-      </div>
+        </div>{/* end bars */}
+      </div>{/* end unified section */}
 
       {/* ── Counters ───────────────────────────────────────────── */}
       {(() => {
