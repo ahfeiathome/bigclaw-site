@@ -79,13 +79,10 @@ const PRODUCTS = [
 function useUserRole(): { role: string; products: string[] } {
   const [info, setInfo] = useState<{ role: string; products: string[] }>({ role: 'admin', products: [] });
   useEffect(() => {
-    try {
-      const cookie = document.cookie.split(';').find(c => c.trim().startsWith('bigclaw-role='));
-      if (cookie) {
-        const val = JSON.parse(decodeURIComponent(cookie.split('=').slice(1).join('=')));
-        setInfo({ role: val.role || 'admin', products: val.products || [] });
-      }
-    } catch { /* fallback to admin */ }
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setInfo({ role: d.role || 'admin', products: d.products || [] }))
+      .catch(() => {});
   }, []);
   return info;
 }
