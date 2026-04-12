@@ -2,9 +2,10 @@ import type { PrdItem, VerifyValue } from '@/components/prd-checklist';
 
 /**
  * Parse PRD_CHECKLIST.md content into PrdItem array.
- * Supports two column schemas:
- *   - 9-col: | ID | Item | Category | Status | Owner | Target | GitHub | Verified | Verified By |
+ * Supports three column schemas:
+ *   - 9-col:  | ID | Item | Category | Status | Owner | Target | GitHub | Verified | Verified By |
  *   - 10-col: | ID | Item | Category | Status | Owner | Target | GitHub | V-G | V-C | V-M |
+ *   - 11-col: | ID | Item | Category | Status | Owner | Target | GitHub | V-CI | V-G | V-C | V-M |
  * Tracks P0/P1/P2 section headers for priority assignment.
  */
 
@@ -24,11 +25,15 @@ export function parsePrdItems(content: string): PrdItem[] {
 
   // Detect schema from header row
   let isTripleVerify = false;
+  let hasVCI = false;
   for (const line of lines) {
     if (line.includes('| V-G') || line.includes('|V-G') || line.includes('| V-G ')) {
       isTripleVerify = true;
-      break;
     }
+    if (line.includes('| V-CI') || line.includes('|V-CI')) {
+      hasVCI = true;
+    }
+    if (isTripleVerify) break;
   }
 
   for (const line of lines) {
@@ -57,6 +62,9 @@ export function parsePrdItems(content: string): PrdItem[] {
     const github = githubRaw.match(/#\d+/) ? githubRaw : undefined;
 
     if (isTripleVerify) {
+      // 11-col schema: ...| V-CI | V-G | V-C | V-M | ...
+      // 10-col schema: ...| V-G  | V-C | V-M | ...
+      const ciOffset = hasVCI ? 1 : 0;
       items.push({
         id: cells[0],
         item: cells[1],
@@ -65,9 +73,10 @@ export function parsePrdItems(content: string): PrdItem[] {
         owner: cells[4],
         priority: currentPriority,
         github,
-        verifyG: parseVerify(cells[7]),
-        verifyC: parseVerify(cells[8]),
-        verifyM: parseVerify(cells[9]),
+        verifyCI: hasVCI ? parseVerify(cells[7]) : undefined,
+        verifyG: parseVerify(cells[7 + ciOffset]),
+        verifyC: parseVerify(cells[8 + ciOffset]),
+        verifyM: parseVerify(cells[9 + ciOffset]),
       });
     } else {
       // Legacy single-column schema (col 7 = Verified ✅/❌, col 8 = Verified By)
