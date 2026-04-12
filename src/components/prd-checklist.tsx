@@ -28,20 +28,6 @@ interface Props {
   repoSlug?: string;
 }
 
-// ── Category mapping ───────────────────────────────────────────────────────
-
-const CATEGORY_COLORS: Record<string, string> = {
-  'AI/ML': 'bg-purple-500',
-  'UI/UX': 'bg-blue-500',
-  'Functional': 'bg-green-500',
-  'QA/Testing': 'bg-amber-500',
-  'Auth/Security': 'bg-red-500',
-  'Infrastructure': 'bg-cyan-500',
-  'Marketing': 'bg-pink-500',
-  'Revenue': 'bg-emerald-500',
-  'Strategy': 'bg-indigo-500',
-};
-
 function statusColor(status: string): string {
   if (status === 'Done') return 'bg-green-500/20 text-green-400';
   if (status === 'In Progress') return 'bg-amber-500/20 text-amber-400';
@@ -81,8 +67,8 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       if (item.verifyM === '✅') entry.vM++;
     }
     return Array.from(map.entries()).sort((a, b) => {
-      const pctA = a[1].total > 0 ? a[1].done / a[1].total : 0;
-      const pctB = b[1].total > 0 ? b[1].done / b[1].total : 0;
+      const pctA = a[1].total > 0 ? a[1].vM / a[1].total : 0;
+      const pctB = b[1].total > 0 ? b[1].vM / b[1].total : 0;
       return pctB - pctA;
     });
   }, [items]);
@@ -129,9 +115,9 @@ export function PrdChecklist({ items, repoSlug }: Props) {
       {/* ── Category Summary Bars ──────────────────────────────── */}
       <div className="space-y-2 mb-6">
         {categories.map(([cat, { done, vG, vC, vM, total }]) => {
-          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const pct = total > 0 ? Math.round((vM / total) * 100) : 0;
           const isActive = filterCategory === cat;
-          const barColor = CATEGORY_COLORS[cat] || 'bg-gray-500';
+          const barColor = pct < 50 ? 'bg-red-500' : pct <= 70 ? 'bg-blue-500' : 'bg-green-500';
           return (
             <button
               key={cat}
@@ -143,8 +129,8 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                 <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
               <span className="text-[10px] font-mono text-muted-foreground text-right shrink-0">
-                {done}/{total} Done ({pct}%)
-                {hasTripleVerify && <> · G:{vG} C:{vC} M:{vM}</>}
+                {vM}/{total} V-M ({pct}%) · Done:{done}
+                {hasTripleVerify && <> · G:{vG} C:{vC}</>}
               </span>
             </button>
           );
