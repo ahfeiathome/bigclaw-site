@@ -64,22 +64,22 @@ const BOXES: Box[] = [
     file: 'tests/ or src/**/__tests__/',
     desc: 'RED: write failing test. GREEN: minimal code to pass. REFACTOR: clean up. COMMIT.',
     creator: 'Code or Gemini' },
-  { id: 'ci',        x: 650,  y: 170, w: 180, h: 56, label: 'CI Regression',     phase: 'ci',
+  { id: 'ci',        x: 650,  y: 170, w: 180, h: 56, label: 'CI Test',           phase: 'ci',
     file: '.github/workflows/ci.yml',
-    desc: 'Every PR: lint + types + unit tests + E2E against Vercel preview. Blocks merge on failure.',
+    desc: 'Every PR: lint + types + unit tests + E2E against Vercel preview. Blocks merge on failure. → CI Test column.',
     creator: 'Automated (GitHub Actions)' },
-  { id: 'gemini',    x: 430,  y: 170, w: 180, h: 56, label: 'Gemini Validation', phase: 'gemini',
+  { id: 'gemini',    x: 430,  y: 170, w: 180, h: 56, label: 'Flow Test',         phase: 'gemini',
     file: 'ops/gemini/VALIDATION_REPORT.md',
-    desc: '6am daily: browser-tests live site via Playwright MCP, driven by PRD Test Matrix.',
+    desc: '6am daily: Gemini navigates live site via Playwright MCP, tests user flows. → Flow Test column.',
     creator: 'Gemini CLI (automated)' },
-  { id: 'michael',   x: 210,  y: 170, w: 180, h: 56, label: 'Michael Review',    phase: 'michael',
+  { id: 'michael',   x: 210,  y: 170, w: 180, h: 56, label: 'User Test',         phase: 'michael',
     file: 'docs/product/PRD_REVIEW_CHECKLIST.md',
-    desc: 'Walk through live site on phone, check UX, verify features feel right.',
+    desc: 'Acceptance test on real device — UX, print quality, content accuracy. → User Test column. (Code Review = Consultant monthly audit, separate.)',
     creator: 'Michael' },
-  { id: 'verified',  x: 30,   y: 170, w: 150, h: 56, label: '✅ Verified',       phase: 'verified',
+  { id: 'verified',  x: 30,   y: 170, w: 150, h: 56, label: '✅ Complete',       phase: 'verified',
     file: 'docs/product/PRD_TEST_MATRIX.md (Verified column)',
-    desc: 'All three layers passed: CI green + Gemini validated + Michael approved. PRD item marked ✅.',
-    creator: 'All three' },
+    desc: 'All layers passed: CI Test ✅ + Flow Test ✅ + User Test ✅. PRD item marked complete.',
+    creator: 'All layers' },
 
   // Row 3 (bug/regression loop)
   { id: 'bug',       x: 30,   y: 300, w: 150, h: 56, label: 'Bug Found',         phase: 'bug',
@@ -301,8 +301,8 @@ export function DevFlowChart() {
           <text x="530" y="20" textAnchor="middle" fill="#8b5cf6" fontSize="9" fontFamily="sans-serif" letterSpacing="1">PRD</text>
           <text x="970" y="20" textAnchor="middle" fill="#0d9488" fontSize="9" fontFamily="sans-serif" letterSpacing="1">DESIGN</text>
           <text x="1150" y="150" textAnchor="middle" fill="#d97706" fontSize="9" fontFamily="sans-serif" letterSpacing="1">TDD</text>
-          <text x="740" y="150" textAnchor="middle" fill="#3b82f6" fontSize="9" fontFamily="sans-serif" letterSpacing="1">CI</text>
-          <text x="520" y="150" textAnchor="middle" fill="#10b981" fontSize="9" fontFamily="sans-serif" letterSpacing="1">GEMINI</text>
+          <text x="740" y="150" textAnchor="middle" fill="#3b82f6" fontSize="9" fontFamily="sans-serif" letterSpacing="1">CI TEST</text>
+          <text x="520" y="150" textAnchor="middle" fill="#10b981" fontSize="9" fontFamily="sans-serif" letterSpacing="1">FLOW TEST</text>
           <text x="110" y="280" textAnchor="middle" fill="#6b7280" fontSize="9" fontFamily="sans-serif" letterSpacing="1">BUG LOOP</text>
         </svg>
       </div>
@@ -332,10 +332,10 @@ export function DevFlowChart() {
           { phase: 'prd', label: 'PRD' },
           { phase: 'design', label: 'Design' },
           { phase: 'tdd', label: 'TDD' },
-          { phase: 'ci', label: 'CI' },
-          { phase: 'gemini', label: 'Gemini' },
-          { phase: 'michael', label: 'Michael' },
-          { phase: 'verified', label: 'Verified' },
+          { phase: 'ci', label: 'CI Test' },
+          { phase: 'gemini', label: 'Flow Test' },
+          { phase: 'michael', label: 'User Test' },
+          { phase: 'verified', label: 'Complete' },
           { phase: 'bug', label: 'Bug Loop' },
         ].map(({ phase, label }) => {
           const c = PHASE_COLORS[phase];

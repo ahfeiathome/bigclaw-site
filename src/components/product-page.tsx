@@ -362,13 +362,13 @@ export async function ProductPage(props: ProductPageProps) {
                     status: ciRun?.conclusion === 'success' ? 'good' : ciRun?.conclusion === 'failure' ? 'bad' : 'neutral',
                   },
                   {
-                    label: 'Gemini (daily)',
+                    label: 'Flow Test (daily)',
                     sub1: verificationRows.length > 0 ? `${verificationRows.length} checks` : 'Not yet run',
                     sub2: verificationRows.length > 0 ? `${verificationRows.filter(r => r.result.includes('PASS') || r.result.includes('✅')).length} passed` : '—',
                     status: verificationRows.length > 0 ? 'good' : 'neutral',
                   },
                   {
-                    label: 'Michael Review',
+                    label: 'User Test',
                     sub1: totalVerified > 0 ? `${totalVerified} verified` : 'Pending',
                     sub2: totalDone > 0 ? `${Math.round((totalVerified / totalDone) * 100)}% of Done` : '—',
                     status: totalVerified > 0 ? 'good' : 'neutral',

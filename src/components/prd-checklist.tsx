@@ -127,9 +127,9 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                 <th className="text-right py-2 px-2">Done</th>
                 {hasTripleVerify ? (
                   <>
-                    <th className="text-right py-2 px-2 text-[10px]" title="Gemini automated">V-G</th>
-                    <th className="text-right py-2 px-2 text-[10px]" title="Consultant audit">V-C</th>
-                    <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael review">V-M</th>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Gemini browser flow test (daily)">Flow Test</th>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Consultant code/file audit (monthly)">Code Review</th>
+                    <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael acceptance test on device">User Test</th>
                   </>
                 ) : (
                   <th className="text-right py-2 pl-2 pr-3">Verified</th>
@@ -165,7 +165,7 @@ export function PrdChecklist({ items, repoSlug }: Props) {
           const verified = hasTripleVerify
             ? (vM > 0 ? vM : vC > 0 ? vC : vG > 0 ? vG : 0)
             : done;
-          const verifyLayer = !hasTripleVerify ? 'Done' : vM > 0 ? 'V-M' : vC > 0 ? 'V-C' : vG > 0 ? 'V-G' : 'V-M';
+          const verifyLayer = !hasTripleVerify ? 'Develop' : vM > 0 ? 'User Test' : vC > 0 ? 'Code Review' : vG > 0 ? 'Flow Test' : 'User Test';
           const pct = total > 0 ? Math.round((verified / total) * 100) : 0;
           const donePct = total > 0 ? Math.round((done / total) * 100) : 0;
           const isActive = filterCategory === cat;
@@ -203,7 +203,7 @@ export function PrdChecklist({ items, repoSlug }: Props) {
         const activeVerified = hasTripleVerify
           ? (counts.vM > 0 ? counts.vM : counts.vC > 0 ? counts.vC : counts.vG > 0 ? counts.vG : 0)
           : counts.done;
-        const activeLayer = !hasTripleVerify ? 'Done' : counts.vM > 0 ? 'V-M' : counts.vC > 0 ? 'V-C' : counts.vG > 0 ? 'V-G' : 'V-M';
+        const activeLayer = !hasTripleVerify ? 'Develop' : counts.vM > 0 ? 'User Test' : counts.vC > 0 ? 'Code Review' : counts.vG > 0 ? 'Flow Test' : 'User Test';
         const verifiedPct = items.length > 0 ? Math.round((activeVerified / items.length) * 100) : 0;
         return (
           <div className="flex gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
@@ -212,7 +212,7 @@ export function PrdChecklist({ items, repoSlug }: Props) {
             <span className="font-mono">{counts.done} Done</span>
             {hasTripleVerify && counts.vM === 0 && (counts.vC > 0 || counts.vG > 0) && <>
               <span>·</span>
-              <span className="font-mono text-[10px]">G:{counts.vG} C:{counts.vC} M:{counts.vM}</span>
+              <span className="font-mono text-[10px]">Flow:{counts.vG} Review:{counts.vC} User:{counts.vM}</span>
             </>}
             <span>·</span>
             <span>{counts.inProgress} in progress</span>
@@ -281,9 +281,9 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               <th className="text-left py-2.5 px-2">PR</th>
               {hasTripleVerify ? (
                 <>
-                  <th className="text-center py-2.5 px-1 text-[10px]" title="Gemini automated test">V-G</th>
-                  <th className="text-center py-2.5 px-1 text-[10px]" title="Consultant audit">V-C</th>
-                  <th className="text-center py-2.5 pl-1 pr-3 text-[10px]" title="Michael review">V-M</th>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Gemini browser flow test (daily)">Flow</th>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Consultant code/file audit (monthly)">Review</th>
+                  <th className="text-center py-2.5 pl-1 pr-3 text-[10px]" title="Michael acceptance test on device">User</th>
                 </>
               ) : (
                 <th className="text-left py-2.5 pl-2 pr-3">Verified</th>
