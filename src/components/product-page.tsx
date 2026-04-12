@@ -167,46 +167,59 @@ export async function ProductPage(props: ProductPageProps) {
     }
   }
 
-  // Compute per-release verification pipeline level
-  type ReleaseLevel = 'planned' | 'merged' | 'flow-tested' | 'code-reviewed' | 'michael-approved' | 'live';
-  interface ReleaseMeta { level: ReleaseLevel; prSummary: string; prdCount: number; }
+  // Compute per-release aggregate verification stats
+  interface ReleaseStats { prSummary: string; prdCount: number; vG: number; vC: number; vM: number; planned: boolean; }
+  type ReleaseReadiness = 'planned' | 'no-prds' | 'not-ready' | 'partial' | 'ready';
 
-  function computeReleaseMeta(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseMeta {
+  function computeReleaseStats(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseStats {
     const prNums = rel.rows.map(r => r.pr).filter(p => /^#\d+$/.test(p.trim()));
     const prSummary = prNums.length === 0 ? '' :
       prNums.length === 1 ? prNums[0] :
       `${prNums[0]}–${prNums[prNums.length - 1]}`;
-    const prdMatches = rel.rows.flatMap(r => r.prds.match(/PRD-\d+/g) || []);
-    const prdCount = new Set(prdMatches).size;
-
-    // Determine level
-    const hasUnstarted = rel.rows.some(r => r.status.includes('🔲') || r.status.toLowerCase().includes('not started'));
-    if (hasUnstarted) return { level: 'planned', prSummary, prdCount };
-
-    const allMerged = rel.rows.every(r => r.status.includes('✅') || r.status.includes('⚠️'));
-    if (!allMerged) return { level: 'planned', prSummary, prdCount };
-
+    const prdMatches = rel.rows.flatMap(r => r.prds.match(/[A-Z]+-\d+/g) || []);
     const uniqueIds = [...new Set(prdMatches)];
+    const hasUnstarted = rel.rows.some(r => r.status.includes('🔲') || r.status.toLowerCase().includes('not started'));
+    const allMerged = rel.rows.every(r => r.status.includes('✅') || r.status.includes('⚠️'));
+    const planned = hasUnstarted || !allMerged;
     const matched = items ? items.filter(i => uniqueIds.includes(i.id)) : [];
-    if (matched.length > 0) {
-      if (matched.every(i => i.verifyM === '✅')) return { level: 'michael-approved', prSummary, prdCount };
-      if (matched.every(i => i.verifyC === '✅')) return { level: 'code-reviewed', prSummary, prdCount };
-      if (matched.every(i => i.verifyG === '✅')) return { level: 'flow-tested', prSummary, prdCount };
-    }
-    return { level: 'merged', prSummary, prdCount };
+    const prdCount = matched.length > 0 ? matched.length : uniqueIds.length;
+    const vG = matched.filter(i => i.verifyG === '✅').length;
+    const vC = matched.filter(i => i.verifyC === '✅').length;
+    const vM = matched.filter(i => i.verifyM === '✅').length;
+    return { prSummary, prdCount, vG, vC, vM, planned };
   }
 
-  const releasesMeta = releases.map(rel => computeReleaseMeta(rel, prdItems));
+  const releasesStats = releases.map(rel => computeReleaseStats(rel, prdItems));
 
-  function releaseLevelBadge(level: ReleaseLevel): { label: string; className: string } {
-    switch (level) {
-      case 'planned':       return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
-      case 'merged':        return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
-      case 'flow-tested':   return { label: '🟡 Flow Tested', className: 'bg-amber-500/15 text-amber-400' };
-      case 'code-reviewed': return { label: '🟡 Code Reviewed', className: 'bg-amber-500/15 text-amber-400' };
-      case 'michael-approved': return { label: '✅ Michael Approved', className: 'bg-green-500/15 text-green-400' };
-      case 'live':          return { label: '🟢 Live', className: 'bg-green-500/20 text-green-300 font-bold' };
+  function releaseReadiness(s: ReleaseStats): ReleaseReadiness {
+    if (s.planned) return 'planned';
+    if (s.prdCount === 0) return 'no-prds';
+    const n = s.prdCount;
+    if (s.vG === n && s.vC === n && s.vM === n) return 'ready';
+    if (s.vG === 0 || s.vC === 0 || s.vM === 0) return 'not-ready';
+    return 'partial';
+  }
+
+  function readinessBadge(r: ReleaseReadiness): { label: string; className: string } {
+    switch (r) {
+      case 'planned':   return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
+      case 'no-prds':   return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
+      case 'not-ready': return { label: '🔴 Not Ready for Release', className: 'bg-red-500/15 text-red-400' };
+      case 'partial':   return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
+      case 'ready':     return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
     }
+  }
+
+  function verifyColIcon(count: number, total: number): string {
+    if (total === 0 || count === 0) return '❌';
+    if (count === total) return '✅';
+    return '⚠️';
+  }
+
+  function verifyColColor(count: number, total: number): string {
+    if (total === 0 || count === 0) return 'text-red-400/80';
+    if (count === total) return 'text-green-400/80';
+    return 'text-amber-400/80';
   }
 
   // Parse Verification Report rows
@@ -464,31 +477,53 @@ export async function ProductPage(props: ProductPageProps) {
           ) : (
             <div className="space-y-1">
               {releases.map((rel, ri) => {
-                const meta = releasesMeta[ri];
-                const badge = releaseLevelBadge(meta.level);
+                const stats = releasesStats[ri];
+                const readiness = releaseReadiness(stats);
+                const badge = readinessBadge(readiness);
+                const showVerifyRow = !stats.planned && stats.prdCount > 0;
+                const n = stats.prdCount;
                 return (
                   <details key={rel.version} className="group rounded-lg border border-border/50 overflow-hidden">
-                    <summary className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none hover:bg-muted/60 list-none [&::-webkit-details-marker]:hidden">
-                      {/* Chevron icon */}
-                      <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                      {/* Version */}
-                      <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
-                      {/* Subtitle (stripped outer quotes) */}
-                      {rel.subtitle && (
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          {rel.subtitle.replace(/^[""]|[""]$/g, '')}
+                    <summary className="flex flex-col px-3 py-2.5 cursor-pointer select-none hover:bg-muted/60 list-none [&::-webkit-details-marker]:hidden gap-1">
+                      {/* Row 1: chevron + version + subtitle + PR/PRD count + badge (if no verify row) */}
+                      <div className="flex items-center gap-2">
+                        <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
+                        {rel.subtitle && (
+                          <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {rel.subtitle.replace(/^[""]|[""]$/g, '')}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {[stats.prSummary && `PRs ${stats.prSummary}`, n > 0 && `${n} PRDs`].filter(Boolean).join(', ')}
                         </span>
+                        {!showVerifyRow && (
+                          <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        )}
+                      </div>
+                      {/* Row 2: per-column verification counts + overall readiness badge */}
+                      {showVerifyRow && (
+                        <div className="flex items-center gap-2 pl-5 flex-wrap">
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vG, n)}`}>
+                            Flow Test: {stats.vG}/{n} {verifyColIcon(stats.vG, n)}
+                          </span>
+                          <span className="text-[10px] text-border">|</span>
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vC, n)}`}>
+                            Code Review: {stats.vC}/{n} {verifyColIcon(stats.vC, n)}
+                          </span>
+                          <span className="text-[10px] text-border">|</span>
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vM, n)}`}>
+                            User Test: {stats.vM}/{n} {verifyColIcon(stats.vM, n)}
+                          </span>
+                          <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        </div>
                       )}
-                      {/* PR + PRD summary */}
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {[meta.prSummary && `PRs ${meta.prSummary}`, meta.prdCount > 0 && `${meta.prdCount} PRDs`].filter(Boolean).join(', ')}
-                      </span>
-                      {/* Verification level badge */}
-                      <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
-                        {badge.label}
-                      </span>
                     </summary>
                     {/* Expanded PR table */}
                     <div className="border-t border-border/50 overflow-x-auto">
