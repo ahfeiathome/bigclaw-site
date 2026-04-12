@@ -41,7 +41,7 @@ export function parsePrdItems(content: string): PrdItem[] {
     if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('| ID ')) continue;
 
     const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-    if (cells.length < 5 || !cells[0].startsWith('PRD-')) continue;
+    if (cells.length < 5 || !cells[0].match(/^[A-Z]+-\d+$/)) continue;
 
     const statusRaw = cells[3].replace(/\*\*/g, '').trim();
     const status = (['Done', 'In Progress', 'Not Started', 'Deferred'].find(
