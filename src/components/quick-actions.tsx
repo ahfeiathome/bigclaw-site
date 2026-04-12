@@ -13,6 +13,7 @@ const ACTIONS: QuickAction[] = [
   { label: 'Preview: iris-studio', href: 'https://iris-studio.vercel.app', icon: '📱', external: true },
   { label: 'RADAR Dashboard', href: 'https://radar-bigclaw.vercel.app', icon: '📊', external: true },
   { label: 'Morning Report', href: '/dashboard/knowledge/ops/morning-brain', icon: '📋' },
+  { label: 'Ideas Backlog', href: '/dashboard/knowledge/knowledge/IDEAS_BACKLOG', icon: '💡' },
   { label: 'Sponsor Gates', href: '/dashboard/sponsor/todo', icon: '💳' },
 ];
 
