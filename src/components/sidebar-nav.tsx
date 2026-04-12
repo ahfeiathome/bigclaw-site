@@ -57,7 +57,7 @@ function SectionHeader({ label }: { label: string }) {
 const VERTICALS = [
   { label: 'Education: GrovaKid', href: '/dashboard/education' },
   { label: 'FinTech: RADAR', href: '/dashboard/fintech' },
-  { label: 'E-Commerce: iris-studio', href: '/dashboard/ecommerce' },
+  { label: 'E-Commerce: iris-studio · FFM', href: '/dashboard/ecommerce' },
   { label: 'Foundry: FC · KT · SC', href: '/dashboard/foundry' },
 ];
 

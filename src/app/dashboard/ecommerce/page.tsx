@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchRepoIssues } from '@/lib/github';
 import { SectionCard, SignalPill, StatusDot } from '@/components/dashboard';
 
