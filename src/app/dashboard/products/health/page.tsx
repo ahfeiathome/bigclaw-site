@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { fetchSDLCGatesMatrix, fetchSDLCViolations, fetchLearnings, fetchLessonsLearned } from '@/lib/github';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { SectionCard, SignalPill } from '@/components/dashboard';
