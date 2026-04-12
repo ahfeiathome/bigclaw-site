@@ -465,7 +465,10 @@ export async function fetchLatestCiRun(repo: string): Promise<GitHubCiRun | null
 }
 
 export async function fetchPrdTestMatrixForRepo(repo: string): Promise<string | null> {
-  return fetchRepoFile(repo, 'docs/product/PRD_TEST_MATRIX.md');
+  const matrix = await fetchRepoFile(repo, 'docs/product/PRD_TEST_MATRIX.md');
+  if (matrix) return matrix;
+  // Fallback: PRD_CHECKLIST.md also has PRD rows and can serve as test coverage source
+  return fetchRepoFile(repo, 'docs/product/PRD_CHECKLIST.md');
 }
 
 export function extractMichaelBlockers(

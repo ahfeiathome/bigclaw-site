@@ -50,8 +50,19 @@ function parseCompetitiveLog(content: string): { lastDate: string | null; change
   const changes: string[] = [];
 
   for (const line of lines) {
-    const dateMatch = line.match(/^##\s+(\d{4}-\d{2}-\d{2})/);
+    // Support both "## YYYY-MM-DD" heading format and "| YYYY-MM-DD | ..." table row format
+    const headingMatch = line.match(/^##\s+(\d{4}-\d{2}-\d{2})/);
+    const tableMatch = line.match(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/);
+    const dateMatch = headingMatch || tableMatch;
     if (dateMatch && !lastDate) lastDate = dateMatch[1];
+
+    // Table rows: extract "What changed" column (3rd pipe-delimited cell)
+    if (tableMatch && changes.length < 3 && !line.match(/^\|[\s-:|]+\|/)) {
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 3 && cells[1] && cells[2]) {
+        changes.push(`${cells[1]}: ${cells[2]}`);
+      }
+    }
 
     const bulletMatch = line.match(/^[-*]\s+(.+)/);
     if (bulletMatch && changes.length < 3) changes.push(bulletMatch[1].trim());
@@ -110,7 +121,7 @@ export async function fetchProductIntel(product: string): Promise<ProductIntel |
   ]);
 
   const s1 = s1Primary || s1Alt;
-  const s3 = s3Primary || s3Alt;
+  const s3 = s3Primary || s3Alt || s3Checklist;
   const prdForCompletion = s3Checklist || s3Alt || s3Primary;
 
   const compData = compLog ? parseCompetitiveLog(compLog) : { lastDate: null, changes: [] };
