@@ -193,14 +193,15 @@ export async function ProductPage(props: ProductPageProps) {
   }
 
   // Compute per-category verification stats from prdItems
-  interface CategoryStat { done: number; vG: number; vC: number; vM: number; total: number; }
+  interface CategoryStat { done: number; vCI: number; vG: number; vC: number; vM: number; total: number; }
   const categoryStats = new Map<string, CategoryStat>();
   if (prdItems) {
     for (const item of prdItems) {
-      if (!categoryStats.has(item.category)) categoryStats.set(item.category, { done: 0, vG: 0, vC: 0, vM: 0, total: 0 });
+      if (!categoryStats.has(item.category)) categoryStats.set(item.category, { done: 0, vCI: 0, vG: 0, vC: 0, vM: 0, total: 0 });
       const stat = categoryStats.get(item.category)!;
       stat.total++;
       if (item.status === 'Done') stat.done++;
+      if (item.verifyCI === '✅') stat.vCI++;
       if (item.verifyG === '✅') stat.vG++;
       if (item.verifyC === '✅') stat.vC++;
       if (item.verifyM === '✅') stat.vM++;
@@ -283,6 +284,21 @@ export async function ProductPage(props: ProductPageProps) {
                 : <span className="text-xs text-muted-foreground">—</span>}
             </div>
           </div>
+          {repoSlug && (
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide">User Guide</div>
+              <div className="mt-1">
+                <a
+                  href={`https://github.com/ahfeiathome/${repoSlug}/blob/main/docs/product/USER_GUIDE.md`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary no-underline hover:underline font-mono"
+                >
+                  docs/product/USER_GUIDE.md
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {(nextGate || blocker) && (

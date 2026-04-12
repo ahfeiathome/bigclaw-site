@@ -15,7 +15,8 @@ export interface PrdItem {
   status: 'Done' | 'In Progress' | 'Not Started' | 'Deferred';
   owner: string;
   github?: string;
-  // Verification columns: V-G (Gemini), V-C (Consultant), V-M (Michael)
+  // Verification columns: V-CI (CI pipeline), V-G (Gemini), V-C (Consultant), V-M (Michael)
+  verifyCI?: VerifyValue;
   verifyG?: VerifyValue;
   verifyC?: VerifyValue;
   verifyM?: VerifyValue;
@@ -55,13 +56,14 @@ export function PrdChecklist({ items, repoSlug }: Props) {
 
   // Category summary
   const categories = useMemo(() => {
-    const map = new Map<string, { done: number; vG: number; vC: number; vM: number; total: number }>();
+    const map = new Map<string, { done: number; vCI: number; vG: number; vC: number; vM: number; total: number }>();
     for (const item of items) {
       const cat = item.category;
-      if (!map.has(cat)) map.set(cat, { done: 0, vG: 0, vC: 0, vM: 0, total: 0 });
+      if (!map.has(cat)) map.set(cat, { done: 0, vCI: 0, vG: 0, vC: 0, vM: 0, total: 0 });
       const entry = map.get(cat)!;
       entry.total++;
       if (item.status === 'Done') entry.done++;
+      if (item.verifyCI === '✅') entry.vCI++;
       if (item.verifyG === '✅') entry.vG++;
       if (item.verifyC === '✅') entry.vC++;
       if (item.verifyM === '✅') entry.vM++;
@@ -79,12 +81,13 @@ export function PrdChecklist({ items, repoSlug }: Props) {
 
   // Overall counts
   const counts = useMemo(() => {
-    const c = { done: 0, vG: 0, vC: 0, vM: 0, inProgress: 0, notStarted: 0, deferred: 0 };
+    const c = { done: 0, vCI: 0, vG: 0, vC: 0, vM: 0, inProgress: 0, notStarted: 0, deferred: 0 };
     for (const item of items) {
       if (item.status === 'Done') c.done++;
       else if (item.status === 'In Progress') c.inProgress++;
       else if (item.status === 'Deferred') c.deferred++;
       else c.notStarted++;
+      if (item.verifyCI === '✅') c.vCI++;
       if (item.verifyG === '✅') c.vG++;
       if (item.verifyC === '✅') c.vC++;
       if (item.verifyM === '✅') c.vM++;
@@ -124,9 +127,10 @@ export function PrdChecklist({ items, repoSlug }: Props) {
             <thead>
               <tr className="text-muted-foreground border-b border-border bg-muted">
                 <th className="text-left py-2 pl-3 pr-2">Category</th>
-                <th className="text-right py-2 px-2">Done</th>
+                <th className="text-right py-2 px-2 text-[10px]" title="PRD item marked Done (developer self-reported)">Develop</th>
                 {hasTripleVerify ? (
                   <>
+                    <th className="text-right py-2 px-2 text-[10px]" title="CI pipeline passing for this feature (V-CI)">CI Test</th>
                     <th className="text-right py-2 px-2 text-[10px]" title="Gemini browser flow test (daily)">Flow Test</th>
                     <th className="text-right py-2 px-2 text-[10px]" title="Consultant code/file audit (monthly)">Code Review</th>
                     <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael acceptance test on device">User Test</th>
@@ -137,12 +141,13 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               </tr>
             </thead>
             <tbody>
-              {categories.map(([cat, { done, vG, vC, vM, total }], i) => (
+              {categories.map(([cat, { done, vCI, vG, vC, vM, total }], i) => (
                 <tr key={cat} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
                   <td className="py-1.5 pl-3 pr-2 text-foreground">{cat}</td>
                   <td className="py-1.5 px-2 text-right font-mono text-muted-foreground">{done}/{total}</td>
                   {hasTripleVerify ? (
                     <>
+                      <td className="py-1.5 px-2 text-right font-mono text-cyan-400">{vCI}</td>
                       <td className="py-1.5 px-2 text-right font-mono text-purple-400">{vG}</td>
                       <td className="py-1.5 px-2 text-right font-mono text-blue-400">{vC}</td>
                       <td className="py-1.5 pl-2 pr-3 text-right font-mono text-green-400">{vM}</td>
@@ -179,11 +184,15 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               <span className="text-xs text-foreground w-28 shrink-0 font-medium">{cat}</span>
               {/* Bar track with ghost Done bar + active verified bar */}
               <div className="flex-1 h-2.5 rounded-full relative bg-muted overflow-hidden">
-                {/* Ghost bar: Done % as faint white outline */}
+                {/* Ghost bar: Done % as faint background with right-edge marker */}
                 {donePct > pct && (
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full"
-                    style={{ width: `${donePct}%`, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}
+                    className="absolute inset-y-0 left-0 rounded-r-full"
+                    style={{
+                      width: `${donePct}%`,
+                      background: 'rgba(255,255,255,0.18)',
+                      borderRight: donePct < 100 ? '2px solid rgba(255,255,255,0.38)' : undefined,
+                    }}
                   />
                 )}
                 {/* Main bar: verified % */}
