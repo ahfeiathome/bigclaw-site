@@ -15,6 +15,7 @@ export default async function RehearsalProductPage() {
     pdlcStage: 'S3 DESIGN',
     status: 'active',
     description: 'Voice-first AI mock interview + verbal delivery feedback. Career prep — Education & Career sector.',
+    previewUrl: 'https://rehearsal-bigclaw.vercel.app',
     nextGate: 'S4 BUILD — Code writes PRD, creates repo, scaffolds Expo/RN',
     revenueModel: 'Apple IAP',
     prdItems,
