@@ -6,6 +6,7 @@ import { PrdChecklist, type PrdItem } from './prd-checklist';
 import { ProductIntelligencePanel } from './product-intelligence';
 import { IssueTrendChart } from './issues-trend-chart';
 import { fetchProductIntel } from '@/lib/product-intel';
+import { VmChecklist } from './vm-checklist';
 
 interface ProductPageProps {
   /** Product slug — used to fetch dynamic data from REGISTRY.md */
@@ -168,22 +169,19 @@ export async function ProductPage(props: ProductPageProps) {
   }
 
   // Compute per-release aggregate verification stats
-  // catCCount = items with verifyG === 'N/A' (can't be Gemini-tested; deferred to V-M)
-  // vGTotal / vCTotal = items where that column is not N/A (the testable denominator)
-  // failCount = non-Cat-C items with explicit V-G ❌ or V-C ❌ (actively failed, not just untested)
+  // Release traffic-light computation
+  // Cat-C items (verifyG === 'N/A') are excluded from V-G and V-C counts
   interface ReleaseStats {
     prSummary: string;
-    prdCount: number;    // total matched PRD items
-    vGTotal: number;     // items with non-N/A V-G
-    vCTotal: number;     // items with non-N/A V-C
-    vGCount: number;     // V-G ✅ count
-    vCCount: number;     // V-C ✅ count
-    vMCount: number;     // V-M ✅ count (denominator = prdCount)
-    catCCount: number;   // V-G === 'N/A' (Cat C — deferred to V-M)
-    failCount: number;   // explicit V-G ❌ or V-C ❌ items
+    prdCount: number;
+    vGTotal: number; vCTotal: number;
+    vGPass: number;  vCPass: number;  vMPass: number;
+    vGFail: number;  vCFail: number;
     planned: boolean;
+    matchedItems: NonNullable<typeof prdItems>;
   }
-  type ReleaseReadiness = 'planned' | 'no-prds' | 'blocked' | 'not-verified' | 'awaiting-michael' | 'ready';
+  type ReleaseColor = 'green' | 'yellow' | 'red' | 'gray';
+  type ReleaseAction = 'review' | 'done' | 'fix' | 'waiting-gemini' | 'waiting-consultant' | 'waiting-both' | 'planned';
 
   function computeReleaseStats(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseStats {
     const prNums = rel.rows.map(r => r.pr).filter(p => /^#\d+$/.test(p.trim()));
@@ -195,62 +193,37 @@ export async function ProductPage(props: ProductPageProps) {
     const hasUnstarted = rel.rows.some(r => r.status.includes('🔲') || r.status.toLowerCase().includes('not started'));
     const allMerged = rel.rows.every(r => r.status.includes('✅') || r.status.includes('⚠️'));
     const planned = hasUnstarted || !allMerged;
-    const matched = items ? items.filter(i => uniqueIds.includes(i.id)) : [];
-    const prdCount = matched.length > 0 ? matched.length : uniqueIds.length;
-    // Cat-C = items where V-G is N/A (Gemini can't test; deferred directly to V-M)
-    const catCCount = matched.filter(i => i.verifyG === 'N/A').length;
-    const vGItems = matched.filter(i => i.verifyG !== 'N/A' && i.verifyG !== undefined);
-    const vCItems = matched.filter(i => i.verifyC !== 'N/A' && i.verifyC !== undefined);
-    const failCount =
-      vGItems.filter(i => i.verifyG === '❌').length +
-      vCItems.filter(i => i.verifyC === '❌').length;
+    const matchedItems = items ? items.filter(i => uniqueIds.includes(i.id)) : [];
+    const prdCount = matchedItems.length > 0 ? matchedItems.length : uniqueIds.length;
+    const vGItems = matchedItems.filter(i => i.verifyG !== 'N/A' && i.verifyG !== undefined);
+    const vCItems = matchedItems.filter(i => i.verifyC !== 'N/A' && i.verifyC !== undefined);
     return {
-      prSummary, prdCount, planned, catCCount, failCount,
-      vGTotal: vGItems.length,
-      vCTotal: vCItems.length,
-      vGCount: vGItems.filter(i => i.verifyG === '✅').length,
-      vCCount: vCItems.filter(i => i.verifyC === '✅').length,
-      vMCount: matched.filter(i => i.verifyM === '✅').length,
+      prSummary, prdCount, planned, matchedItems,
+      vGTotal: vGItems.length,       vCTotal: vCItems.length,
+      vGPass: vGItems.filter(i => i.verifyG === '✅').length,
+      vCPass: vCItems.filter(i => i.verifyC === '✅').length,
+      vMPass: matchedItems.filter(i => i.verifyM === '✅').length,
+      vGFail: vGItems.filter(i => i.verifyG === '❌').length,
+      vCFail: vCItems.filter(i => i.verifyC === '❌').length,
     };
   }
 
   const releasesStats = releases.map(rel => computeReleaseStats(rel, prdItems));
 
-  function releaseReadiness(s: ReleaseStats): ReleaseReadiness {
-    if (s.planned) return 'planned';
-    if (s.prdCount === 0) return 'no-prds';
-    // Explicit fails in V-G or V-C block the release
-    if (s.failCount > 0) return 'blocked';
-    // All V-M complete
-    if (s.vMCount === s.prdCount) return 'ready';
-    // All testable (non-Cat-C) items cleared V-G + V-C — only Michael's review remains
-    if (s.vGCount === s.vGTotal && s.vCCount === s.vCTotal) return 'awaiting-michael';
-    // In-progress: some verification done but not complete
-    return 'not-verified';
-  }
-
-  function readinessBadge(r: ReleaseReadiness, s: ReleaseStats): { label: string; className: string } {
-    switch (r) {
-      case 'planned':          return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
-      case 'no-prds':          return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
-      case 'blocked':          return { label: `🔴 Blocked — ${s.failCount} item${s.failCount !== 1 ? 's' : ''} failed verification`, className: 'bg-red-500/15 text-red-400' };
-      case 'not-verified':     return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
-      case 'awaiting-michael': return { label: '🟡 Awaiting Michael Review', className: 'bg-amber-500/15 text-amber-400' };
-      case 'ready':            return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
-    }
-  }
-
-  function verifyColIcon(count: number, total: number): string {
-    if (total === 0) return '';
-    if (count === 0) return '❌';
-    if (count === total) return '✅';
-    return '⚠️';
-  }
-
-  function verifyColColor(count: number, total: number): string {
-    if (total === 0 || count === 0) return 'text-red-400/80';
-    if (count === total) return 'text-green-400/80';
-    return 'text-amber-400/80';
+  // Three traffic light emoji per column + overall color + action
+  function releaseTrafficLights(s: ReleaseStats): { vg: string; vc: string; vm: string; color: ReleaseColor; action: ReleaseAction } {
+    if (s.planned) return { vg: '—', vc: '—', vm: '—', color: 'gray', action: 'planned' };
+    const vg = s.vGTotal === 0 ? '—' : s.vGFail > 0 ? '❌' : s.vGPass === s.vGTotal ? '✅' : '⚠️';
+    const vc = s.vCTotal === 0 ? '—' : s.vCFail > 0 ? '❌' : s.vCPass === s.vCTotal ? '✅' : '⚠️';
+    const vm = s.prdCount === 0 ? '—' : s.vMPass === s.prdCount ? '✅' : '⏳';
+    const hasFail = s.vGFail > 0 || s.vCFail > 0;
+    const vgOk = vg === '✅' || vg === '—';
+    const vcOk = vc === '✅' || vc === '—';
+    if (hasFail)       return { vg, vc, vm, color: 'red',    action: 'fix' };
+    if (vm === '✅')   return { vg, vc, vm, color: 'green',  action: 'done' };
+    if (vgOk && vcOk)  return { vg, vc, vm, color: 'green',  action: 'review' };
+    const action: ReleaseAction = !vgOk && !vcOk ? 'waiting-both' : !vgOk ? 'waiting-gemini' : 'waiting-consultant';
+    return { vg, vc, vm, color: 'yellow', action };
   }
 
   // Parse Verification Report rows
@@ -509,106 +482,97 @@ export async function ProductPage(props: ProductPageProps) {
             <div className="space-y-1">
               {releases.map((rel, ri) => {
                 const stats = releasesStats[ri];
-                const readiness = releaseReadiness(stats);
-                const badge = readinessBadge(readiness, stats);
-                const showVerifyRow = !stats.planned && stats.prdCount > 0;
+                const { vg, vc, vm, color, action } = releaseTrafficLights(stats);
+                const totalFails = stats.vGFail + stats.vCFail;
+                // Items for V-M checklist: exclude those with explicit upstream fails
+                const vmItems = stats.matchedItems.filter(i => i.verifyG !== '❌' && i.verifyC !== '❌');
+                const borderColor = color === 'green' ? 'rgb(34 197 94 / 0.4)' : color === 'yellow' ? 'rgb(245 158 11 / 0.4)' : color === 'red' ? 'rgb(239 68 68 / 0.4)' : 'hsl(var(--border))';
+                const dotCls = color === 'green' ? 'bg-green-400' : color === 'yellow' ? 'bg-amber-400' : color === 'red' ? 'bg-red-400' : 'bg-muted-foreground/40';
                 return (
-                  <details key={rel.version} className="group rounded-lg border border-border/50 overflow-hidden">
-                    <summary className="flex flex-col px-3 py-2.5 cursor-pointer select-none hover:bg-muted/60 list-none [&::-webkit-details-marker]:hidden gap-1">
-                      {/* Row 1: chevron + version + subtitle + PR/PRD count + badge (if no verify row) */}
-                      <div className="flex items-center gap-2">
-                        <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
-                        {rel.subtitle && (
-                          <span className="text-xs text-muted-foreground hidden sm:inline">
-                            {rel.subtitle.replace(/^[""]|[""]$/g, '')}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          {[stats.prSummary && `PRs ${stats.prSummary}`, stats.prdCount > 0 && `${stats.prdCount} PRDs`].filter(Boolean).join(', ')}
+                  <details key={rel.version} className="group overflow-hidden rounded-lg border border-border/50 border-l-2" style={{ borderLeftColor: borderColor }}>
+                    {/* ── ONE-LINE SUMMARY ── */}
+                    <summary className="flex items-center gap-2.5 px-3 py-2 cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotCls}`} />
+                      <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                      <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
+                      {rel.subtitle && (
+                        <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[180px]">
+                          {rel.subtitle.replace(/^[""]|[""]$/g, '')}
                         </span>
-                        {!showVerifyRow && (
-                          <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
-                            {badge.label}
+                      )}
+                      {/* Traffic lights */}
+                      <div className="flex items-center gap-1 ml-auto shrink-0">
+                        <span className="text-[9px] text-muted-foreground font-mono">V-G</span>
+                        <span className="text-sm leading-none">{vg}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono ml-2">V-C</span>
+                        <span className="text-sm leading-none">{vc}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono ml-2">V-M</span>
+                        <span className="text-sm leading-none">{vm}</span>
+                      </div>
+                      {/* Action */}
+                      <div className="shrink-0 ml-3 min-w-[120px] text-right">
+                        {action === 'review' && (previewUrl
+                          ? <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded-md bg-green-500/15 text-green-400 font-medium no-underline hover:bg-green-500/25 whitespace-nowrap transition-colors">Review on Phone ↗</a>
+                          : <span className="text-[10px] text-green-400/60 whitespace-nowrap">Awaiting preview URL</span>
+                        )}
+                        {action === 'done' && <span className="text-[10px] px-2 py-1 rounded-md bg-green-500/20 text-green-300 font-bold whitespace-nowrap">✅ Ready</span>}
+                        {action === 'fix' && <span className="text-[10px] text-red-400/80 whitespace-nowrap">Fix {totalFails} item{totalFails !== 1 ? 's' : ''} first</span>}
+                        {(action === 'waiting-both' || action === 'waiting-gemini' || action === 'waiting-consultant') && (
+                          <span className="text-[10px] text-amber-400/70 whitespace-nowrap">
+                            {action === 'waiting-both' ? 'Waiting on Gemini + Consultant' : action === 'waiting-gemini' ? 'Waiting on Gemini' : 'Waiting on Consultant'}
                           </span>
                         )}
+                        {action === 'planned' && <span className="text-[10px] text-muted-foreground">Planned</span>}
                       </div>
-                      {/* Row 2: per-column verification counts + overall readiness badge */}
-                      {showVerifyRow && (
-                        <div className="flex items-center gap-2 pl-5 flex-wrap">
-                          {/* V-G: Flow Test — denominator excludes Cat-C (N/A) items */}
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vGCount, stats.vGTotal)}`}>
-                            Flow Test: {stats.vGCount}/{stats.vGTotal} {verifyColIcon(stats.vGCount, stats.vGTotal)}
-                            {stats.catCCount > 0 && (
-                              <span className="text-muted-foreground"> ({stats.catCCount} deferred to V-M)</span>
-                            )}
-                          </span>
-                          <span className="text-[10px] text-border">|</span>
-                          {/* V-C: Code Review */}
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vCCount, stats.vCTotal)}`}>
-                            Code Review: {stats.vCCount}/{stats.vCTotal} {verifyColIcon(stats.vCCount, stats.vCTotal)}
-                          </span>
-                          <span className="text-[10px] text-border">|</span>
-                          {/* V-M: User Test — denominator is all items (including Cat-C) */}
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vMCount, stats.prdCount)}`}>
-                            User Test: {stats.vMCount}/{stats.prdCount} {verifyColIcon(stats.vMCount, stats.prdCount)}
-                          </span>
-                          <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
-                            {badge.label}
-                          </span>
-                        </div>
-                      )}
-                      {/* Row 3: action prompt — tells Michael exactly what to do */}
-                      {readiness === 'awaiting-michael' && (
-                        <div className="pl-5 text-[10px] text-muted-foreground">
-                          {'→ Review preview at '}
-                          {previewUrl
-                            ? <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-primary no-underline hover:underline">{previewUrl.replace(/^https?:\/\//, '')}</a>
-                            : <span className="font-mono text-muted-foreground">preview URL</span>
-                          }
-                          {', then say '}
-                          <span className="italic text-foreground/70">"Approved. Merge main to release."</span>
-                        </div>
-                      )}
-                      {readiness === 'blocked' && (
-                        <div className="pl-5 text-[10px] text-red-400/70">
-                          → {stats.failCount} PRD item{stats.failCount !== 1 ? 's' : ''} failed verification. Felix needs to investigate before this release can proceed.
-                        </div>
-                      )}
-                      {readiness === 'ready' && (
-                        <div className="pl-5 text-[10px] text-green-400/70">
-                          → All verification gates passed. Say "Approved. Merge main to release."
-                        </div>
-                      )}
                     </summary>
-                    {/* Expanded PR table */}
-                    <div className="border-t border-border/50 overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="text-muted-foreground border-b border-border bg-muted/50">
-                            <th className="text-left py-2 pl-3 pr-2">PR</th>
-                            <th className="text-left py-2 px-2">What</th>
-                            <th className="text-left py-2 px-2">PRDs</th>
-                            <th className="text-left py-2 pl-2 pr-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rel.rows.map((row, i) => (
-                            <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
-                              <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
-                              <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
-                              <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
-                              <td className="py-1.5 pl-2 pr-3">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
-                                  {row.status}
-                                </span>
-                              </td>
-                            </tr>
+
+                    {/* ── EXPANDED CONTENT ── */}
+                    <div className="border-t border-border/50">
+                      {/* Section 1: V-M Test Checklist (top, prominent — Michael's view) */}
+                      {vmItems.length > 0 && repoSlug && (
+                        <VmChecklist repoSlug={repoSlug} items={vmItems.map(i => ({
+                          id: i.id, item: i.item,
+                          verifyG: i.verifyG, verifyC: i.verifyC, verifyM: i.verifyM,
+                        }))} />
+                      )}
+
+                      {/* Section 2: PR Details (collapsed sub-accordion) */}
+                      <details className="group/pr">
+                        <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none hover:bg-muted/30 list-none [&::-webkit-details-marker]:hidden border-t border-border/40 text-[10px] text-muted-foreground">
+                          <svg className="w-2.5 h-2.5 shrink-0 transition-transform group-open/pr:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                          PR Details ({rel.rows.length} PRs{stats.prSummary ? ` · ${stats.prSummary}` : ''})
+                        </summary>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-muted-foreground border-b border-border bg-muted/50">
+                                <th className="text-left py-2 pl-3 pr-2">PR</th>
+                                <th className="text-left py-2 px-2">What</th>
+                                <th className="text-left py-2 px-2">PRDs</th>
+                                <th className="text-left py-2 pl-2 pr-3">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rel.rows.map((row, i) => (
+                                <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
+                                  <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
+                                  <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
+                                  <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
+                                  <td className="py-1.5 pl-2 pr-3">
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                                      {row.status}
+                                    </span>
+                                  </td>
+                                </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                      </details>
                     </div>
                   </details>
                 );
