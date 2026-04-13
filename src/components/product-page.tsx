@@ -168,8 +168,20 @@ export async function ProductPage(props: ProductPageProps) {
   }
 
   // Compute per-release aggregate verification stats
-  interface ReleaseStats { prSummary: string; prdCount: number; vG: number; vC: number; vM: number; planned: boolean; }
-  type ReleaseReadiness = 'planned' | 'no-prds' | 'not-ready' | 'partial' | 'ready';
+  // catCCount = items with verifyG === 'N/A' (can't be Gemini-tested; deferred to V-M)
+  // vGTotal / vCTotal = items where that column is not N/A (the testable denominator)
+  interface ReleaseStats {
+    prSummary: string;
+    prdCount: number;    // total matched PRD items
+    vGTotal: number;     // items with non-N/A V-G
+    vCTotal: number;     // items with non-N/A V-C
+    vGCount: number;     // V-G ✅ count
+    vCCount: number;     // V-C ✅ count
+    vMCount: number;     // V-M ✅ count (denominator = prdCount)
+    catCCount: number;   // V-G === 'N/A' (Cat C — deferred to V-M)
+    planned: boolean;
+  }
+  type ReleaseReadiness = 'planned' | 'no-prds' | 'not-ready' | 'partial' | 'awaiting-vm' | 'ready';
 
   function computeReleaseStats(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseStats {
     const prNums = rel.rows.map(r => r.pr).filter(p => /^#\d+$/.test(p.trim()));
@@ -183,10 +195,18 @@ export async function ProductPage(props: ProductPageProps) {
     const planned = hasUnstarted || !allMerged;
     const matched = items ? items.filter(i => uniqueIds.includes(i.id)) : [];
     const prdCount = matched.length > 0 ? matched.length : uniqueIds.length;
-    const vG = matched.filter(i => i.verifyG === '✅').length;
-    const vC = matched.filter(i => i.verifyC === '✅').length;
-    const vM = matched.filter(i => i.verifyM === '✅').length;
-    return { prSummary, prdCount, vG, vC, vM, planned };
+    // Cat-C = items where V-G is N/A (Gemini can't test; deferred directly to V-M)
+    const catCCount = matched.filter(i => i.verifyG === 'N/A').length;
+    const vGItems = matched.filter(i => i.verifyG !== 'N/A' && i.verifyG !== undefined);
+    const vCItems = matched.filter(i => i.verifyC !== 'N/A' && i.verifyC !== undefined);
+    return {
+      prSummary, prdCount, planned, catCCount,
+      vGTotal: vGItems.length,
+      vCTotal: vCItems.length,
+      vGCount: vGItems.filter(i => i.verifyG === '✅').length,
+      vCCount: vCItems.filter(i => i.verifyC === '✅').length,
+      vMCount: matched.filter(i => i.verifyM === '✅').length,
+    };
   }
 
   const releasesStats = releases.map(rel => computeReleaseStats(rel, prdItems));
@@ -194,24 +214,28 @@ export async function ProductPage(props: ProductPageProps) {
   function releaseReadiness(s: ReleaseStats): ReleaseReadiness {
     if (s.planned) return 'planned';
     if (s.prdCount === 0) return 'no-prds';
-    const n = s.prdCount;
-    if (s.vG === n && s.vC === n && s.vM === n) return 'ready';
-    if (s.vG === 0 || s.vC === 0 || s.vM === 0) return 'not-ready';
+    if (s.vMCount === s.prdCount) return 'ready';
+    // All testable (non-Cat-C) items have passed V-G + V-C — only V-M remains
+    if (s.vGCount === s.vGTotal && s.vCCount === s.vCTotal) return 'awaiting-vm';
+    // Any blocking column still at zero
+    if (s.vGCount === 0 || s.vCCount === 0) return 'not-ready';
     return 'partial';
   }
 
   function readinessBadge(r: ReleaseReadiness): { label: string; className: string } {
     switch (r) {
-      case 'planned':   return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
-      case 'no-prds':   return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
-      case 'not-ready': return { label: '🔴 Not Ready for Release', className: 'bg-red-500/15 text-red-400' };
-      case 'partial':   return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
-      case 'ready':     return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
+      case 'planned':     return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
+      case 'no-prds':     return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
+      case 'not-ready':   return { label: '🔴 Not Ready for Release', className: 'bg-red-500/15 text-red-400' };
+      case 'partial':     return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
+      case 'awaiting-vm': return { label: '🟡 Awaiting V-M', className: 'bg-amber-500/15 text-amber-400' };
+      case 'ready':       return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
     }
   }
 
   function verifyColIcon(count: number, total: number): string {
-    if (total === 0 || count === 0) return '❌';
+    if (total === 0) return '';
+    if (count === 0) return '❌';
     if (count === total) return '✅';
     return '⚠️';
   }
@@ -481,7 +505,6 @@ export async function ProductPage(props: ProductPageProps) {
                 const readiness = releaseReadiness(stats);
                 const badge = readinessBadge(readiness);
                 const showVerifyRow = !stats.planned && stats.prdCount > 0;
-                const n = stats.prdCount;
                 return (
                   <details key={rel.version} className="group rounded-lg border border-border/50 overflow-hidden">
                     <summary className="flex flex-col px-3 py-2.5 cursor-pointer select-none hover:bg-muted/60 list-none [&::-webkit-details-marker]:hidden gap-1">
@@ -497,7 +520,7 @@ export async function ProductPage(props: ProductPageProps) {
                           </span>
                         )}
                         <span className="text-[10px] text-muted-foreground font-mono">
-                          {[stats.prSummary && `PRs ${stats.prSummary}`, n > 0 && `${n} PRDs`].filter(Boolean).join(', ')}
+                          {[stats.prSummary && `PRs ${stats.prSummary}`, stats.prdCount > 0 && `${stats.prdCount} PRDs`].filter(Boolean).join(', ')}
                         </span>
                         {!showVerifyRow && (
                           <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
@@ -508,16 +531,22 @@ export async function ProductPage(props: ProductPageProps) {
                       {/* Row 2: per-column verification counts + overall readiness badge */}
                       {showVerifyRow && (
                         <div className="flex items-center gap-2 pl-5 flex-wrap">
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vG, n)}`}>
-                            Flow Test: {stats.vG}/{n} {verifyColIcon(stats.vG, n)}
+                          {/* V-G: Flow Test — denominator excludes Cat-C (N/A) items */}
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vGCount, stats.vGTotal)}`}>
+                            Flow Test: {stats.vGCount}/{stats.vGTotal} {verifyColIcon(stats.vGCount, stats.vGTotal)}
+                            {stats.catCCount > 0 && (
+                              <span className="text-muted-foreground"> ({stats.catCCount} deferred to V-M)</span>
+                            )}
                           </span>
                           <span className="text-[10px] text-border">|</span>
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vC, n)}`}>
-                            Code Review: {stats.vC}/{n} {verifyColIcon(stats.vC, n)}
+                          {/* V-C: Code Review */}
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vCCount, stats.vCTotal)}`}>
+                            Code Review: {stats.vCCount}/{stats.vCTotal} {verifyColIcon(stats.vCCount, stats.vCTotal)}
                           </span>
                           <span className="text-[10px] text-border">|</span>
-                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vM, n)}`}>
-                            User Test: {stats.vM}/{n} {verifyColIcon(stats.vM, n)}
+                          {/* V-M: User Test — denominator is all items (including Cat-C) */}
+                          <span className={`text-[10px] font-mono ${verifyColColor(stats.vMCount, stats.prdCount)}`}>
+                            User Test: {stats.vMCount}/{stats.prdCount} {verifyColIcon(stats.vMCount, stats.prdCount)}
                           </span>
                           <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
                             {badge.label}
