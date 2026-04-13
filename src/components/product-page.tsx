@@ -170,6 +170,7 @@ export async function ProductPage(props: ProductPageProps) {
   // Compute per-release aggregate verification stats
   // catCCount = items with verifyG === 'N/A' (can't be Gemini-tested; deferred to V-M)
   // vGTotal / vCTotal = items where that column is not N/A (the testable denominator)
+  // failCount = non-Cat-C items with explicit V-G ❌ or V-C ❌ (actively failed, not just untested)
   interface ReleaseStats {
     prSummary: string;
     prdCount: number;    // total matched PRD items
@@ -179,9 +180,10 @@ export async function ProductPage(props: ProductPageProps) {
     vCCount: number;     // V-C ✅ count
     vMCount: number;     // V-M ✅ count (denominator = prdCount)
     catCCount: number;   // V-G === 'N/A' (Cat C — deferred to V-M)
+    failCount: number;   // explicit V-G ❌ or V-C ❌ items
     planned: boolean;
   }
-  type ReleaseReadiness = 'planned' | 'no-prds' | 'not-ready' | 'partial' | 'awaiting-vm' | 'ready';
+  type ReleaseReadiness = 'planned' | 'no-prds' | 'blocked' | 'not-verified' | 'awaiting-michael' | 'ready';
 
   function computeReleaseStats(rel: { version: string; subtitle: string; rows: ReleaseRow[] }, items: typeof prdItems): ReleaseStats {
     const prNums = rel.rows.map(r => r.pr).filter(p => /^#\d+$/.test(p.trim()));
@@ -199,8 +201,11 @@ export async function ProductPage(props: ProductPageProps) {
     const catCCount = matched.filter(i => i.verifyG === 'N/A').length;
     const vGItems = matched.filter(i => i.verifyG !== 'N/A' && i.verifyG !== undefined);
     const vCItems = matched.filter(i => i.verifyC !== 'N/A' && i.verifyC !== undefined);
+    const failCount =
+      vGItems.filter(i => i.verifyG === '❌').length +
+      vCItems.filter(i => i.verifyC === '❌').length;
     return {
-      prSummary, prdCount, planned, catCCount,
+      prSummary, prdCount, planned, catCCount, failCount,
       vGTotal: vGItems.length,
       vCTotal: vCItems.length,
       vGCount: vGItems.filter(i => i.verifyG === '✅').length,
@@ -214,22 +219,24 @@ export async function ProductPage(props: ProductPageProps) {
   function releaseReadiness(s: ReleaseStats): ReleaseReadiness {
     if (s.planned) return 'planned';
     if (s.prdCount === 0) return 'no-prds';
+    // Explicit fails in V-G or V-C block the release
+    if (s.failCount > 0) return 'blocked';
+    // All V-M complete
     if (s.vMCount === s.prdCount) return 'ready';
-    // All testable (non-Cat-C) items have passed V-G + V-C — only V-M remains
-    if (s.vGCount === s.vGTotal && s.vCCount === s.vCTotal) return 'awaiting-vm';
-    // Any blocking column still at zero
-    if (s.vGCount === 0 || s.vCCount === 0) return 'not-ready';
-    return 'partial';
+    // All testable (non-Cat-C) items cleared V-G + V-C — only Michael's review remains
+    if (s.vGCount === s.vGTotal && s.vCCount === s.vCTotal) return 'awaiting-michael';
+    // In-progress: some verification done but not complete
+    return 'not-verified';
   }
 
-  function readinessBadge(r: ReleaseReadiness): { label: string; className: string } {
+  function readinessBadge(r: ReleaseReadiness, s: ReleaseStats): { label: string; className: string } {
     switch (r) {
-      case 'planned':     return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
-      case 'no-prds':     return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
-      case 'not-ready':   return { label: '🔴 Not Ready for Release', className: 'bg-red-500/15 text-red-400' };
-      case 'partial':     return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
-      case 'awaiting-vm': return { label: '🟡 Awaiting V-M', className: 'bg-amber-500/15 text-amber-400' };
-      case 'ready':       return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
+      case 'planned':          return { label: '⬜ Planned', className: 'bg-muted text-muted-foreground' };
+      case 'no-prds':          return { label: '🟡 Merged to main', className: 'bg-amber-500/15 text-amber-400' };
+      case 'blocked':          return { label: `🔴 Blocked — ${s.failCount} item${s.failCount !== 1 ? 's' : ''} failed verification`, className: 'bg-red-500/15 text-red-400' };
+      case 'not-verified':     return { label: '🟡 Partially Verified', className: 'bg-amber-500/15 text-amber-400' };
+      case 'awaiting-michael': return { label: '🟡 Awaiting Michael Review', className: 'bg-amber-500/15 text-amber-400' };
+      case 'ready':            return { label: '🟢 Ready for Release', className: 'bg-green-500/15 text-green-400 font-bold' };
     }
   }
 
@@ -503,7 +510,7 @@ export async function ProductPage(props: ProductPageProps) {
               {releases.map((rel, ri) => {
                 const stats = releasesStats[ri];
                 const readiness = releaseReadiness(stats);
-                const badge = readinessBadge(readiness);
+                const badge = readinessBadge(readiness, stats);
                 const showVerifyRow = !stats.planned && stats.prdCount > 0;
                 return (
                   <details key={rel.version} className="group rounded-lg border border-border/50 overflow-hidden">
@@ -551,6 +558,28 @@ export async function ProductPage(props: ProductPageProps) {
                           <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.className}`}>
                             {badge.label}
                           </span>
+                        </div>
+                      )}
+                      {/* Row 3: action prompt — tells Michael exactly what to do */}
+                      {readiness === 'awaiting-michael' && (
+                        <div className="pl-5 text-[10px] text-muted-foreground">
+                          {'→ Review preview at '}
+                          {previewUrl
+                            ? <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-primary no-underline hover:underline">{previewUrl.replace(/^https?:\/\//, '')}</a>
+                            : <span className="font-mono text-muted-foreground">preview URL</span>
+                          }
+                          {', then say '}
+                          <span className="italic text-foreground/70">"Approved. Merge main to release."</span>
+                        </div>
+                      )}
+                      {readiness === 'blocked' && (
+                        <div className="pl-5 text-[10px] text-red-400/70">
+                          → {stats.failCount} PRD item{stats.failCount !== 1 ? 's' : ''} failed verification. Felix needs to investigate before this release can proceed.
+                        </div>
+                      )}
+                      {readiness === 'ready' && (
+                        <div className="pl-5 text-[10px] text-green-400/70">
+                          → All verification gates passed. Say "Approved. Merge main to release."
                         </div>
                       )}
                     </summary>
