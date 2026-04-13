@@ -88,7 +88,7 @@ function parseDependencyChains(content: string): string[] {
   return codeMatch[1].split('\n').filter(l => l.trim());
 }
 
-export default async function SponsorTodoPage() {
+export default async function FounderTodoPage() {
   const todoMd = await fetchMichaelTodo();
 
   if (!todoMd) {
@@ -119,7 +119,7 @@ export default async function SponsorTodoPage() {
       <div className="mb-6 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Sponsor TODO</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Founder TODO</h1>
             <SignalPill label={`${totalItems} items`} tone="warning" />
           </div>
           <ViewSource repo="bigclaw-ai" path="founder/FOUNDER_TODO.md" />
@@ -155,7 +155,7 @@ export default async function SponsorTodoPage() {
 
       {/* This Week — always expanded */}
       {thisWeek.length > 0 && (
-        <SectionCard title="This Week (April 7-11)" className="mb-6">
+        <SectionCard title="This Week" className="mb-6">
           {thisWeek.map((item, i) => <TodoRow key={i} item={item} />)}
         </SectionCard>
       )}
