@@ -130,10 +130,9 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                 <th className="text-right py-2 px-2 text-[10px]" title="PRD item marked Done (developer self-reported)">Develop</th>
                 {hasTripleVerify ? (
                   <>
-                    <th className="text-right py-2 px-2 text-[10px]" title="CI pipeline passing for this feature (V-CI)">CI Test</th>
-                    <th className="text-right py-2 px-2 text-[10px]" title="Gemini browser flow test (daily)">Flow Test</th>
-                    <th className="text-right py-2 px-2 text-[10px]" title="Consultant code/file audit (monthly)">Code Review</th>
-                    <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael acceptance test on device">User Test</th>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Gemini browser flow test (daily)">V-G</th>
+                    <th className="text-right py-2 px-2 text-[10px]" title="Consultant code/file audit (monthly)">V-C</th>
+                    <th className="text-right py-2 pl-2 pr-3 text-[10px]" title="Michael acceptance test on device">V-M</th>
                   </>
                 ) : (
                   <th className="text-right py-2 pl-2 pr-3">Verified</th>
@@ -147,7 +146,6 @@ export function PrdChecklist({ items, repoSlug }: Props) {
                   <td className="py-1.5 px-2 text-right font-mono text-muted-foreground">{done}/{total}</td>
                   {hasTripleVerify ? (
                     <>
-                      <td className="py-1.5 px-2 text-right font-mono text-cyan-400">{vCI}</td>
                       <td className="py-1.5 px-2 text-right font-mono text-purple-400">{vG}</td>
                       <td className="py-1.5 px-2 text-right font-mono text-blue-400">{vC}</td>
                       <td className="py-1.5 pl-2 pr-3 text-right font-mono text-green-400">{vM}</td>
@@ -290,9 +288,9 @@ export function PrdChecklist({ items, repoSlug }: Props) {
               <th className="text-left py-2.5 px-2">PR</th>
               {hasTripleVerify ? (
                 <>
-                  <th className="text-center py-2.5 px-1 text-[10px]" title="Gemini browser flow test (daily)">Flow</th>
-                  <th className="text-center py-2.5 px-1 text-[10px]" title="Consultant code/file audit (monthly)">Review</th>
-                  <th className="text-center py-2.5 pl-1 pr-3 text-[10px]" title="Michael acceptance test on device">User</th>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Gemini browser flow test (daily)">V-G</th>
+                  <th className="text-center py-2.5 px-1 text-[10px]" title="Consultant code/file audit (monthly)">V-C</th>
+                  <th className="text-center py-2.5 pl-1 pr-3 text-[10px]" title="Michael acceptance test on device">V-M</th>
                 </>
               ) : (
                 <th className="text-left py-2.5 pl-2 pr-3">Verified</th>
