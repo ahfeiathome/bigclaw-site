@@ -75,6 +75,11 @@ export function MoneyActionChecklist({ initialItems }: Props) {
               <span className="text-base leading-none">{typeIcon(item.type)}</span>
               <span className="text-sm font-medium text-foreground">{item.item}</span>
               <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${typeBg(item.type)}`}>{item.type}</span>
+              {item.ageDays !== undefined && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${item.ageDays >= 7 ? 'bg-red-500/15 text-red-400' : item.ageDays >= 3 ? 'bg-amber-500/15 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                  {item.ageDays}d
+                </span>
+              )}
             </div>
             {item.unblocks && (
               <p className="text-xs text-muted-foreground ml-6">Unblocks: {item.unblocks}</p>
