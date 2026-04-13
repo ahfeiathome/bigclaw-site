@@ -5,6 +5,7 @@ const INTERNAL_PREFIXES = [
   '/dashboard/departments/operations',
   '/dashboard/departments/infrastructure',
   '/dashboard/sponsor',
+  '/dashboard/founder',
   '/dashboard/settings',
   '/dashboard/forge',
   '/dashboard/axiom',

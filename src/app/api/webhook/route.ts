@@ -10,6 +10,7 @@ const NOTIFY_PATTERNS = [
   /docs\/specs\//,
   /knowledge\//,
   /sponsor\//,
+  /founder\//,
   /PATROL_REPORT\.md/,
   /FINANCE\.md/,
   /RADAR_DASHBOARD\.md/,
@@ -26,7 +27,7 @@ function mapToDashboardUrl(filePath: string, repo: string): string | null {
     const slug = filePath.split('knowledge/')[1]?.replace('.md', '');
     return slug ? `${DASHBOARD_URL}/dashboard/departments/knowledge/${slug}` : null;
   }
-  if (filePath.includes('sponsor/')) return `${DASHBOARD_URL}/dashboard/sponsor/todo`;
+  if (filePath.includes('founder/') || filePath.includes('sponsor/')) return `${DASHBOARD_URL}/dashboard/sponsor/todo`;
   return null;
 }
 
