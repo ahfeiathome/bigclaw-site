@@ -193,6 +193,71 @@ export default function ProcessPage() {
             <p>Any bug found triggers: fix → add regression test row to Test Matrix → CI confirms fix → back to Gemini + Michael verification. Test matrix only grows, never shrinks.</p>
           </div>
         </div>
+        {/* Development & Release Flow — 7-step pipeline */}
+        <div className="mt-6 border-t border-border/30 pt-5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Development &amp; Release Flow</div>
+          <div className="overflow-x-auto">
+            <div className="flex items-start gap-1 min-w-max">
+              {[
+                { label: 'Define PRD', role: 'Consultant', badge: 'manual' },
+                { label: 'RED: Test', role: 'Code CLI', badge: 'automated' },
+                { label: 'GREEN: Code', role: 'Code CLI', badge: 'automated' },
+                { label: 'CI: V-G', role: 'GitHub CI', badge: 'automated' },
+                { label: 'Review: V-C', role: 'Consultant', badge: 'manual' },
+                { label: 'Phone: V-M', role: 'Michael', badge: 'manual' },
+                { label: 'Ship', role: 'Code CLI', badge: 'manual' },
+              ].map((step, i, arr) => (
+                <div key={step.label} className="flex items-start gap-1">
+                  <div className={`rounded-lg border p-2.5 min-w-[90px] ${step.badge === 'automated' ? 'border-green-500/30 bg-green-500/5' : 'border-border bg-card/50'}`}>
+                    <div className={`text-[10px] font-bold mb-1 ${step.badge === 'automated' ? 'text-green-400' : 'text-foreground'}`}>{step.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{step.role}</div>
+                    <div className={`text-[8px] mt-1 px-1 rounded font-mono ${step.badge === 'automated' ? 'bg-green-500/20 text-green-400' : 'bg-muted text-muted-foreground'}`}>
+                      {step.badge === 'automated' ? 'Automated' : 'Manual'}
+                    </div>
+                  </div>
+                  {i < arr.length - 1 && <div className="mt-5 text-muted-foreground text-xs">→</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Verification Gates */}
+        <div className="mt-5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Verification Gates</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border bg-muted">
+                  <th className="text-left py-2 pl-3 pr-2">Gate</th>
+                  <th className="text-left py-2 px-2">Who</th>
+                  <th className="text-left py-2 px-2">What</th>
+                  <th className="text-left py-2 pl-2 pr-3">Automated?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['V-G', 'Gemini CI', '1 browser flow test per PRD item, runs on every push', true],
+                  ['V-C', 'Consultant', 'Reviews test quality and code correctness in PR', false],
+                  ['V-M', 'Michael', 'Phone test on preview URL — final production gate', false],
+                ] .map(([gate, who, what, auto], i) => (
+                  <tr key={String(gate)} className={`border-b border-border/30 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+                    <td className="py-2 pl-3 pr-2 font-mono font-bold text-primary">{gate}</td>
+                    <td className="py-2 px-2 text-foreground font-medium">{who}</td>
+                    <td className="py-2 px-2 text-muted-foreground">{what}</td>
+                    <td className="py-2 pl-2 pr-3">
+                      {auto
+                        ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 font-mono">✅ Automated</span>
+                        : <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">Manual</span>
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div className="mt-4">
           <Link
             href="https://github.com/ahfeiathome/bigclaw-ai/blob/main/knowledge/UNIFIED_DEV_FLOW.md"
