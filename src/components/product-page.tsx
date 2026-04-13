@@ -7,6 +7,7 @@ import { ProductIntelligencePanel } from './product-intelligence';
 import { IssueTrendChart } from './issues-trend-chart';
 import { fetchProductIntel } from '@/lib/product-intel';
 import { VmChecklist } from './vm-checklist';
+import { VmGroupChecklist, type VmGroup } from './vm-group-checklist';
 
 interface ProductPageProps {
   /** Product slug — used to fetch dynamic data from REGISTRY.md */
@@ -25,6 +26,8 @@ interface ProductPageProps {
   revenueModel?: string;
   shelvedReason?: string;
   revivalCondition?: string;
+  /** Optional grouped phone-review config. When provided, shows ONE combined checklist above per-release accordions. */
+  vmGroups?: VmGroup[];
 }
 
 function relativeTime(iso: string): string {
@@ -79,6 +82,7 @@ export async function ProductPage(props: ProductPageProps) {
   const prdItems = props.prdItems;
   const shelvedReason = props.shelvedReason;
   const revivalCondition = props.revivalCondition;
+  const vmGroups = props.vmGroups;
 
   const [allIssues, closedIssues, intel, mrdContent, dailyCostsMd, violationsMd, gatesMd, releasePlanMd, verificationMd, ciRun, testMatrixMd] = await Promise.all([
     repoSlug ? fetchRepoIssues(repoSlug).catch(() => []) : Promise.resolve([]),
@@ -209,6 +213,14 @@ export async function ProductPage(props: ProductPageProps) {
   }
 
   const releasesStats = releases.map(rel => computeReleaseStats(rel, prdItems));
+
+  // Deduplicated union of all matched PRD items across releases — used by the combined phone review
+  const allMatchedItems = releasesStats.reduce<NonNullable<typeof prdItems>>((acc, stats) => {
+    for (const item of stats.matchedItems) {
+      if (!acc.some(i => i.id === item.id)) acc.push(item);
+    }
+    return acc;
+  }, []);
 
   // Three traffic light emoji per column + overall color + action
   function releaseTrafficLights(s: ReleaseStats): { vg: string; vc: string; vm: string; color: ReleaseColor; action: ReleaseAction } {
@@ -479,105 +491,114 @@ export async function ProductPage(props: ProductPageProps) {
           {releases.length === 0 ? (
             <p className="text-xs text-muted-foreground">No release plan found at <code className="font-mono text-primary">docs/product/RELEASE_PLAN.md</code>.</p>
           ) : (
-            <div className="space-y-1">
-              {releases.map((rel, ri) => {
-                const stats = releasesStats[ri];
-                const { vg, vc, vm, color, action } = releaseTrafficLights(stats);
-                const totalFails = stats.vGFail + stats.vCFail;
-                // Items for V-M checklist: exclude those with explicit upstream fails
-                const vmItems = stats.matchedItems.filter(i => i.verifyG !== '❌' && i.verifyC !== '❌');
-                const borderColor = color === 'green' ? 'rgb(34 197 94 / 0.4)' : color === 'yellow' ? 'rgb(245 158 11 / 0.4)' : color === 'red' ? 'rgb(239 68 68 / 0.4)' : 'hsl(var(--border))';
-                const dotCls = color === 'green' ? 'bg-green-400' : color === 'yellow' ? 'bg-amber-400' : color === 'red' ? 'bg-red-400' : 'bg-muted-foreground/40';
-                return (
-                  <details key={rel.version} className="group overflow-hidden rounded-lg border border-border/50 border-l-2" style={{ borderLeftColor: borderColor }}>
-                    {/* ── ONE-LINE SUMMARY ── */}
-                    <summary className="flex items-center gap-2.5 px-3 py-2 cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotCls}`} />
-                      <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                      <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
-                      {rel.subtitle && (
-                        <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[180px]">
-                          {rel.subtitle.replace(/^[""]|[""]$/g, '')}
-                        </span>
-                      )}
-                      {/* Traffic lights */}
-                      <div className="flex items-center gap-1 ml-auto shrink-0">
-                        <span className="text-[9px] text-muted-foreground font-mono">V-G</span>
-                        <span className="text-sm leading-none">{vg}</span>
-                        <span className="text-[9px] text-muted-foreground font-mono ml-2">V-C</span>
-                        <span className="text-sm leading-none">{vc}</span>
-                        <span className="text-[9px] text-muted-foreground font-mono ml-2">V-M</span>
-                        <span className="text-sm leading-none">{vm}</span>
-                      </div>
-                      {/* Action */}
-                      <div className="shrink-0 ml-3 min-w-[120px] text-right">
-                        {action === 'review' && (previewUrl
-                          ? <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded-md bg-green-500/15 text-green-400 font-medium no-underline hover:bg-green-500/25 whitespace-nowrap transition-colors">Review on Phone ↗</a>
-                          : <span className="text-[10px] text-green-400/60 whitespace-nowrap">Awaiting preview URL</span>
-                        )}
-                        {action === 'done' && <span className="text-[10px] px-2 py-1 rounded-md bg-green-500/20 text-green-300 font-bold whitespace-nowrap">✅ Ready</span>}
-                        {action === 'fix' && <span className="text-[10px] text-red-400/80 whitespace-nowrap">Fix {totalFails} item{totalFails !== 1 ? 's' : ''} first</span>}
-                        {(action === 'waiting-both' || action === 'waiting-gemini' || action === 'waiting-consultant') && (
-                          <span className="text-[10px] text-amber-400/70 whitespace-nowrap">
-                            {action === 'waiting-both' ? 'Waiting on Gemini + Consultant' : action === 'waiting-gemini' ? 'Waiting on Gemini' : 'Waiting on Consultant'}
+            <>
+              {/* ── SECTION 1: Combined Phone Review ── */}
+              {vmGroups && vmGroups.length > 0 && repoSlug && allMatchedItems.length > 0 && (
+                <VmGroupChecklist
+                  repoSlug={repoSlug}
+                  groups={vmGroups}
+                  allItems={allMatchedItems.map(i => ({
+                    id: i.id, item: i.item,
+                    verifyG: i.verifyG, verifyC: i.verifyC, verifyM: i.verifyM,
+                  }))}
+                />
+              )}
+
+              {/* ── SECTION 2: Per-release breakdown (reference) ── */}
+              <div className={`space-y-1 ${vmGroups && vmGroups.length > 0 ? 'mt-4' : ''}`}>
+                {vmGroups && vmGroups.length > 0 && (
+                  <div className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground/50 mb-2 px-1">
+                    Per-release breakdown
+                  </div>
+                )}
+                {releases.map((rel, ri) => {
+                  const stats = releasesStats[ri];
+                  const { vg, vc, vm, color, action } = releaseTrafficLights(stats);
+                  const totalFails = stats.vGFail + stats.vCFail;
+                  const borderColor = color === 'green' ? 'rgb(34 197 94 / 0.4)' : color === 'yellow' ? 'rgb(245 158 11 / 0.4)' : color === 'red' ? 'rgb(239 68 68 / 0.4)' : 'hsl(var(--border))';
+                  const dotCls = color === 'green' ? 'bg-green-400' : color === 'yellow' ? 'bg-amber-400' : color === 'red' ? 'bg-red-400' : 'bg-muted-foreground/40';
+                  return (
+                    <details key={rel.version} className="group overflow-hidden rounded-lg border border-border/50 border-l-2" style={{ borderLeftColor: borderColor }}>
+                      {/* ── ONE-LINE SUMMARY ── */}
+                      <summary className="flex items-center gap-2.5 px-3 py-2 cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotCls}`} />
+                        <svg className="w-3 h-3 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-xs font-bold font-mono text-foreground">{rel.version}</span>
+                        {rel.subtitle && (
+                          <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[180px]">
+                            {rel.subtitle.replace(/^[""]|[""]$/g, '')}
                           </span>
                         )}
-                        {action === 'planned' && <span className="text-[10px] text-muted-foreground">Planned</span>}
-                      </div>
-                    </summary>
+                        {/* Traffic lights */}
+                        <div className="flex items-center gap-1 ml-auto shrink-0">
+                          <span className="text-[9px] text-muted-foreground font-mono">V-G</span>
+                          <span className="text-sm leading-none">{vg}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono ml-2">V-C</span>
+                          <span className="text-sm leading-none">{vc}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono ml-2">V-M</span>
+                          <span className="text-sm leading-none">{vm}</span>
+                        </div>
+                        {/* Action */}
+                        <div className="shrink-0 ml-3 min-w-[120px] text-right">
+                          {action === 'review' && (previewUrl
+                            ? <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded-md bg-green-500/15 text-green-400 font-medium no-underline hover:bg-green-500/25 whitespace-nowrap transition-colors">Review on Phone ↗</a>
+                            : <span className="text-[10px] text-green-400/60 whitespace-nowrap">Awaiting preview URL</span>
+                          )}
+                          {action === 'done' && <span className="text-[10px] px-2 py-1 rounded-md bg-green-500/20 text-green-300 font-bold whitespace-nowrap">✅ Ready</span>}
+                          {action === 'fix' && <span className="text-[10px] text-red-400/80 whitespace-nowrap">Fix {totalFails} item{totalFails !== 1 ? 's' : ''} first</span>}
+                          {(action === 'waiting-both' || action === 'waiting-gemini' || action === 'waiting-consultant') && (
+                            <span className="text-[10px] text-amber-400/70 whitespace-nowrap">
+                              {action === 'waiting-both' ? 'Waiting on Gemini + Consultant' : action === 'waiting-gemini' ? 'Waiting on Gemini' : 'Waiting on Consultant'}
+                            </span>
+                          )}
+                          {action === 'planned' && <span className="text-[10px] text-muted-foreground">Planned</span>}
+                        </div>
+                      </summary>
 
-                    {/* ── EXPANDED CONTENT ── */}
-                    <div className="border-t border-border/50">
-                      {/* Section 1: V-M Test Checklist (top, prominent — Michael's view) */}
-                      {vmItems.length > 0 && repoSlug && (
-                        <VmChecklist repoSlug={repoSlug} items={vmItems.map(i => ({
-                          id: i.id, item: i.item,
-                          verifyG: i.verifyG, verifyC: i.verifyC, verifyM: i.verifyM,
-                        }))} />
-                      )}
-
-                      {/* Section 2: PR Details (collapsed sub-accordion) */}
-                      <details className="group/pr">
-                        <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none hover:bg-muted/30 list-none [&::-webkit-details-marker]:hidden border-t border-border/40 text-[10px] text-muted-foreground">
-                          <svg className="w-2.5 h-2.5 shrink-0 transition-transform group-open/pr:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                          PR Details ({rel.rows.length} PRs{stats.prSummary ? ` · ${stats.prSummary}` : ''})
-                        </summary>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="text-muted-foreground border-b border-border bg-muted/50">
-                                <th className="text-left py-2 pl-3 pr-2">PR</th>
-                                <th className="text-left py-2 px-2">What</th>
-                                <th className="text-left py-2 px-2">PRDs</th>
-                                <th className="text-left py-2 pl-2 pr-3">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rel.rows.map((row, i) => (
-                                <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
-                                  <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
-                                  <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
-                                  <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
-                                  <td className="py-1.5 pl-2 pr-3">
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
-                                      {row.status}
-                                    </span>
-                                  </td>
+                      {/* ── EXPANDED: PR Details only ── */}
+                      <div className="border-t border-border/50">
+                        <details className="group/pr">
+                          <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none hover:bg-muted/30 list-none [&::-webkit-details-marker]:hidden text-[10px] text-muted-foreground">
+                            <svg className="w-2.5 h-2.5 shrink-0 transition-transform group-open/pr:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                            PR Details ({rel.rows.length} PRs{stats.prSummary ? ` · ${stats.prSummary}` : ''})
+                          </summary>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-muted-foreground border-b border-border bg-muted/50">
+                                  <th className="text-left py-2 pl-3 pr-2">PR</th>
+                                  <th className="text-left py-2 px-2">What</th>
+                                  <th className="text-left py-2 px-2">PRDs</th>
+                                  <th className="text-left py-2 pl-2 pr-3">Status</th>
                                 </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                      </details>
-                    </div>
-                  </details>
-                );
-              })}
-            </div>
+                              </thead>
+                              <tbody>
+                                {rel.rows.map((row, i) => (
+                                  <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
+                                    <td className="py-1.5 pl-3 pr-2 font-mono text-primary">{row.pr}</td>
+                                    <td className="py-1.5 px-2 text-foreground max-w-[200px] truncate">{row.what}</td>
+                                    <td className="py-1.5 px-2 font-mono text-muted-foreground text-[10px]">{row.prds}</td>
+                                    <td className="py-1.5 pl-2 pr-3">
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${row.status.includes('✅') ? 'bg-green-500/20 text-green-400' : row.status.includes('⚠️') ? 'bg-amber-500/20 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                                        {row.status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            </>
           )}
         </SectionCard>
       )}
