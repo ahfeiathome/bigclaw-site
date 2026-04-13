@@ -1,12 +1,10 @@
 export const dynamic = 'force-dynamic';
 
-import { fetchAllIssues, fetchRecentClosedIssues, fetchMichaelTodo, fetchBandwidth, fetchRadarDashboard, fetchMorningBrainLog, fetchDailyCosts, fetchAgentSystem, fetchRepoFile } from '@/lib/github';
+import { fetchAllIssues, fetchRecentClosedIssues, fetchMichaelTodo, fetchRadarDashboard, fetchMorningBrainLog } from '@/lib/github';
 import { fetchProducts } from '@/lib/content';
 import { SectionCard } from '@/components/dashboard';
 import { IssueTrendChart } from '@/components/issues-trend-chart';
 import { QuickActions } from '@/components/quick-actions';
-import { CostTrendChart } from '@/components/cost-trend-chart';
-import { CronHealthLights } from '@/components/cron-health-lights';
 import { DeployApprovalSection } from '@/components/deploy-approval-section';
 import { MoneyActionChecklist } from '@/components/money-action-checklist';
 import { parsePendingGates } from '@/app/api/controls/pending/route';
@@ -48,18 +46,13 @@ function formatTime(d: Date): string {
 export default async function MissionControlPage() {
   const pageRenderedAt = new Date();
 
-  const [allIssues, closedIssues, todoMd, bandwidthMd, radarMd, morningLog, registryProducts, agentMd, dailyCostsMd, activeSessionsMd, sanityCheckMd] = await Promise.all([
+  const [allIssues, closedIssues, todoMd, radarMd, morningLog, registryProducts] = await Promise.all([
     fetchAllIssues(),
     fetchRecentClosedIssues(90),
     fetchMichaelTodo(),
-    fetchBandwidth(),
     fetchRadarDashboard(),
     fetchMorningBrainLog(),
     fetchProducts(),
-    fetchAgentSystem(),
-    fetchDailyCosts(),
-    fetchRepoFile('bigclaw-ai', 'ops/ACTIVE_SESSIONS.md'),
-    fetchRepoFile('bigclaw-ai', 'ops/SANITY_CHECK.md'),
   ]);
 
   // ── Section 2: Action Required ────────────────────────────────────────────
@@ -73,44 +66,7 @@ export default async function MissionControlPage() {
     p => p.slug !== 'bigclaw-dashboard' && p.slug !== 'cortex' && p.name.toLowerCase() !== 'cortex'
   );
 
-  // ── Section 4: System Health ──────────────────────────────────────────────
-  // Cost — last entry
-  let lastSpend: string | null = null;
-  let lastSpendDate: string | null = null;
-  if (dailyCostsMd) {
-    const costLines = dailyCostsMd.split('\n').filter(
-      l => l.startsWith('|') && !l.match(/^\|[\s-:|]+\|$/) && !l.includes('Date')
-    );
-    const last = costLines[costLines.length - 1];
-    if (last) {
-      const cells = last.split('|').map(c => c.trim()).filter(Boolean);
-      const dateM = cells[0]?.match(/\d{4}-\d{2}-\d{2}/);
-      const spendM = cells[3]?.match(/\$?([\d.]+)/);
-      if (dateM) lastSpendDate = dateM[0];
-      if (spendM) lastSpend = `$${parseFloat(spendM[1]).toFixed(2)}`;
-    }
-  }
-
-  // Agents
-  const agentTableRows = bandwidthMd ? parseMarkdownTable(extractSection(bandwidthMd, 'Current Agent Load')) : [];
-  const activeAgents = agentTableRows.filter(r => r.cells[3]?.toLowerCase() === 'busy').length;
-
-  // Sessions
-  const sessionLines = activeSessionsMd
-    ? activeSessionsMd.split('\n').filter(l => l.trim() && !l.startsWith('#') && l.includes('|'))
-    : [];
-
-  // Sanity check
-  let sanityStatus = '';
-  let sanityDate = '';
-  if (sanityCheckMd) {
-    const dateMatch = sanityCheckMd.match(/\*\*Run:\*\*\s*([^\n]+)/);
-    const resultMatch = sanityCheckMd.match(/\*\*Result:\*\*\s*([^\n]+)/);
-    sanityDate = dateMatch?.[1]?.trim() || '';
-    sanityStatus = resultMatch?.[1]?.trim() || '';
-  }
-
-  // ── Section 5: Intelligence ───────────────────────────────────────────────
+  // ── Section 4: Intelligence ───────────────────────────────────────────────
   // Morning report
   let morningTimestamp = '';
   let morningSpecRows: string[][] = [];
@@ -345,67 +301,7 @@ Step 3b: "Rejected. Fix [what's wrong]."
       </SectionCard>
 
       {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 4: SYSTEM HEALTH (one row)                       */}
-      {/* ══════════════════════════════════════════════════════════ */}
-      <SectionCard title="System Health" className="mb-4">
-        {/* Top stat strip */}
-        <div className="flex flex-wrap gap-2 mb-4 items-center">
-          {lastSpend && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/50 bg-card/30">
-              <span className="text-[10px] text-muted-foreground">Spend</span>
-              <span className="text-sm font-mono font-semibold text-foreground">{lastSpend}</span>
-              {lastSpendDate && <span className="text-[9px] text-muted-foreground font-mono">{lastSpendDate}</span>}
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/50 bg-card/30">
-            <span className={`w-1.5 h-1.5 rounded-full ${activeAgents > 0 ? 'bg-green-400' : 'bg-muted-foreground/40'}`} />
-            <span className="text-[10px] text-muted-foreground">Agents</span>
-            <span className="text-sm font-mono font-semibold text-foreground">{activeAgents}</span>
-            <span className="text-[9px] text-muted-foreground">active</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/50 bg-card/30">
-            <span className={`w-1.5 h-1.5 rounded-full ${sessionLines.length > 0 ? 'bg-blue-400' : 'bg-muted-foreground/40'}`} />
-            <span className="text-[10px] text-muted-foreground">Sessions</span>
-            <span className="text-sm font-mono font-semibold text-foreground">{sessionLines.length}</span>
-            <span className="text-[9px] text-muted-foreground">active</span>
-          </div>
-          {sanityStatus && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/50 bg-card/30">
-              <span className="text-[10px] text-muted-foreground">Sanity</span>
-              <span className="text-xs text-foreground">{sanityStatus}</span>
-              {sanityDate && <span className="text-[9px] text-muted-foreground font-mono">{sanityDate}</span>}
-            </div>
-          )}
-          <span className="text-[10px] text-muted-foreground font-mono ml-auto">{ts}</span>
-        </div>
-
-        {/* Cron jobs */}
-        <div className="mb-4">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Cron Jobs</div>
-          <CronHealthLights agentMd={agentMd} />
-        </div>
-
-        {/* Cost trend */}
-        <div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Daily Spend Trend</div>
-          <CostTrendChart data={(() => {
-            const data: { date: string; spend: number }[] = [];
-            if (dailyCostsMd) {
-              for (const line of dailyCostsMd.split('\n')) {
-                if (!line.startsWith('|') || line.match(/^\|[\s-:|]+\|$/) || line.includes('Date')) continue;
-                const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-                const dateMatch = cells[0]?.match(/\d{4}-\d{2}-\d{2}/);
-                const spendMatch = cells[3]?.match(/\$?([\d.]+)/);
-                if (dateMatch && spendMatch) data.push({ date: dateMatch[0], spend: parseFloat(spendMatch[1]) });
-              }
-            }
-            return data;
-          })()} />
-        </div>
-      </SectionCard>
-
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 5: INTELLIGENCE                                   */}
+      {/* SECTION 4: INTELLIGENCE                                   */}
       {/* ══════════════════════════════════════════════════════════ */}
       <SectionCard title="Intelligence" className="mb-4">
         {/* RADAR */}
