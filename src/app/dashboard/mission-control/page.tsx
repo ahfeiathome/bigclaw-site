@@ -273,16 +273,17 @@ Step 3b: "Rejected. Fix [what's wrong]."
                 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
                 : 'text-muted-foreground bg-muted/30 border-border/50';
             return (
-              <a key={p.slug} href={p.href}
-                 className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs no-underline hover:opacity-80 transition-opacity ${stageTone}`}>
-                <span className="font-semibold">{p.name}</span>
-                <span className="font-mono text-[10px] opacity-70">{p.stage}</span>
+              <span key={p.slug} className="inline-flex items-center gap-1">
+                <a href={p.href}
+                   className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs no-underline hover:opacity-80 transition-opacity ${stageTone}`}>
+                  <span className="font-semibold">{p.name}</span>
+                  <span className="font-mono text-[10px] opacity-70">{p.stage}</span>
+                </a>
                 {p.liveUrl && (
                   <a href={p.liveUrl} target="_blank" rel="noopener noreferrer"
-                     onClick={e => e.stopPropagation()}
-                     className="opacity-50 hover:opacity-100 no-underline">↗</a>
+                     className="text-[10px] opacity-40 hover:opacity-80 no-underline">↗</a>
                 )}
-              </a>
+              </span>
             );
           })}
         </div>
