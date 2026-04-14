@@ -59,7 +59,6 @@ export default async function MissionControlPage() {
   const pendingGates = todoMd ? parsePendingGates(todoMd) : [];
   const moneyItems = todoMd ? parseMoneyItems(todoMd) : [];
   const pendingMoneyItems = moneyItems.filter(i => !i.done);
-  const hasActions = pendingGates.length > 0 || pendingMoneyItems.length > 0;
 
   // ── Section 3: Portfolio ──────────────────────────────────────────────────
   const products = registryProducts.filter(
@@ -230,74 +229,64 @@ Step 3b: "Rejected. Fix [what's wrong]."
       </details>
 
       {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 2: ACTION REQUIRED                               */}
+      {/* ZONE A: NEEDS YOU NOW (💳/⚖️/🧠 action items)           */}
       {/* ══════════════════════════════════════════════════════════ */}
       <SectionCard
-        title={hasActions
-          ? `Action Required (${pendingGates.length + pendingMoneyItems.length})`
-          : 'Action Required'}
+        title={pendingMoneyItems.length > 0
+          ? `Needs You Now (${pendingMoneyItems.length})`
+          : 'Needs You Now'}
         className="mb-4"
       >
-        {!hasActions ? (
+        {pendingMoneyItems.length === 0 ? (
           <div className="flex items-center gap-2 text-sm text-green-400">
             <span>✅</span>
-            <span>No action required — all clear</span>
+            <span>No pending 💳/⚖️/🧠 decisions</span>
             <span className="text-[10px] text-muted-foreground font-mono ml-auto">{ts}</span>
           </div>
         ) : (
-          <div className="space-y-4">
-            {pendingGates.length > 0 && (
-              <div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2 flex items-center justify-between">
-                  <span>Production Deploy Approvals ({pendingGates.length})</span>
-                  <span className="font-mono normal-case">{ts}</span>
-                </div>
-                <DeployApprovalSection initialGates={pendingGates} />
-              </div>
-            )}
-            {pendingMoneyItems.length > 0 && (
-              <div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2 flex items-center justify-between">
-                  <span>💳 Money Actions ({pendingMoneyItems.length} pending)</span>
-                  <span className="font-mono normal-case">{ts}</span>
-                </div>
-                <MoneyActionChecklist initialItems={pendingMoneyItems} />
-              </div>
-            )}
-          </div>
+          <MoneyActionChecklist initialItems={pendingMoneyItems} />
         )}
       </SectionCard>
 
       {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 3: PORTFOLIO                                      */}
+      {/* ZONE B: READY TO SHIP (deploy gates)                     */}
       {/* ══════════════════════════════════════════════════════════ */}
-      <SectionCard title="Portfolio" className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground">{products.length} products</span>
-          <span className="text-[10px] text-muted-foreground font-mono">{ts}</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {products.map(p => (
-            <div key={p.slug} className="rounded-lg border border-border/50 bg-card/30 px-3 py-2.5">
-              <div className="flex items-start justify-between gap-1 mb-1">
-                <span className="text-xs font-semibold text-foreground leading-tight">{p.name}</span>
+      {pendingGates.length > 0 && (
+        <SectionCard
+          title={`Ready to Ship (${pendingGates.length})`}
+          className="mb-4"
+        >
+          <p className="text-[10px] text-muted-foreground mb-3">Open preview on your phone → approve or reject below.</p>
+          <DeployApprovalSection initialGates={pendingGates} />
+        </SectionCard>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* SECTION 3: PORTFOLIO (compact status strip)              */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      <SectionCard title={`Portfolio — ${products.length} products`} className="mb-4">
+        <div className="flex flex-wrap gap-2">
+          {products.map(p => {
+            const stageTone = p.stageRaw.includes('S7') || p.stageRaw.includes('S8') || p.stageRaw.toLowerCase().includes('launch') || p.stageRaw.toLowerCase().includes('active')
+              ? 'text-green-400 bg-green-500/10 border-green-500/30'
+              : p.stageRaw.includes('S5') || p.stageRaw.includes('S6')
+                ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                : 'text-muted-foreground bg-muted/30 border-border/50';
+            return (
+              <a key={p.slug} href={p.href}
+                 className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs no-underline hover:opacity-80 transition-opacity ${stageTone}`}>
+                <span className="font-semibold">{p.name}</span>
+                <span className="font-mono text-[10px] opacity-70">{p.stage}</span>
                 {p.liveUrl && (
                   <a href={p.liveUrl} target="_blank" rel="noopener noreferrer"
-                     className="text-[10px] text-primary no-underline hover:underline shrink-0 mt-0.5" title={p.liveUrl}>↗</a>
+                     onClick={e => e.stopPropagation()}
+                     className="opacity-50 hover:opacity-100 no-underline">↗</a>
                 )}
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">{p.stage}</span>
-                {p.company && (
-                  <span className="text-[9px] text-muted-foreground/60 truncate">{p.company}</span>
-                )}
-              </div>
-              {p.revenue && (
-                <div className="text-[10px] text-green-400/80 font-mono mt-1">{p.revenue}</div>
-              )}
-            </div>
-          ))}
+              </a>
+            );
+          })}
         </div>
+        <div className="text-[9px] text-muted-foreground font-mono mt-2">{ts}</div>
       </SectionCard>
 
       {/* ══════════════════════════════════════════════════════════ */}

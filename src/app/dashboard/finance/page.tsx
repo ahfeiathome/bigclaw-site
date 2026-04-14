@@ -47,18 +47,20 @@ function buildCostRows(content: string, dailyCostsMd: string | null): CostRow[] 
   const budgetTotal = anthropicBudget?.cells[1] || '$127.00';
   const budgetSpend = anthropicBudget?.cells[2] || '~$5.00';
 
-  // Detect exhausted balance from DAILY_COSTS.md latest remaining
-  let anthropicExhausted = false;
+  // Detect exhausted balance from DAILY_COSTS.md — columns: Date | Balance ($) | Spent Today ($) | Burn Rate | Runway
+  let openRouterExhausted = false;
+  let openRouterBalance: string | null = null;
   if (dailyCostsMd) {
     const costLines = dailyCostsMd.split('\n').filter(l => l.includes('|') && !l.match(/^\|[\s-:|]+\|$/) && !/Date|date/.test(l));
     const lastRow = costLines[costLines.length - 1];
     if (lastRow) {
       const cells = lastRow.split('|').map(c => c.trim()).filter(Boolean);
-      const remainingCell = cells[2]; // "Remaining" is 3rd column
-      if (remainingCell) {
-        const m = remainingCell.match(/\$?([\d.]+)/);
-        const remaining = m ? parseFloat(m[1]) : -1;
-        if (remaining <= 0.5) anthropicExhausted = true;
+      const balanceCell = cells[1]; // cells[1] = "Balance ($)"
+      if (balanceCell) {
+        const m = balanceCell.match(/\$?([\d.]+)/);
+        const balance = m ? parseFloat(m[1]) : -1;
+        if (balance >= 0) openRouterBalance = `$${balance.toFixed(2)}`;
+        if (balance >= 0 && balance <= 0.5) openRouterExhausted = true;
       }
     }
   }
@@ -74,35 +76,29 @@ function buildCostRows(content: string, dailyCostsMd: string | null): CostRow[] 
       detail: r.cells[5] ? `Margin: ${clean(r.cells[5])}` : undefined,
     }));
 
-  // Parse agent costs
-  const agentSection = extractSection(content, 'Pi5 Agent Token Usage');
+  // Parse agent costs — actual heading in FINANCE.md: "Pi5 Agent Operations"
+  // Columns: Agent | Daily Activity | Est. Cost | Status
+  const agentSection = extractSection(content, 'Pi5 Agent Operations');
   const agentRows = parseMarkdownTable(agentSection);
   const agentChildren = agentRows
-    .filter(r => r.cells.length >= 5 && !r.cells[0].includes('Total'))
+    .filter(r => r.cells.length >= 3 && !r.cells[0].includes('Total') && r.cells[0] !== 'Agent')
     .map(r => ({
-      label: `${clean(r.cells[0])} (${clean(r.cells[1])})`,
-      value: clean(r.cells[4] || r.cells[5] || '$0'),
-      detail: `${clean(r.cells[2] || '')} model`,
+      label: `${clean(r.cells[0])} — ${clean(r.cells[1])}`,
+      value: clean(r.cells[2] || '$0'),
+      detail: clean(r.cells[3] || ''),
     }));
-
-  // Parse orchestration
-  const orchSection = extractSection(content, 'Pi5 Cost Breakdown by Tier');
-  const orchRows = parseMarkdownTable(orchSection);
-  const orchTotal = orchRows.find(r => r.cells[0]?.includes('Orchestration'));
-  const orchCost = orchTotal?.cells[2] || '~$3.73';
 
   rows.push({
     category: 'Anthropic API (Claude)',
     monthly: clean(budgetSpend),
     pctOfTotal: '100%',
-    status: anthropicExhausted ? 'CRITICAL — balance exhausted' : `Within budget (${clean(budgetTotal)})`,
-    statusTone: anthropicExhausted ? 'error' : 'success',
+    status: `Within budget (${clean(budgetTotal)})`,
+    statusTone: 'success',
     children: [
       ...(appChildren.length > 0 ? [{ label: `App products (${appChildren.length} projects)`, value: '$1.07', detail: undefined }] : []),
       ...appChildren.map(c => ({ ...c, label: `  └ ${c.label}` })),
-      ...(agentChildren.length > 0 ? [{ label: `Agent operations (${agentChildren.length} agents)`, value: '~$1.27', detail: undefined }] : []),
+      ...(agentChildren.length > 0 ? [{ label: `Pi5 agents (${agentChildren.length})`, value: '', detail: undefined }] : []),
       ...agentChildren.map(c => ({ ...c, label: `  └ ${c.label}` })),
-      { label: 'Orchestration overhead', value: clean(orchCost), detail: 'SDK + routing' },
     ],
   });
 
@@ -132,17 +128,20 @@ function buildCostRows(content: string, dailyCostsMd: string | null): CostRow[] 
     ],
   });
 
-  // OpenRouter
-  const orMatch = content.match(/OpenRouter[^|]*\|[^|]*\|[^|]*~?\$?([\d,.-]+)/i);
+  // OpenRouter — balance from DAILY_COSTS.md (cells[1] = Balance)
   rows.push({
-    category: 'OpenRouter (Phoenix)',
-    monthly: orMatch ? `~$${orMatch[1]}` : '~$7-15',
+    category: 'OpenRouter (Pi5 agents)',
+    monthly: '~$0.37/day',
     pctOfTotal: 'TBD',
-    status: 'Trial budget ($15)',
-    statusTone: 'warning',
+    status: openRouterExhausted
+      ? 'CRITICAL — balance exhausted'
+      : openRouterBalance
+        ? `Balance: ${openRouterBalance}`
+        : '$50/mo limit',
+    statusTone: openRouterExhausted ? 'error' : 'success',
     children: [
-      { label: 'Gate review', value: '2026-03-31', detail: 'Evaluate spend vs quality' },
       { label: 'Per-agent threshold', value: '$0.50/day', detail: 'Alert if exceeded' },
+      { label: 'Monthly cap', value: '$50/mo', detail: 'Resets monthly' },
     ],
   });
 
