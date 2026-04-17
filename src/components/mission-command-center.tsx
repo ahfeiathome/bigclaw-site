@@ -22,8 +22,8 @@ const ALL_PRODUCTS: PipelineProduct[] = [
   { slug: 'fatfrogmodels', name: 'fatfrogmodels', stage: 'S7 LAUNCH', nextGate: 'S8 GROW' },
   { slug: 'fairconnect', name: 'FairConnect', stage: 'S4 BUILD', nextGate: 'Merge PR #1 (🔒)' },
   { slug: 'keeptrack', name: 'KeepTrack', stage: 'S5 HARDEN', nextGate: 'Apple Dev (💳)' },
-  { slug: 'subcheck', name: 'SubCheck', stage: 'S1 DONE', nextGate: 'S2 DEFINE' },
-  { slug: 'cortex', name: 'CORTEX', stage: 'S4 BUILD', nextGate: 'S5 HARDEN' },
+  { slug: 'subcheck', name: 'SubCheck', stage: 'ARCHIVED', nextGate: 'Merged into KeepTrack Lane 3' },
+  { slug: 'cortex', name: 'CORTEX', stage: 'RETIRED', nextGate: '—' },
   { slug: 'radar', name: 'RADAR', stage: 'S4 BUILD', nextGate: 'Phase 0 gate Apr 18 (🧠)' },
   { slug: 'bigclaw-dashboard', name: 'BigClaw Dashboard', stage: 'S7 LAUNCH', nextGate: 'S8 GROW' },
 ];
@@ -152,7 +152,7 @@ export function MissionCommandCenter({ radarReserve, hasLive, defaultCollapsed }
               <tbody>
                 {ALL_PRODUCTS.map(product => {
                   const deployOn = controls.deploy_gates[product.slug] ?? true;
-                  const stageColor = product.stage.includes('S7') || product.stage.includes('S8') ? 'text-green-400' : product.stage.includes('S4') || product.stage.includes('S5') ? 'text-amber-400' : 'text-muted-foreground';
+                  const stageColor = product.stage === 'RETIRED' || product.stage === 'ARCHIVED' ? 'text-muted-foreground/50 line-through' : product.stage.includes('S7') || product.stage.includes('S8') ? 'text-green-400' : product.stage.includes('S4') || product.stage.includes('S5') ? 'text-amber-400' : 'text-muted-foreground';
                   return (
                     <tr key={product.slug} className="border-b border-border/20">
                       <td className="py-1 pr-2 text-foreground">{product.name}</td>
