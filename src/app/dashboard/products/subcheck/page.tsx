@@ -7,12 +7,12 @@ export default async function SubCheckProductPage() {
     slug: 'subcheck',
     name: 'SubCheck',
     company: 'Axiom',
-    pdlcStage: 'S1 DONE',
-    status: 'active',
+    pdlcStage: 'ARCHIVED',
+    status: 'shelved',
     previewUrl: 'https://subcheck-bigclaw.vercel.app',
     repoSlug: 'subcheck',
-    description: 'Subscription auditor and cancellation assistant.',
-    nextGate: 'S2 DEFINE — after FairConnect + KeepTrack reach TestFlight',
+    description: 'Subscription auditor and cancellation assistant. Subscription tracking absorbed into KeepTrack Lane 3. Repo frozen.',
+    shelvedReason: 'Merged into KeepTrack Lane 3 (KT-013–018). No new development.',
     revenueModel: 'Apple IAP',
   });
 }

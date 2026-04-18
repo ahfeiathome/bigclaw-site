@@ -4,8 +4,8 @@ const products = [
   {
     name: 'GrovaKid',
     description: 'AI-powered worksheet generator for K-5 families. Print, complete by hand, scan to grade.',
-    status: 'LIVE',
-    statusColor: 'bg-green-500/10 text-green-500',
+    status: 'BUILD',
+    statusColor: 'bg-blue-500/10 text-blue-500',
     pricing: '$19.99/mo per family',
   },
   {
@@ -32,16 +32,9 @@ const products = [
   {
     name: 'KeepTrack',
     description: 'iOS collection tracker with OCR scanning, iCloud sync, and push alerts.',
-    status: 'BUILD',
-    statusColor: 'bg-blue-500/10 text-blue-500',
+    status: 'HARDEN',
+    statusColor: 'bg-purple-500/10 text-purple-500',
     pricing: 'Apple IAP',
-  },
-  {
-    name: 'CORTEX',
-    description: 'AI knowledge management — capture, organize, and surface information via visual capture.',
-    status: 'BUILD',
-    statusColor: 'bg-blue-500/10 text-blue-500',
-    pricing: 'Freemium + Apple IAP',
   },
   {
     name: 'RADAR',
