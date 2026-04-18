@@ -19,7 +19,7 @@ interface Project {
 const products: Project[] = [
   {
     name: 'GrovaKid',
-    status: 'LIVE',
+    status: 'BUILD',
     url: 'https://learnie-ai-ten.vercel.app',
     description:
       'AI-powered worksheet generator for K-5 families. Adaptive difficulty, Common Core aligned, print-and-scan grading — no screen time for your child.',
@@ -33,11 +33,11 @@ const products: Project[] = [
       'Parent dashboard with progress heatmaps and goal tracking',
     ],
     pricing: '$19.99/mo per family',
-    phase: 'v0.5 — 437+ tests, 10 overnight features shipped. Building toward first paid users.',
+    phase: 'v0.5 — 633+ tests, pilot-blocked. Building toward first paid users.',
   },
   {
     name: 'REHEARSAL',
-    status: 'BUILD',
+    status: 'SHELVED',
     url: null,
     description:
       'AI-powered interview practice for job seekers. Real-time feedback, domain-specific question banks, confidence tracking.',
@@ -86,7 +86,7 @@ const products: Project[] = [
   },
   {
     name: 'KeepTrack',
-    status: 'BUILD',
+    status: 'HARDEN',
     url: 'https://keeptrack-bigclaw.vercel.app',
     description:
       'iOS app for tracking personal collections — physical media, gear, inventory. OCR scanning, iCloud sync, push alerts.',
@@ -99,11 +99,11 @@ const products: Project[] = [
       'Archive-ready build',
     ],
     pricing: 'Apple IAP',
-    phase: 'v1.0 — All S7 features built. Blocked: 💳 Apple Developer $99 for TestFlight.',
+    phase: 'v1.0 — All S5 features built. Blocked: 💳 Apple Developer $99 for TestFlight.',
   },
   {
     name: 'SubCheck',
-    status: 'BUILD',
+    status: 'ARCHIVED',
     url: 'https://subcheck-bigclaw.vercel.app',
     description:
       'Subscription tracker that surfaces hidden recurring charges. Bank-agnostic, privacy-first.',
@@ -119,8 +119,8 @@ const products: Project[] = [
   },
   {
     name: 'CORTEX',
-    status: 'BUILD',
-    url: 'https://cortex-bigclaw.vercel.app',
+    status: 'RETIRED',
+    url: null,
     description:
       'AI knowledge management — capture, organize, and surface information from documents, images, and notes across all sources.',
     stack: ['Next.js', 'Claude AI', 'Claude Vision', 'PostgreSQL'],
@@ -131,7 +131,7 @@ const products: Project[] = [
       'Unified knowledge base across all input types',
     ],
     pricing: 'Freemium + Apple IAP',
-    phase: 'v0.2 — Pivoted to visual/OCR capture. Active development.',
+    phase: 'Retired — concept absorbed into other products.',
   },
   {
     name: 'RADAR',
@@ -145,11 +145,11 @@ const products: Project[] = [
       '6 strategies: PEAD, Momentum, BTD, Wheel, Iron Condor, Long Call',
       'Regime detection (Bull/Fear/Chop) with VIX monitoring',
       'Per-trade risk capped at 2% of equity, R:R >= 3.0',
-      '$100K paper account with live position tracking',
-      '314 tests, 50% coverage, kill switch active',
+      'Dual-track: $100K paper account + $90 live seed account',
+      '314 tests, kill switch active',
     ],
     pricing: 'Internal — personal brokerage',
-    phase: 'v0.5 — Phase 0 gate Apr 18. Paper trading: 30% win rate (threshold: 40%).',
+    phase: 'v0.5 — Dual-track trading. 20% win rate (threshold: 40%). Gate-blocked.',
   },
 ];
 
@@ -176,7 +176,11 @@ function statusColor(status: string): string {
   switch (status) {
     case 'LIVE': return 'bg-green-500/10 text-green-500';
     case 'BUILD': return 'bg-blue-500/10 text-blue-500';
+    case 'HARDEN': return 'bg-purple-500/10 text-purple-500';
     case 'PAPER': return 'bg-amber-500/10 text-amber-500';
+    case 'SHELVED': return 'bg-gray-500/10 text-gray-400';
+    case 'ARCHIVED': return 'bg-gray-500/10 text-gray-400';
+    case 'RETIRED': return 'bg-red-500/10 text-red-400';
     default: return 'bg-gray-500/10 text-gray-500';
   }
 }
