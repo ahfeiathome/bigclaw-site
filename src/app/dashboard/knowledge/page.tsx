@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import Link from 'next/link';
 import { fetchGraphReport, fetchKnowledgeHub, fetchLearnings, fetchLessonsLearned } from '@/lib/github';
 import { listKnowledgeEntries } from '@/lib/content';
 import { SectionCard, SignalPill } from '@/components/dashboard';
@@ -216,9 +217,9 @@ export default async function KnowledgePage() {
           <div className="text-2xl mb-2">🕸️</div>
           <div className="text-sm font-semibold text-foreground mb-1">No knowledge graph built yet</div>
           <div className="text-xs text-muted-foreground mb-3">Run Graphify to build the codebase graph: <code className="font-mono text-primary">graphify build .</code></div>
-          <a href="/dashboard/knowledge/KNOWLEDGE_CAPTURE_FLOW" className="text-xs text-primary hover:underline">
+          <Link href="/dashboard/knowledge/KNOWLEDGE_CAPTURE_FLOW" className="text-xs text-primary hover:underline">
             See setup guide →
-          </a>
+          </Link>
         </div>
       )}
 
@@ -328,9 +329,9 @@ export default async function KnowledgePage() {
             Hermes Capture isn&apos;t running yet. Once set up, this section will show capture activity,
             recent articles, and how they connect to the product portfolio.
           </div>
-          <a href="/dashboard/knowledge/KNOWLEDGE_CAPTURE_FLOW" className="text-[11px] text-primary hover:underline mt-1 block">
+          <Link href="/dashboard/knowledge/KNOWLEDGE_CAPTURE_FLOW" className="text-[11px] text-primary hover:underline mt-1 block">
             See knowledge/KNOWLEDGE_CAPTURE_FLOW.md →
-          </a>
+          </Link>
         </div>
       </div>
 
