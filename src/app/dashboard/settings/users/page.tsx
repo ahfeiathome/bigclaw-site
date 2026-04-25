@@ -53,6 +53,7 @@ export default function UserManagementPage() {
     setLoading(false);
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- setState calls in fetchUsers happen after `await fetch(...)`, so they're async, not sync; rule can't trace through the call.
   useEffect(() => { fetchUsers(); }, []);
 
   async function handleAdd(e: React.FormEvent) {

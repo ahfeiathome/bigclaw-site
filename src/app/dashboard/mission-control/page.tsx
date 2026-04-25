@@ -172,7 +172,7 @@ Step 3b: "Rejected. Fix [what's wrong]."
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
-                    <th className="text-left py-1.5 pr-3">Don't Say</th>
+                    <th className="text-left py-1.5 pr-3">Don&apos;t Say</th>
                     <th className="text-left py-1.5 px-2">Why</th>
                     <th className="text-left py-1.5 pl-2">Say Instead</th>
                   </tr>
@@ -223,7 +223,7 @@ Step 3b: "Rejected. Fix [what's wrong]."
                 </tbody>
               </table>
             </div>
-            <p className="text-[10px] text-amber-400/80 mt-2">⚠️ If you don't say this, the next session starts cold.</p>
+            <p className="text-[10px] text-amber-400/80 mt-2">⚠️ If you don&apos;t say this, the next session starts cold.</p>
           </div>
         </div>
       </details>
